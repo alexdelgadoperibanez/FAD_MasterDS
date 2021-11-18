@@ -1,0 +1,141 @@
+---
+title: "AnalisisDatos"
+author: "Amanda del Álamo"
+date: "16/11/2021"
+output: html_document
+---
+
+```{r}
+library(readr)
+getwd() #obtener el directorio en el que estas 
+data <- read.csv("coches.csv")
+head(data)
+names(data)
+attach(data) #esto es para q cuando menciones una de las variables, no tengas q poner data$prize sino q puedes llamarla cuando quieras 
+```
+
+```{r análisis variable "Year"}
+library(ggplot2)
+class(Year)
+unique(Year)
+h <- hist(Year)
+h
+boxplot(Year,horizontal = TRUE)
+ggplot(data, aes(x=Year)) + geom_histogram(binwidth = 0.4,  fill="blue", colour="black")
+ggplot(data, aes(x=Year)) + geom_histogram(aes(y=..density..), binwidth = 0.4,  fill="blue", colour="black")+geom_density(colour="green", fill="green",alpha=0.3)
+```
+```{r analisis variable Kilometers_driven}
+names(data)
+class(Kilometers_Driven)
+unique(Kilometers_Driven)
+sum(Kilometers_Driven>=55000)
+summary(Kilometers_Driven) #7253 es el total
+boxplot(Kilometers_Driven) # ese valor atípico q sale deberiamos plantearnos q hacer con él, es un valor excesivamente alto
+which(Kilometers_Driven==6500000) #posicion del valor atipico
+Kilometers_Driven
+kilometers <- Kilometers_Driven[-2329] #quito ese valor, solo por probar, yo le estudiaría aparte
+summary(kilometers)
+hist(kilometers)
+boxplot(kilometers, horizontal=TRUE)
+k <- hist(kilometers)
+k
+```
+
+
+```{r analisis variable Fuel_Type}
+names(data)
+class(Fuel_Type)
+Fuel_Type
+unique(Fuel_Type)
+ggplot(data, aes(x=Fuel_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black")
+summary(Fuel_Type)
+```
+
+
+
+```{r análisis variable Name}
+class(Name)
+Name
+unique(Name)
+summary(Name)
+
+```
+
+```{r analisis variable Location}
+class(Location)
+summary(Location) 
+ggplot(data, aes(x=Location)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+
+```
+
+```{r analisis variable Transmission}
+class(Transmission)
+summary(Transmission)
+ggplot(data, aes(x=Transmission)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+
+```
+
+```{r analisis variable Owner_Type}
+class(Owner_Type)
+summary(Owner_Type)
+ggplot(data, aes(x=Owner_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+
+```
+
+```{r analisis variable Mileage}
+class(Mileage)
+summary(Mileage)
+unique(Mileage)
+```
+
+```{r análisis variable Engine}
+class(Engine)
+summary(Engine)
+unique(Engine)
+ggplot(data, aes(x=Engine)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
+```
+
+```{r analisis variable Power}
+class(Power)
+summary(Power)
+unique(Power)
+```
+
+```{r analisis variable Seats}
+class(Seats)
+summary(Seats)
+unique(Seats)
+boxplot(Seats) # ese valor atípico q sale deberiamos plantearnos q hacer con él, es un valor excesivamente alto
+Seats
+hist(Seats)
+boxplot(Seats, horizontal=TRUE)
+s <- hist(Seats)
+s
+```
+
+
+```{r analisis variable New_price}
+class(New_Price)
+summary(New_Price)
+unique(New_Price)
+```
+
+
+```{r analisis variable Price}
+class(Price)
+summary(Price)
+boxplot(Price)
+p <- hist(Price)
+p
+ggplot(data, aes(x=Price)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
+```
+
+
+
+
+
+
+
+
+
+
