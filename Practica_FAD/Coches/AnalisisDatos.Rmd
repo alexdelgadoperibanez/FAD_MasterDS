@@ -15,7 +15,7 @@ library(mice)
 ```
 ```{r}
 getwd() #obtener el directorio en el que estas 
-data <- read.csv("coches.csv")
+data <- read.csv("coches_train.csv")
 head(data)
 names(data)
 attach(data) #esto es para q cuando menciones una de las variables, no tengas q poner data$prize sino q puedes llamarla cuando quieras 
