@@ -12,6 +12,8 @@ library(dplyr)
 library(readr)
 # install.packages("mice")
 library(mice)
+#install.packages("stringr")
+library(stringr)
 ```
 ```{r}
 getwd() #obtener el directorio en el que estas 
@@ -30,27 +32,69 @@ Tenemos 7253 observaciones
 14 columnas 
 Y a simple vista vemos que muchos datos estan bien tipados pero otros habra que transformarlos, como puede ser el caso de la variable Mileage (Kilometraje) que está como Character ya que viene el número con su unidad de medida y habrá que decidir si ponerlo todo como km/kg o kmpl. Lo mismo nos pasa con Power (potencia) y New Price que a también vemos a simple vista, parece tener mucho elementos faltantes. La variable Seats (asientos) es un double cuando debería ser entera... Hay muchas cosas que cambiar para dar valor a estos datos.
 
-```{r Limpieza ColNames}
-colnames(data) <- c("X", "Name", "Location", "Year", "Total_Km", "Fuel_Type", "Transmission", "Owner_Type",
-                    "Mileage (km/l)", "Engine (CC)", "Power (bhp)", "Seats", "New_Price (Lakh)", "Price (Lakh)")
+### Name -> Nombre de las marcas y modelos de los coches.
+### Location -> La ubicación en la que se vende el coche o está disponible para su compra.
+### Year -> El año del modelo de coche.
+### Kilometers_Driven -> El total de kilómetros recorridos en el coche por el anterior propietario en Km
+### Fuel_Type -> El tipo de combustible utilizado por el coche.
+### Transmission -> El tipo de transmisión utilizado por el coche.
+### Owner_Type -> Indica si el coche es de primera, segunda, tercera, cuarta... mano.
+### Mileage -> El kilometraje estándar ofrecido por la compañía de automóviles en kmpl o km/kg.
+### Engine -> La cilindrada del motor en cc.
+### Power -> La potencia máxima del motor en bhp (CV).
+### Seats -> Número de asientos.
+### New_Price -> El precio del coche, nuevo.
+### Price -> El precio del coche usado en INR Lakhs (Rupias).
+
+```{r}
+data %>% pull(Mileage) %>% str_split(" ", simplify=TRUE) %>% cbind(data$Fuel_Type) %>% subset(select=2:3) %>% as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
+
+data %>% pull(Engine) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que ha solo hay un tipo
+
+data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que ha solo hay un tipo
 
 ```
 
-```{r Limpieza Mileage}
-Mileage <- substr(Mileage, 1, nchar(Mileage)-5)
+AQUI TENGO QUE PONER TODO EL TEMA DE QUE HAY DOS VARIABLES Y QUE HAY QUE SEPARAR, ETC ETC ETC. LO DEJO EN BLANCO DE MOMENTO.
+
+```{r Modificación de Datos}
+data$Fuel_Type <- as.factor(data$Fuel_Type) # Los pongo como factores porque a mi no me aparecen así, asique de esta manera nos aseguramos
+data$Transmission <- as.factor(data$Transmission)
+data$Location <- as.factor(data$Location)
+
+data <- data %>%
+  mutate(Seats = as.integer(Seats)) %>%
+  mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth/Above")))
+
+data <- data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) %>% 
+    mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
+    mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
+    select(-Mileage)
+
+# as.numeric(str_extract(Mileage, "^[:graph:]+")) aqui lo que hago es seleccionar del inicio de todas las filas (^) todas (+) los numeros y signos de puntuación hasta que hay espacio [:graph:] y lo transformo en numerico
+
+# mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) y con esto creo las nuevas columnas, la función ifelse lo que hace es que si se cumple la condicion, pone el valor de Mileage y sino pone 0, por eso al final se pone Mileage, 0. Mileage para los True y 0 para los False
+
+# select(-Mileage) excluimos la columna
+```
+
+
+```{r Limpieza Variables}
+data$Engine <- substr(Engine, 1, nchar(Engine)-3) %>% as.integer() #Al final junto todo en el mismo bloque
+data$Power <- substr(Power, 1, nchar(Power)-4) %>% as.integer()
+data$New_Price <- substr(New_Price, 1, nchar(New_Price)-4) %>% as.double()
 data
 ```
-
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
 
 ```{r missing data}
-#sum(is.na(data))
+sum(is.na(data))
 md.pattern(data, plot = TRUE, rotate.names=TRUE)
 
-data %>% select(Name, Engine (CC), Seats, Power (bhp), New_Price (Lakh), Price (Lakh)) %>% filter(is.na(Engine (CC)) | is.na(Seats) | is.na(Power (bhp)) | is.na(New_Price (Lakh)) | is.na(Price (Lakh))) %>% arrange(Name) %>% distinct()
+data %>% select(Name, Engine, Seats, Power, New_Price, Price) %>% filter(is.na(Engine | is.na(Seats) | is.na(Power) | is.na(New_Price ) | is.na(Price))) %>% arrange(Name) %>% distinct()
 
-data[!sapply(data, function(x) all(x == ""))] #Así identificamos las columnas que tienen valores faltantes
+data[!sapply(data, function(data) all(data == ""))] #Así identificamos las columnas que tienen valores faltantes
 ```
 Al analizar los valores faltantes con md.pattern nos hemos dado cuenta de que algo no tenía sentido. Claramente la columna New_Price tenia valores faltantes pero no los detectaba. Esto es debido a que no estan marcados como Nan sino como valores vacíos y lo mismo nos pasa en columnas como Engine o Power, por lo tanto para saber la cantidad total de valores faltantes tendremos que contabilizar también los valores vacíos.
 
