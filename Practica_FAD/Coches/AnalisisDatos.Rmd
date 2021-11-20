@@ -1,0 +1,212 @@
+---
+title: "AnalisisDatos"
+author: "Amanda del Álamo & Alejandro Delgado"
+date: "16/11/2021"
+output: html_document
+---
+
+Carga de librerías
+```{r}
+library(dplyr)
+# install.packages("readr")
+library(readr)
+# install.packages("mice")
+library(mice)
+```
+```{r}
+getwd() #obtener el directorio en el que estas 
+data <- read.csv("coches_train.csv")
+head(data)
+names(data)
+attach(data) #esto es para q cuando menciones una de las variables, no tengas q poner data$prize sino q puedes llamarla cuando quieras 
+```
+
+La función glimpse() del paquete dplyr puede utilizarse para ver las columnas del conjunto de datos y mostrar alguna porción de los datos con respecto a cada atributo que pueda caber en una sola línea.
+```{r}
+glimpse(data)
+```
+Con esta forma de visualización podemos observar mejor la naturaleza de los datos.
+Tenemos 7253 observaciones
+14 columnas 
+Y a simple vista vemos que muchos datos estan bien tipados pero otros habra que transformarlos, como puede ser el caso de la variable Mileage (Kilometraje) que está como Character ya que viene el número con su unidad de medida y habrá que decidir si ponerlo todo como km/kg o kmpl. Lo mismo nos pasa con Power (potencia) y New Price que a también vemos a simple vista, parece tener mucho elementos faltantes. La variable Seats (asientos) es un double cuando debería ser entera... Hay muchas cosas que cambiar para dar valor a estos datos.
+
+```{r Limpieza ColNames}
+colnames(data) <- c("X", "Name", "Location", "Year", "Total_Km", "Fuel_Type", "Transmission", "Owner_Type",
+                    "Mileage (km/l)", "Engine (CC)", "Power (bhp)", "Seats", "New_Price (Lakh)", "Price (Lakh)")
+
+```
+
+```{r Limpieza Mileage}
+Mileage <- substr(Mileage, 1, nchar(Mileage)-5)
+data
+```
+
+
+A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
+
+```{r missing data}
+#sum(is.na(data))
+md.pattern(data, plot = TRUE, rotate.names=TRUE)
+
+data %>% select(Name, Engine (CC), Seats, Power (bhp), New_Price (Lakh), Price (Lakh)) %>% filter(is.na(Engine (CC)) | is.na(Seats) | is.na(Power (bhp)) | is.na(New_Price (Lakh)) | is.na(Price (Lakh))) %>% arrange(Name) %>% distinct()
+
+data[!sapply(data, function(x) all(x == ""))] #Así identificamos las columnas que tienen valores faltantes
+```
+Al analizar los valores faltantes con md.pattern nos hemos dado cuenta de que algo no tenía sentido. Claramente la columna New_Price tenia valores faltantes pero no los detectaba. Esto es debido a que no estan marcados como Nan sino como valores vacíos y lo mismo nos pasa en columnas como Engine o Power, por lo tanto para saber la cantidad total de valores faltantes tendremos que contabilizar también los valores vacíos.
+
+
+```{r análisis variable "Year"}
+library(ggplot2)
+class(Year)
+unique(Year)
+h <- hist(Year)
+h
+sum(Year==2002)
+boxplot(Year,horizontal = TRUE)
+
+ggplot(data, aes(x=Year)) + geom_histogram(binwidth = 0.4,  fill="blue", colour="black")
+ggplot(data, aes(x=Year)) + geom_histogram(aes(y=..density..), binwidth = 0.4,  fill="blue", colour="black")+geom_density(colour="green", fill="green",alpha=0.3)
+```
+La primera variable que vamos a analizar es "Year", hace referencia al año en que vamos a estudiar cada coche. Se trata de una variable cuantitativa,ya que podemos calcular la diferencia entre fechas, en la que aparecen los años desde el 1996 hasta el 2018.  Obtenemos que en el año 1996 se contabilizan 5, en 1998 se contabilizan 7 , en 1999, 2, en el 2000, 26, en el 2001 tenemos 8 muestras, en el 2002 se tienen 18, en 2003 se tienen 20 y es a partir de 2004 donde se aprecia un crecimiento notable en cuanto al número de muestras, desde 157 hasta llegar incluso a 1815 en el año 2014. Esta variable está definida como "integer" y así la trataremos, ya que no nos da problema y nos aporta toda la información necesaria. Además, gracias al boxplot se aprecia que el 50% de los datos se encontrarán entre 2011 y 2017.
+
+```{r analisis variable Kilometers_driven}
+names(data)
+class(Kilometers_Driven)
+unique(Kilometers_Driven)
+sum(Kilometers_Driven>=55000)
+summary(Kilometers_Driven) #7253 es el total
+boxplot(Kilometers_Driven) # ese valor atípico q sale deberiamos plantearnos q hacer con él, es un valor excesivamente alto
+which(Kilometers_Driven==6500000) #posicion del valor atipico
+Kilometers_Driven
+kilometers <- Kilometers_Driven[-2329] #quito ese valor, solo por probar, yo le estudiaría aparte
+summary(kilometers)
+hist(kilometers)
+boxplot(kilometers, horizontal=TRUE)
+k <- hist(kilometers)
+k
+ggplot(data, aes(Kilometers_Driven))+geom_histogram(aes(y=..density..), bins=50, col="black", fill="white")+geom_density(col="blue")+scale_x_log10()
+```
+
+
+
+```{r analisis variable Fuel_Type}
+names(data)
+class(Fuel_Type)
+Fuel_Type
+unique(Fuel_Type)
+ggplot(data, aes(x=Fuel_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black") 
+summary(Fuel_Type)
+```
+La tercera variable que vamos a analizar es "Fuel_Type", que hace referencia al tipo de combustible que usa cada coche. Se trata de una variable cualitativa. Está representada en nuestros datos como factor y los valores que  toma son CNG,LPG, Electric, Diesel y Pretol. Vamos a describir cada uno de los valores que toma esta variable:
+    -CNG: El gas natural comprimido, más conocido por la sigla GNC, es un combustible para uso vehicular que, por ser económico y ambientalmente más limpio, ​ es considerado una alternativa sustentable para la sustitución de combustibles líquidos.
+    -LPG: El gas licuado del petróleo es la mezcla de gases licuados presentes en el gas natural o disueltos en el petróleo. Lleva consigo procesos físicos y químicos por ejemplo el uso de metano.
+    -Diésel: El diésel o dísel, también denominado gasóleo o gasoil, es un hidrocarburo líquido de densidad sobre 850 kg/m³, compuesto fundamentalmente por parafinas y utilizado principalmente como combustible en calefacción y en motores diésel. Su poder calorífico inferior es de 35,86 MJ/l.
+    -Petrol: La gasolina es formada con el petróleo refinado, utilizado principalmente como combustible, es esencial para la red mundial de transporte, el combustible primario que hace funcionar los motores de combustión interna que mueven la mayoría de los automóviles y otros sistemas de transporte.
+    
+De Electric, eléctricos es del tipo que menos muestras poseemos, sólo 2. De LPG y CNG también poseemos pocas (12 y 62 respectivamente) y es en Diesel y Petrol donde tenemos la mayoría de los datos, siendo 3852 y 3325 las muestras respectivamente. 
+Se muestra el histograma para visualizar la gran diferencia de muestras entre Diesel y Petróleo y las demás.
+
+```{r análisis variable Name}
+class(Name)
+Name
+unique(Name)
+summary(Name)
+
+```
+
+La siguiente variable, la cuarta que vamos a analizar, es "Name", que hace refencia al nombre completo de cada coche. Se trata de una variable definida como factor en nuestros datos en la que aparecen multitud de marcas de coche, más de 2000 entradas con distintos nombres. Más adelante, dividiremos los coches por Marca y posteriormente por modelo, para así generar una mejor agrupación de los datos. Según tenemos distribuida la variable es difícil representarla visualmente con gráficos que sean comprensibles y útiles.
+
+
+```{r analisis variable Location}
+class(Location)
+summary(Location) 
+ggplot(data, aes(x=Location)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+```
+
+
+```{r analisis variable Transmission}
+class(Transmission)
+summary(Transmission)
+ggplot(data, aes(x=Transmission)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+##podemos añadir tambien el porcentaje de los que son de cada tipo
+```
+
+Seguimos con el análisis univariante, ahora con "Transmission". Se trata de una variable cualitativa binaria, en la que podemos distinguir entre los coches automáticos y manuales. Una transmisión manual es una caja de cambios que no puede alterar la relación de cambio por sí sola, requiriendo la intervención del conductor para hacer esto y sin embargo, una transmisión automática es una caja de cambios de automóviles u otro tipo de vehículos que puede encargarse por sí misma de cambiar la relación de cambio automáticamente a medida que el vehículo se mueve, liberando así al conductor de la tarea de cambiar de marcha manualmente. Se tienen 2049 muestras de automáticos y 5204 de manuales. Tenemos la variable como factor en nuestros datos, en este caso, al ser sólo dos valores, es perfecto para nuestro análisis.
+
+```{r analisis variable Owner_Type}
+class(Owner_Type)
+summary(Owner_Type)
+ggplot(data, aes(x=Owner_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
+
+```
+La siguiente variable a analizar es "Owner_Type", que hace referencia a la clase de propietario, es decir, si el conductor está configurado como primer, segundo o tercero. Se trata de una variable cualitativa en la que podemos distinguir entre los valores: First, Second, Third y Fourth&Above. Del valor que menos muestras tenemos es Fourth&Above con 12 de ellas, después, Third con 137, y en Second y First aumentan considerablemente (1152 y 5952, respectivamente) por lo que será mucho más preciso el análisis a la hora de correlacionar variables. Realizamos el histograma para apreciar la diferencia entre el número de muestras de cada tipo.
+
+
+```{r analisis variable Mileage}
+class(Mileage)
+summary(Mileage)
+unique(Mileage)
+ggplot(data, aes(x=Mileage, y = Price)) + geom_point()
+```
+Seguimos con el análisis univariante de la variable "Mileage" que hace referencia al kilometraje del coche y está expresado en kilómetros por litro. Se trata de una variable cuantitativa continua que toma muchos y distintos valores que posteriormente agruparemos por intervalo. En nuestros datos está expresada como factor, lo mejor sería convertirlo a integer o float para así poder realizar gráficos para visualizar cada una de las muestras. No tiene sentido trabajarla como factor pero la trabajaremos más adelante. Tampoco se ha realizado el gráfico porque visualmente no ayuda.
+
+
+
+```{r análisis variable Engine}
+class(Engine)
+summary(Engine)
+unique(Engine)
+ggplot(data, aes(x=Engine)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
+```
+
+```{r analisis variable Power}
+class(Power)
+summary(Power)
+unique(Power)
+ggplot(data, aes(x=Power)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
+```
+
+```{r analisis variable Seats}
+class(Seats)
+summary(Seats)
+unique(Seats)
+boxplot(Seats) # ese valor atípico q sale deberiamos plantearnos q hacer con él, es un valor excesivamente alto
+Seats
+hist(Seats)
+boxplot(Seats, horizontal=TRUE)
+s <- hist(Seats)
+s
+```
+Esta variable "Seats" hace referencia al número de asientos que tiene el coche. Es una variable cuantitativa discreta ya que son valores exactos y además se trata como numeric, que viene perfecto para nuestro análisis. Se aprecia que aparece una de las opciones con Seats=0 cuyo valor es NA, de momento no lo tenemos en cuenta pero posteriormente valoraremos que hacer con los datos faltantes que serán también de gran importancia en nuestro análisis. La mayoría de los coches poseen 5 asientos y se le acercan también los coches de 7 y 8 plazas, mucho más comunes en personas con muchos hijos o que necesiten los coches para transportar más personas de lo "común".
+Si nos fijamos en el summary como hemos dicho antes la media está en 5.28, aproximadamente 5 y contamos con 53 valores NA's.
+
+
+```{r analisis variable New_price}
+class(New_Price)
+summary(New_Price)
+unique(New_Price)
+```
+
+
+```{r analisis variable Price}
+class(Price)
+summary(Price)
+boxplot(Price)
+p <- hist(Price)
+p
+Price
+ggplot(data, aes(x=Price)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
+```
+```{r analisis Year + Price}
+ggplot(data, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+```
+
+
+
+
+
+
+
+
+
+
