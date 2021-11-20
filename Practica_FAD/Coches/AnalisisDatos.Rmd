@@ -28,15 +28,27 @@ glimpse(data)
 Con esta forma de visualización podemos observar mejor la naturaleza de los datos.
 Tenemos 7253 observaciones
 14 columnas 
-Y a simple vista vemos que muchos datos estan bien tipados pero otros habra que transformarlos, como puede ser el caso de la variable Mileage (Kilometraje) que está como Character ya que viene el número con su unidad de medida y habrá que decidir si ponerlo todo como km/kg o kmpl. Lo mismo nos pasa con Power (potencia) y New Price que a también vemos a simple vista, parece tener mucho elementos faltantes. La variable Seats (asientos) es un double cuando debería ser entera... Hay muchas cosas que cambiar para dar valor a estos datos
+Y a simple vista vemos que muchos datos estan bien tipados pero otros habra que transformarlos, como puede ser el caso de la variable Mileage (Kilometraje) que está como Character ya que viene el número con su unidad de medida y habrá que decidir si ponerlo todo como km/kg o kmpl. Lo mismo nos pasa con Power (potencia) y New Price que a también vemos a simple vista, parece tener mucho elementos faltantes. La variable Seats (asientos) es un double cuando debería ser entera... Hay muchas cosas que cambiar para dar valor a estos datos.
+
+```{r Limpieza ColNames}
+colnames(data) <- c("X", "Name", "Location", "Year", "Total_Km", "Fuel_Type", "Transmission", "Owner_Type",
+                    "Mileage (km/l)", "Engine (CC)", "Power (bhp)", "Seats", "New_Price (Lakh)", "Price (Lakh)")
+
+```
+
+```{r Limpieza Mileage}
+Mileage <- substr(Mileage, 1, nchar(Mileage)-5)
+data
+```
+
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
 
 ```{r missing data}
-sum(is.na(data))
+#sum(is.na(data))
 md.pattern(data, plot = TRUE, rotate.names=TRUE)
 
-data %>% select(Name, Engine, Seats, Power, New_Price, Price) %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power) | is.na(New_Price) | is.na(Price)) %>% arrange(Name) %>% distinct()
+data %>% select(Name, Engine (CC), Seats, Power (bhp), New_Price (Lakh), Price (Lakh)) %>% filter(is.na(Engine (CC)) | is.na(Seats) | is.na(Power (bhp)) | is.na(New_Price (Lakh)) | is.na(Price (Lakh))) %>% arrange(Name) %>% distinct()
 
 data[!sapply(data, function(x) all(x == ""))] #Así identificamos las columnas que tienen valores faltantes
 ```
@@ -72,7 +84,7 @@ hist(kilometers)
 boxplot(kilometers, horizontal=TRUE)
 k <- hist(kilometers)
 k
-ggplot(data, aes(Kilometers_Driven))+geom_histogram(aes(y=..density..), bins=50)+geom_density()+scale_x_log10()
+ggplot(data, aes(Kilometers_Driven))+geom_histogram(aes(y=..density..), bins=50, col="black", fill="white")+geom_density(col="blue")+scale_x_log10()
 ```
 
 
@@ -114,7 +126,6 @@ ggplot(data, aes(x=Location)) + geom_histogram(stat="count",binwidth = 0.4,  fil
 
 ```{r analisis variable Transmission}
 class(Transmission)
-Transmission
 summary(Transmission)
 ggplot(data, aes(x=Transmission)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
 ##podemos añadir tambien el porcentaje de los que son de cada tipo
