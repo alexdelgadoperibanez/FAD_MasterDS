@@ -186,6 +186,9 @@ p
 Price
 ggplot(data, aes(x=Price)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
 ```
+```{r analisis Year + Price}
+ggplot(data, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+```
 
 
 
