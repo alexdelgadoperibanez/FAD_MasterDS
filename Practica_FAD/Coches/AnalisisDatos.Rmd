@@ -14,6 +14,8 @@ library(readr)
 library(mice)
 #install.packages("stringr")
 library(stringr)
+#install.packages("ggplot2")
+library(ggplot2)
 ```
 ```{r}
 getwd() #obtener el directorio en el que estas 
@@ -58,13 +60,15 @@ data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% 
 AQUI TENGO QUE PONER TODO EL TEMA DE QUE HAY DOS VARIABLES Y QUE HAY QUE SEPARAR, ETC ETC ETC. LO DEJO EN BLANCO DE MOMENTO.
 
 ```{r Modificación de Datos}
-data$Fuel_Type <- as.factor(data$Fuel_Type) # Los pongo como factores porque a mi no me aparecen así, asique de esta manera nos aseguramos
-data$Transmission <- as.factor(data$Transmission)
-data$Location <- as.factor(data$Location)
-
 data <- data %>%
   mutate(Seats = as.integer(Seats)) %>%
-  mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth/Above")))
+  mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
+  mutate(Transmission = as.factor(Transmission)) %>%
+  mutate(Location = as.factor(Location)) %>%
+  mutate(Engine = as.integer(str_extract(Engine, "^[:graph:]+"))) %>%
+  mutate(Power = as.numeric(str_extract(Power, "^[:graph:]+"))) %>%
+  mutate(New_Price = as.numeric(str_extract(New_Price, "^[:graph:]+"))) %>%
+  mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth", "Above")))
 
 data <- data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) %>% 
     mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
@@ -76,14 +80,6 @@ data <- data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+")
 # mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) y con esto creo las nuevas columnas, la función ifelse lo que hace es que si se cumple la condicion, pone el valor de Mileage y sino pone 0, por eso al final se pone Mileage, 0. Mileage para los True y 0 para los False
 
 # select(-Mileage) excluimos la columna
-```
-
-
-```{r Limpieza Variables}
-data$Engine <- substr(Engine, 1, nchar(Engine)-3) %>% as.integer() #Al final junto todo en el mismo bloque
-data$Power <- substr(Power, 1, nchar(Power)-4) %>% as.integer()
-data$New_Price <- substr(New_Price, 1, nchar(New_Price)-4) %>% as.double()
-data
 ```
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
@@ -100,7 +96,6 @@ Al analizar los valores faltantes con md.pattern nos hemos dado cuenta de que al
 
 
 ```{r análisis variable "Year"}
-library(ggplot2)
 class(Year)
 unique(Year)
 h <- hist(Year)
