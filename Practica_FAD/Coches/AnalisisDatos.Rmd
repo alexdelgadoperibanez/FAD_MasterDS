@@ -5,7 +5,6 @@ date: "16/11/2021"
 output: html_document
 ---
 
-Carga de librerías
 ```{r}
 library(dplyr)
 # install.packages("readr")
@@ -83,6 +82,7 @@ class(Engine)
 
 # select(-Mileage) excluimos la columna
 ```
+##Análisis valores faltantes
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
 
@@ -105,21 +105,19 @@ data_na
 # Asignamos 1 a los valores TRUE (es decir a los NA), y sumamos todos.
 vectorDeNAs = which(apply(data_na,1,sum)>0)
 vectorDeNAs
-#Quiero que las celdas vacías se conviertan en NA
-data[apply(data, 2, function(Price) Price=="")] = NA
-Price[which(Price == "unknown")] <- NA
-
-
 sapply(data, function(x) sum(is.na(x)))
 apply(is.na(data), 2, mean) #porcentaje na por columna  
 apply(is.na(data), 2, which)  # Posición de NA por columna
-
+p= dim(data)[2]
+number_na = apply(data[,-c(p-1,p)],1,function(x) sum(is.na(x)))
+table(number_na)
 
 
 
 ```
-```
+Esto quiere decir que existen 824 muestras sin valores faltantes, 5043 muestras con un NA en una de las variables, 111 con 2 valores faltantes y a partir de ahí ya apenas son significativos los NA.
 
+##Análisis Univariante
 
 ```{r análisis variable "Year"}
 class(Year)
@@ -177,7 +175,6 @@ Se muestra el histograma para visualizar la gran diferencia de muestras entre Di
 ```{r análisis variable Name}
 class(Name)
 Name
-unique(Name)
 summary(Name)
 
 ```
@@ -208,13 +205,13 @@ summary(Owner_Type)
 ggplot(data, aes(x=Owner_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="blue", colour="black", ordered=TRUE)
 
 ```
+
 La siguiente variable a analizar es "Owner_Type", que hace referencia a la clase de propietario, es decir, si el conductor está configurado como primer, segundo o tercero. Se trata de una variable cualitativa en la que podemos distinguir entre los valores: First, Second, Third y Fourth&Above. Del valor que menos muestras tenemos es Fourth&Above con 12 de ellas, después, Third con 137, y en Second y First aumentan considerablemente (1152 y 5952, respectivamente) por lo que será mucho más preciso el análisis a la hora de correlacionar variables. Realizamos el histograma para apreciar la diferencia entre el número de muestras de cada tipo.
 
 
 ```{r analisis variable Mileage}
 class(Mileage)
 summary(Mileage)
-unique(Mileage)
 ggplot(data, aes(x=Mileage, y = Price)) + geom_point()
 ```
 
@@ -236,6 +233,7 @@ class(Power)
 summary(Power)
 ggplot(data, aes(x=Power)) + geom_histogram(stat="count",binwidth = 0.2,  fill="blue", colour="black", ordered=TRUE)
 ```
+
 Esta variable hace referencia a la potencia del motor. Se trata de una variable cuantitativa continua en la que el mínimo es 34.2 y el máximo 560 con media 113.3 y donde el 50% de los datos se encuentran entre 75 y 138. Además, existen 143 valores faltantes que serán de gran importancia en nuestro análisis.
 
 ```{r analisis variable Seats}
@@ -249,6 +247,7 @@ boxplot(Seats, horizontal=TRUE)
 s <- hist(Seats)
 s
 ```
+
 Esta variable "Seats" hace referencia al número de asientos que tiene el coche. Es una variable cuantitativa discreta ya que son valores exactos y además se trata como numeric, que viene perfecto para nuestro análisis. Se aprecia que aparece una de las opciones con Seats=0 cuyo valor es NA, de momento no lo tenemos en cuenta pero posteriormente valoraremos que hacer con los datos faltantes que serán también de gran importancia en nuestro análisis. La mayoría de los coches poseen 5 asientos y se le acercan también los coches de 7 y 8 plazas, mucho más comunes en personas con muchos hijos o que necesiten los coches para transportar más personas de lo "común".
 Si nos fijamos en el summary como hemos dicho antes la media está en 5.28, aproximadamente 5 y contamos con 53 valores NA's.
 
@@ -272,9 +271,17 @@ ggplot(data, aes(x=Price)) + geom_histogram(breaks=seq(0,160,by=10), stat="count
 ```
 La variable Price será nuestra variable respuesta. Trataremos de estimar el precio de un coche en base a todas las demás características. El precio está expresado en Rupias y en nuestros datos como numeric. Haciendo un summary vemos que el mínimo precio es de 0.440 y el máximo de 160 que al estar tan lejos de la media se entiende que hay pocos coches que tengan un precio tan alto. La media está en 9.47 rupias y el 50% de los coches tienen un precio de entre 3.5 y 9.95. 
 
+##NA
+Tras el análisis univariante y la eliminación de la variable "New Price" desaparecen muchos valores faltantes, por lo que ello favorecerá el estudio. Lo vemos aquí:
+
+```{r}
+number_na = apply(data[,-c(p-1,p)],1,function(x) sum(is.na(x)))
+table(number_na)
+```
+Ahora vemos que se reduce significativamente el número de NA. Existen 5867 muestras que no tienen ningún NA, 111 que tienen un valor faltante, 5 que tienen dos NA y 35 que tienen 3 NA's. Vamos a estudiar que hacer con ellos, posiblemente sean eliminados ya que en porcentaje con respecto a nuestros datos, no aportan nada. 
 
 
-####CORRELACIÓN ENTRE VARIABLES 
+##Correlación entre variables 
 
 ```{r}
 pairs(data[,1:13],pch=19)
@@ -283,7 +290,8 @@ pairs(data[,1:13],pch=19)
 
 Para analizar la correlación entre variables, primero mostraremos la matriz de varianzas y covarianzas, y la matriz de correlaciones entre variables, que no aparecen al hacer `summary` y también nos proporcionan información importante.
 
-```{r corr 1}
+```{r}
+data <- na.omit(data) #omito na's para la correlacion, de momento
 var(data) # Matriz de varianzas y covarianzas
 cor(data) # Matriz de correlaciones
 ```
@@ -298,58 +306,95 @@ Además para ver mejor la correlación entre variables que, calculamos más arri
 
 
 ```{r corr 2}
-install.packages("ellipse")
+#install.packages("ellipse")
 library(ellipse)
 library(corrplot)
 library(ggplot2)
 library(ggcorrplot)
+install.packages("Hmisc")
+install.packages("corrplot")
+library(corrplot)
+library(Hmisc)
 plotcorr(cor(data)) # Para ver la correlación mejor
 plotcorr(cor(data),numbers=TRUE) # Para ver la correlación mejor
 corrplot.mixed(corr = cor(data,method = "pearson"))
+library(GGally)
+ggpairs(data)
+ggplot(data, aes(x = x, y = y, fill = valor)) +
+  geom_tile(color = "black") +
+  geom_text(aes(label = valor), color = "white", size = 4) +
+  coord_fixed()
+
+rcorr(as.matrix(data))
 ```
 
 Con estos gráficos podemos ver rápidamente cuáles son las variables más correlacionadas con la variable respuesta y entre ellas mismas.
 
 ```{r analisis Year + Price}
+library(PerformanceAnalytics)
+#install.packages("PerformanceAnalytics")
 ggplot(data, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+dat1 <- data.frame(Year, Price)
+chart.Correlation(dat1)
 ```
 
 ```{r analisis Name+ Price}
+Name <- as.numeric(Name) #Aquí deberíamos hacer lo de clasificar todos los coches por marca, y ver si la marca influye. Asi no tiene mucho sentido
 ```
 
 
 ```{r análisis Location+Price}
+ggplot(data, aes(Location, Price))+geom_boxplot(aes(group=Location))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 ```{r analisis Kilometers_Driven+Precio}
+ggplot(data, aes(Kilometers_Driven, Price))+geom_boxplot(aes(group=Kilometers_Driven))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 
 ```{r análisis FuelType+Precio}
+ggplot(data, aes(Fuel_Type, Price))+geom_boxplot(aes(group=Fuel_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 ```{r análisis Transmission+Precio}
+ggplot(data, aes(Transmission, Price))+geom_boxplot(aes(group=Transmission))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 
 ```{r análisis OwnerType + Precio}
+ggplot(data, aes(Owner_Type, Price))+geom_boxplot(aes(group=Owner_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 ```{r análisis Engine+Precio}
+ggplot(data, aes(Engine, Price))+geom_boxplot(aes(group=Engine))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+d <- data.frame(Engine, Price)
+chart.Correlation(d)
 ```
 
 ```{r análisis Power+Precio}
+ggplot(data, aes(Power, Price))+geom_boxplot(aes(group=Power))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+dat12 <- data.frame(Power, Price)
+chart.Correlation(dat12)
 ```
 
 
 ```{r  análisis Seats+Precio}
+ggplot(data, aes(Seats, Price))+geom_boxplot(aes(group=Seats))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 ```
 
 ```{r análisis kmpl+Price}
+ggplot(data, aes(kmpl, Price))+geom_boxplot(aes(group=kmpl))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+dat1234 <- data.frame(kmpl, Price)
+chart.Correlation(dat1234)
 ```
 
 
-```{r análisis kmpkg+ Price}
+```{r análisis kmpkg+ Price} 
+ggplot(data, aes(kmpkg, Price))+geom_boxplot(aes(group=kmpkg))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+dat4 <- data.frame(kmpkg, Price)
+chart.Correlation(dat4)
+kmpkg
+#tanto aquí como en la anterior hay que pensar qué hacer con los valores que son 0
 ```
 
 
