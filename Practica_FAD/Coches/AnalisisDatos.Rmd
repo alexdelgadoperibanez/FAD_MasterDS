@@ -15,6 +15,9 @@ library(mice)
 library(stringr)
 #install.packages("ggplot2")
 library(ggplot2)
+#install.packages("tidyverse")
+library(tidyverse)
+library(gridExtra)
 ```
 
 
@@ -49,48 +52,45 @@ Con esta forma de visualización podemos observar mejor la naturaleza de los dat
 ### Price -> El precio del coche usado en INR Lakhs (Rupias).
 
 ```{r}
-data %>% pull(Mileage) %>% str_split(" ", simplify=TRUE) %>% cbind(data$Fuel_Type) %>% subset(select=2:3) %>% as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
+data %>% pull(Mileage) %>% str_split(" ", simplify=TRUE) %>% cbind(Fuel_Type) %>% subset(select=2:3) %>% as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
 
 data %>% pull(Engine) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
 
 data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
+
+data %>% pull(New_Price) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table()
 
 ```
 
 AQUI TENGO QUE PONER TODO EL TEMA DE QUE HAY DOS VARIABLES Y QUE HAY QUE SEPARAR, ETC ETC ETC. LO DEJO EN BLANCO DE MOMENTO.
 
 ```{r Modificación de Datos}
-data <- data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) %>% 
+data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) %>% 
     mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
     mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
-    select(-Mileage)
+    select(-Mileage) -> data
 
-data <- data %>%
+data %>% mutate(Engine = as.numeric(str_extract(Engine, "^[:graph:]+"))) -> data
+data %>% mutate(Power = as.numeric(str_extract(Power, "^[:graph:]+"))) -> data
+
+data %>%
   mutate(Seats = as.integer(Seats)) %>%
+  mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> data
+
+data %>%
   mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
   mutate(Transmission = as.factor(Transmission)) %>%
   mutate(Location = as.factor(Location)) %>%
-  mutate(Engine = as.integer(str_extract(Engine, "^[:graph:]+"))) %>%
-  mutate(Power = as.numeric(str_extract(Power, "^[:graph:]+"))) %>%
-  mutate(New_Price = as.numeric(str_extract(New_Price, "^[:graph:]+"))) %>%
-  mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth&Above")))
+  mutate(New_Price = as.numeric(str_extract(New_Price, "^[:graph:]+"))) -> data
+
 attach(data)
-class(Engine)
-# as.numeric(str_extract(Mileage, "^[:graph:]+")) aqui lo que hago es seleccionar del inicio de todas las filas (^) todas (+) los numeros y signos de puntuación hasta que hay espacio [:graph:] y lo transformo en numerico
-
-# mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) y con esto creo las nuevas columnas, la función ifelse lo que hace es que si se cumple la condicion, pone el valor de Mileage y sino pone 0, por eso al final se pone Mileage, 0. Mileage para los True y 0 para los False
-
-# select(-Mileage) excluimos la columna
 ```
 ##Análisis valores faltantes
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
 
 ```{r missing data}
-sum(is.na(data))
 md.pattern(data, plot = TRUE, rotate.names=TRUE)
-
-data %>% select(Name, Engine, Seats, Power, New_Price, Price) %>% filter(is.na(Engine | is.na(Seats) | is.na(Power) | is.na(New_Price ) | is.na(Price))) %>% arrange(Name) %>% distinct()
 ```
 
 
@@ -101,23 +101,107 @@ Vamos a buscar en qué variables y en qué medida de nuestro conjunto de datos h
 ```{r encontrar NAs en el caso de que aparezcan en nuestro conjunto}
 # Convertimos nuestro set de datos en un set de booleanos que contendrá TRUE en la celda en la que haya un NA
 data_na = is.na(data)
-data_na
+#data_na
 # Asignamos 1 a los valores TRUE (es decir a los NA), y sumamos todos.
 vectorDeNAs = which(apply(data_na,1,sum)>0)
-vectorDeNAs
-sapply(data, function(x) sum(is.na(x)))
+#vectorDeNAs
+#sapply(data, function(x) sum(is.na(x)))
 apply(is.na(data), 2, mean) #porcentaje na por columna  
-apply(is.na(data), 2, which)  # Posición de NA por columna
-p= dim(data)[2]
-number_na = apply(data[,-c(p-1,p)],1,function(x) sum(is.na(x)))
-table(number_na)
-
-
+#apply(is.na(data), 2, which)  # Posición de NA por columna
+#p= dim(data)[2]
+#number_na = apply(data[,-c(p-1,p)],1,function(x) sum(is.na(x)))
+#table(number_na)
 
 ```
 Esto quiere decir que existen 824 muestras sin valores faltantes, 5043 muestras con un NA en una de las variables, 111 con 2 valores faltantes y a partir de ahí ya apenas son significativos los NA.
 
-##Análisis Univariante
+-----------------------------------------------
+Se observa claramente que al 86% de los registros les falta datos de la variable New_price, por lo que vamos a proceder a su eliminación ya que la imputación de NA es inviable. También eliminaremos la columna 'X' ya que no es más que el indice duplicado.
+
+```{r}
+data %>% select(-New_Price) -> data
+data %>% select(-X) -> data
+```
+
+Podemos volver a analizar los valores faltantes ahora que hemos eliminado la columna New_Price
+
+```{r missing data2}
+md.pattern(data, plot = TRUE, rotate.names=TRUE)
+```
+Como podemos ver ahora, hay 4 tipos de valores faltantes.
+-36 coches que tienen valores faltantes en las columnas Engine, Seats y Power
+-4 coches que tienen valores faltantes en las columnas de Seats y Power
+-2 coches que no tienen datos de Seats
+-103 coches que no tienen ni un solo dato de Power
+
+```{r}
+data %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power))
+```
+
+Los datos faltantes se podrían rellenar buscando información en internet o completandolos con los datos de coches con el mismo nombre. Vamos a probar esto.
+
+```{r}
+data %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power)) %>% pull(Name) %>% unique() -> missing_cars # guardamos los coches que tienen faltantes
+
+data %>% group_by(Name) %>% fill(Engine, Power, Seats) %>% ungroup() -> data #sacamos de data esos coches
+
+md.pattern(data, plot = TRUE, rotate.names=TRUE)
+```
+Se puede apreciar que el número de valores faltantes disminuye pero no de forma significativa. Aún tenemos más de 120 coches con valores faltantes y dado que la mayoría tiene muchas especificaciones dentro de su propio nombre, buscar los valores que faltan coche por coche es tedioso y puede que no afecte mucho al resultado final del análisis. 
+Procedemos a eleminiar todos los registros con valores faltantes en lugar de imputarlos.
+
+```{r}
+data %>% drop_na() -> data
+```
+
+Por lo antes comentado de los nombres, vamos a crear una nueva variable llamada *Marca*, la razón de crear esta variable es la de separar la Marca del tipo de coche ya que ambos estan juntos en la variable *Name*.
+
+```{r new variable}
+str_split(data$Name, " ", simplify=TRUE) %>% subset(select=1) %>% unique() -> car_makes
+car_makes[car_makes=="Land"] <- "Land Rover" #Anomalía en los datos
+car_makes_regex <- paste(car_makes, collapse="|")
+str_extract(data$Name, car_makes_regex) -> make
+data %>% mutate(Make = str_to_title(make)) -> data
+```
+
+Ahora ya podemos separar el dataset en sets para train y test.
+
+```{r train test sets} 
+# 80% del tamaño de la muestra
+smp_size <- floor(0.8 * nrow(data))
+
+# establecemos la semilla para que su partición sea reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(data)), size = smp_size)
+
+train <- data[train_ind, ]
+test <- data[-train_ind, ]
+
+rm(train_ind)
+```
+A partir de ahora solo trabajaremos con train
+
+##Exploración de los datos
+
+Nuestra variable respuesta va a ser: *Price*
+Por lo que en primer lugar, vamos a ver la distribución de esta variable.
+
+```{r}
+train %>% ggplot() + 
+  geom_histogram(aes(Price, ..density..), bins=80) + 
+  geom_density(aes(Price))
+```
+
+La distrubución es demasiado sesgada, volvemos a probar usando una distribución logaritmica
+
+```{r}
+train %>% ggplot() + 
+  geom_histogram(aes(Price, ..density..), bins=80) + 
+  geom_density(aes(Price)) +
+  scale_x_log10()
+```
+
+Esto remedia la asimetría, por lo que transformaremos la variable antes de modelarla. Para la exploración seguiremos utilizando la escala logarítmica, pero no transformaremos realmente la variable *Price* en el conjunto de datos.
 
 ```{r análisis variable "Year"}
 class(Year)
@@ -173,13 +257,22 @@ De Electric, eléctricos es del tipo que menos muestras poseemos, sólo 2. De LP
 Se muestra el histograma para visualizar la gran diferencia de muestras entre Diesel y Petróleo y las demás.
 
 ```{r análisis variable Name}
-class(Name)
-Name
-summary(Name)
-
+grid.arrange(
+  ggplot(train, aes(reorder(Make, Price, median), Price)) +
+    geom_boxplot() +
+    scale_y_log10() + 
+    coord_flip(),
+  ggplot(train, aes(reorder(Make, Price, median))) + 
+    geom_bar(stat="count") +
+    theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+    coord_flip(),
+      ncol=3, nrow=1,
+      layout_matrix=t(c(1,1,2))
+)
 ```
 
-La siguiente variable, la cuarta que vamos a analizar, es "Name", que hace refencia al nombre completo de cada coche. Se trata de una variable definida como factor en nuestros datos en la que aparecen multitud de marcas de coche, más de 2000 entradas con distintos nombres. Más adelante, dividiremos los coches por Marca y posteriormente por modelo, para así generar una mejor agrupación de los datos. Según tenemos distribuida la variable es difícil representarla visualmente con gráficos que sean comprensibles y útiles.
+Lo que podemos ver es que hay mas marcas baratas que caras. Las marcas más caras son las de coches de lujo y hay muy pocos coches de este tipo en este dataset. 
+Por otro lado, hay muchos coches de gama media de precio decente, como Hyundai y Maruti. Esto nos da una pista de que la marca de un coche puede determinar su precio.
 
 
 ```{r analisis variable Location}
