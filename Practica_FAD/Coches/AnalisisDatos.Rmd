@@ -20,9 +20,19 @@ library(tidyverse)
 library(gridExtra)
 library(gmodels)
 #install.packages("Hmisc")
-#library(Hmisc)
+library(Hmisc)
 #install.packages("ggthemes")
 library(ggthemes)
+#install.packages("ellipse")
+library(ellipse)
+library(corrplot)
+library(ggcorrplot)
+#install.packages("corrplot")
+library(corrplot)
+library(leaps)
+#install.packages("PerformanceAnalytics")
+library(PerformanceAnalytics)
+library(GGally)
 ```
 
 
@@ -385,23 +395,13 @@ Para analizar la correlación entre variables mostramos tres gráficos (utilizan
 
 
 ```{r corr 2}
-#install.packages("ellipse")
-library(ellipse)
-library(corrplot)
-library(ggplot2)
-library(ggcorrplot)
-#install.packages("Hmisc")
-#install.packages("corrplot")
-library(corrplot)
-library(Hmisc)
+
 
 ```
 
 Con estos gráficos podemos ver rápidamente cuáles son las variables más correlacionadas con la variable respuesta y entre ellas mismas.
 
 ```{r analisis Year + Price}
-library(PerformanceAnalytics)
-install.packages("PerformanceAnalytics")
 ggplot(train, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 dat1 <- data.frame(Year, Price)
 chart.Correlation(dat1)
@@ -409,7 +409,7 @@ chart.Correlation(dat1)
 plotcorr(cor(Year,Price)) # Para ver la correlación mejor
 plotcorr(cor(train),numbers=TRUE) # Para ver la correlación mejor
 corrplot.mixed(corr = cor(train,method = "pearson"))
-library(GGally)
+
 ggpairs(train)
 ggplot(train, aes(x = x, y = y, fill = valor)) +
   geom_tile(color = "black") +
@@ -558,6 +558,46 @@ kmpkg
 ```
 
 #AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
+
+```{r}
+cor(train$Price, train$Year)
+cor(train$Price, train$Power)
+cor(train$Price, train$Engine)
+cor(train$Price, train$kmpl)
+cor(train$Price, train$kmpkg)
+
+pairs(train[, c(3, 8, 9, 11, 13, 14)])
+```
+```{r}
+#Trabajos con las variables cuantitativas
+reg.fit.selec=regsubsets(x=train[, c(3, 8, 9, 13, 14)],y=train$Price)
+reg.summary=summary(reg.fit.selec)
+summary(reg.fit.selec)
+```
+```{r criterios}
+names(reg.summary) #criterios o estadisticos para comparar modelos
+#Estadisticos R^2:
+reg.summary$rsq
+#Estadisticos R^2 ajustado:
+reg.summary$adjr2
+```
+
+```{r}
+par(mfrow=c(1,2))
+#rsq es la R2 prque en teoria dice que el mejor modelo minimiza R2 y adjusted rsq será algo parecido a R2 ajustada que era maximizar
+plot(reg.summary$rss ,xlab="Numero de variables ",ylab="RSS",
+     type="l") #aqui usamos rss
+plot(reg.summary$adjr2 ,xlab="Numero de variables ",
+     ylab="R2 ajustada",type="l")
+which.max(reg.summary$adjr2)
+points(4,reg.summary$adjr2[4], col="red",cex=2,pch=20)
+```
+
+```{r}
+
+```
+
+
 
 
 
