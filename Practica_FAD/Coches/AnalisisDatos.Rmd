@@ -87,6 +87,7 @@ data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% 
 
 data %>% pull(New_Price) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table()
 ```
+
 Podemos observar que en Fuel_Type y New_Price tenemos diferentes tipos de unidades. Más adelante dividiremos en dos variables distintas.
 
 ```{r Modificación de datos}
@@ -389,14 +390,19 @@ Para analizar la correlación entre variables mostramos tres gráficos (utilizan
 
 - En el primero lo que haremos será ver la correlación con elipses. Cuanto más circular sea menos correlación habrá entre las variables y cuanto más recta más correlación habrá.
 
-- En el segundo lo que haremos será ver la correlación con una escala numérica de 0 a 10. El 0 indica ausencia de relación lineal y el 10 indica relación lineal perfecta.
+- En el segundo lo que haremos será ver la correlación con una escala numérica de 0 a 1. El 0 indica ausencia de relación lineal y el 1 indica relación lineal perfecta.
 
 - En el tercero, usando la escala que tenemos en el lateral, vemos que cuanto más oscuro y grande es el círculo, mayor relación lineal hay (azul si es positiva y rojo si es negativa), y cuanto más claro y pequeño es el círculo, menor relación lineal hay (azul si es positiva y rojo si es negativa).
 
+Lo hacemos únicamente, de momento, con las variables numéricas.
 
 ```{r corr 2}
-
-
+#install.packages("psych")
+library(psych)
+corrplot(cor(train[, c(3, 8, 9, 11, 13, 14)]), method = "ellipse") 
+corPlot(train[, c(3, 8, 9, 11, 13, 14)], cex = 1.2, main = "Matriz de correlación")
+corrplot(cor(train[, c(3, 8, 9, 11, 13, 14)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
+         addrect =2,rect.col = 3,rect.lwd = 3)  
 ```
 
 Con estos gráficos podemos ver rápidamente cuáles son las variables más correlacionadas con la variable respuesta y entre ellas mismas.
