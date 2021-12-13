@@ -548,7 +548,7 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
-Se aprecia una buena e igualada dstribución en el precio de los coches en función del número de asientos que posean. Puede parecer extraño que los más caros sean los coches biplaza pero son muy valorados debido a su comodidad, bajo consumo, manejabilidad y adaptación a la carretera. Es evidente que el número de plazas en el coche a igualdad de condiciones, afectará pero no parece altamente significativo en este dataset. También es cierto que coches biplaza sólo tenemos 11 en este dataset y es dificil sacar una conclusión con certeza.
+Se aprecia una buena e igualada dstribución en el precio de los coches en función del número de asientos que posean. Los más caros son los biplaza debido, seguramente, a que las marcas de lujo como Lamborguini y Bently venden sobretodo deportivos biplaza. Es evidente que el número de plazas en el coche a igualdad de condiciones, afectará pero no parece altamente significativo en este dataset. También es cierto que coches biplaza sólo tenemos 11 en este dataset y es dificil sacar una conclusión con certeza.
 
 ```{r análisis kmpl+Price}
 ggplot(train, aes(kmpl, Price))+geom_boxplot(aes(group=kmpl))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
@@ -560,29 +560,30 @@ chart.Correlation(dat1234)
 ggplot(train, aes(kmpkg, Price))+geom_boxplot(aes(group=kmpkg))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 dat4 <- data.frame(train$kmpkg, train$Price)
 chart.Correlation(dat4)
-kmpkg
+#kmpkg
 ```
 La relación entre el kilometraje y el precio no va a ser diferencial ni significativa en nuestro análisis. 
 
-En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de conbustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y elnúmero de plazas que posee
+En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de combustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y el número de plazas que posee
 
 #AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
 
 ```{r}
-cor(train$Price, train$Year)
-cor(train$Price, train$Power)
-cor(train$Price, train$Engine)
-cor(train$Price, train$kmpl)
-cor(train$Price, train$kmpkg)
-
-pairs(train[, c(3, 8, 9, 11, 13, 14)])
+cor(train[, c(3, 8, 9, 11)])
 ```
 ```{r}
 #Trabajos con las variables cuantitativas
-reg.fit.selec=regsubsets(x=train[, c(3, 8, 9, 13, 14)],y=train$Price)
+reg.fit.selec=regsubsets(x=train[, c(3, 8, 9, 10)], y=train$Price)
 reg.summary=summary(reg.fit.selec)
 summary(reg.fit.selec)
 ```
+
+Vamos a proceder a seleccionar ls variables con las que vamos a hacer la regresión, empezamos con las variables cuantitativas unicamente.
+El mejor modelo con una variable explicativa, sería el que contiene Power.
+El mejor modelo con dos variables explicativas, sería el que contiene Year y Power
+El mejor modelo con tres, el que contiene las tres.
+
+
 ```{r criterios}
 names(reg.summary) #criterios o estadisticos para comparar modelos
 #Estadisticos R^2:
@@ -598,15 +599,73 @@ plot(reg.summary$rss ,xlab="Numero de variables ",ylab="RSS",
      type="l") #aqui usamos rss
 plot(reg.summary$adjr2 ,xlab="Numero de variables ",
      ylab="R2 ajustada",type="l")
-which.max(reg.summary$adjr2)
-points(4,reg.summary$adjr2[4], col="red",cex=2,pch=20)
+num_var <- which.max(reg.summary$adjr2)
+points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
+```
+```{r}
+reg.summary$cp
+plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
+num_var <- which.min(reg.summary$cp)
+points(num_var,reg.summary$cp[num_var], col="red",cex=2,pch=20)
+``` 
+
+```{r}
+reg.summary$bic
+plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
+num_var <- which.min(reg.summary$bic)
+points(num_var,reg.summary$bic[num_var], col="red",cex=2,pch=20)
+```
+
+Una vez utilizados los criterios y estadísticos para seleccionar las variables significativas, en este caso cuantitativas, decidimos seleccionar las cuatro variables para nuestro modelo de regresión.
+
+
+Ahora vamos a realizar lo mismo pero añadiendo las variables que estan como factor en nuestros datos.
+
+```{r}
+#x=model.matrix(~Year+Transmission+Fuel_Type+Owner_Type+Engine+Power+Seats+Make,data=train)
+x=model.matrix(~Year+Transmission+Owner_Type+Engine+Power+Seats+Make,data=train)
+#x <- model.matrix(Price~., train)
+reg.fit.select=regsubsets(x[,-1], y=train$Price) #Quitamos la intercptación que por defecto se construye en la matriz de diseño, ya que la funcion regsubsets tambien la incluye por defecto
+reg.summary= summary(reg.fit.select)
+names(reg.summary)
+
+#Vamos a buscar el mejor modelo 
+reg.summary$adjr2 
+plot(reg.summary$adjr2 ,xlab="Numero de variables ", ylab="R2 ajustada",type="l")
+num_var <- which.max(reg.summary$adjr2)
+points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
+summary(reg.fit.select)
 ```
 
 ```{r}
+response <- log10(train$Price)
+predictor.matrix <- model.matrix(Price~., train)
 
+test.response <- log10(test$Price)
+test.predictor.matrix <- model.matrix(Price~., test)
+
+variables <- colnames(test.predictor.matrix)[colnames(test.predictor.matrix) %in% colnames(predictor.matrix)]
+
+predictor.matrix <- predictor.matrix[,variables]
+test.predictor.matrix <- test.predictor.matrix[,variables]
 ```
 
+```{r}
+reg.summary$cp
+plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
+var <- which.min(reg.summary$cp)
+points(var,reg.summary$cp[var], col="red",cex=2,pch=20)
+```
 
+```{r}
+reg.summary$bic
+plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
+var <- which.min(reg.summary$bic)
+points(var,reg.summary$bic[var], col="red",cex=2,pch=20)
+summary(reg.fit.select)
+```
+
+Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables.
 
 
 
