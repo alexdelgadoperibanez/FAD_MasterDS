@@ -399,31 +399,23 @@ Lo hacemos únicamente, de momento, con las variables numéricas.
 ```{r corr 2}
 #install.packages("psych")
 library(psych)
-corrplot(cor(train[, c(3, 8, 9, 11, 13, 14)]), method = "ellipse") 
-corPlot(train[, c(3, 8, 9, 11, 13, 14)], cex = 1.2, main = "Matriz de correlación")
-corrplot(cor(train[, c(3, 8, 9, 11, 13, 14)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
+corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]), method = "ellipse") 
+corPlot(train[, c(3,4, 8, 9, 11, 13, 14)], cex = 1.2, main = "Matriz de correlación")
+corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
          addrect =2,rect.col = 3,rect.lwd = 3)  
 ```
 
-Con estos gráficos podemos ver rápidamente cuáles son las variables más correlacionadas con la variable respuesta y entre ellas mismas.
+Con estos gráficos podemos ver rápidamente cuáles son las variables más correlacionadas con la variable respuesta y entre ellas mismas. Las que más pueden afectar a nuestra variable respuesta son Engine y Power. Year y kmpl tienen una correlación de 0.3 y sin embargo kmpkg no tiene nada de correlación al igual que los kilómetros recorridos que tenga el coche por lo que no servirán de mucho para nuestro análisis.
+
+Vemos más detalladamente la correlación con cada variable, esta parte es fundamental para la selección de variables que posteriormente haremos en la regresión del modelo que creemos.
 
 ```{r analisis Year + Price}
 ggplot(train, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 dat1 <- data.frame(Year, Price)
 chart.Correlation(dat1)
-
-plotcorr(cor(Year,Price)) # Para ver la correlación mejor
-plotcorr(cor(train),numbers=TRUE) # Para ver la correlación mejor
-corrplot.mixed(corr = cor(train,method = "pearson"))
-
-ggpairs(train)
-ggplot(train, aes(x = x, y = y, fill = valor)) +
-  geom_tile(color = "black") +
-  geom_text(aes(label = valor), color = "white", size = 4) +
-  coord_fixed()
-cor(Year,Price)
-rcorr(as.matrix(train))
 ```
+Se aprecia cierta correlación entre el año de fabricación del modelo y el precio del coche. Cuanto más nuevo es, más valor tiene. No influye de manera significativa y drástica año a año pero si aumenta, aunque sea en poca proporción, el valor del coche.
+
 
 ```{r analisis Make + Price}
 grid.arrange(
@@ -459,11 +451,16 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
+Los coches disponibles están bien distribuidos en cada una de las ciudades de la India y como se aprecia, no tiene mucha relación el lugar de venta con el precio que cuesta.
 
 ```{r analisis Kilometers_Driven+Precio}
 ggplot(train, aes(Kilometers_Driven, Price))+geom_boxplot(aes(group=Kilometers_Driven))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-```
 
+plot(train$Kilometers_Driven, train$Price)
+dat1 <- data.frame(train$Kilometers_Driven, train$Price)
+chart.Correlation(dat1)
+```
+La empresa de ventas de coches parece haber decidido que no es relevante el número de kilómetros recorridos con respecto al precio. Mientras el coche circule y esté en óptimas condiciones, no se tiene en cuenta el número de kilómetros que suele estar relacionado con el año de fabricaión del coche.
 
 ```{r análisis FuelType+Precio}
 ggplot(train, aes(Fuel_Type, Price))+geom_boxplot(aes(group=Fuel_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
@@ -481,6 +478,7 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
+Lo primero que se aprecia es que la mayoria de coches son de diésel y gasolina y además son los que mayor precio tienen. Un coche diésel es más caro que uno de gasolina generalmente básicamente por el consumo que realiza cada uno de ellos.
 
 ```{r análisis Transmission+Precio}
 ggplot(train, aes(Transmission, Price))+geom_boxplot(aes(group=Transmission))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
@@ -498,7 +496,7 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
-
+En este dataset hay más coches manuales que automáticos como se aprecia pero los automáticos son más caros. Esto es porque ofrecen mayor comodidad, la conducción es más segura y atenta al tráfico al no tener que estar pendiente del pedal y la palanca, aparte de la diferencia de consumo entre ambos.
 
 ```{r análisis OwnerType + Precio}
 ggplot(train, aes(Owner_Type, Price))+geom_boxplot(aes(group=Owner_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
@@ -516,19 +514,23 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
+La mayoría de coches de segunda mano son los que han pasado ya por un conductor o en su defecto por dos. Antigüedad de 3 dueños es poco común y se da pocas veces generalmente. Está estrechamente relacionado el precio con los dueños que ha tenido el coche, siendo más caros los que menos dueños han tenido, lógicamente.
 
 ```{r análisis Engine+Precio}
 ggplot(train, aes(Engine, Price))+geom_boxplot(aes(group=Engine))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-d <- data.frame(Engine, Price)
+d <- data.frame(train$Engine, train$Price)
 chart.Correlation(d)
 ```
+Atendiendo a los gráficos se tiene una alta correlación entre la cilindrada del motor y el precio del coche. 
+Cuanto mayor sea la cilindrada del motor, mayor será el precio del coche ya que es un factor determinante en la potencia del coche y en el combustible que éste consume.
+
 
 ```{r análisis Power+Precio}
 ggplot(train, aes(Power, Price))+geom_boxplot(aes(group=Power))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 dat12 <- data.frame(Power, Price)
 chart.Correlation(dat12)
 ```
-
+La potencia del motor está relacionada altamente y de manera lineal con el precio del coche. A mayor potencia, mayor será el precio de compra. 
 
 ```{r  análisis Seats+Precio}
 ggplot(train, aes(Seats, Price))+geom_boxplot(aes(group=Seats))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
@@ -546,22 +548,23 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
+Se aprecia una buena e igualada dstribución en el precio de los coches en función del número de asientos que posean. Puede parecer extraño que los más caros sean los coches biplaza pero son muy valorados debido a su comodidad, bajo consumo, manejabilidad y adaptación a la carretera. Es evidente que el número de plazas en el coche a igualdad de condiciones, afectará pero no parece altamente significativo en este dataset. También es cierto que coches biplaza sólo tenemos 11 en este dataset y es dificil sacar una conclusión con certeza.
 
 ```{r análisis kmpl+Price}
 ggplot(train, aes(kmpl, Price))+geom_boxplot(aes(group=kmpl))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat1234 <- data.frame(kmpl, Price)
+dat1234 <- data.frame(train$kmpl, train$Price)
 chart.Correlation(dat1234)
 ```
 
-
 ```{r análisis kmpkg+ Price} 
 ggplot(train, aes(kmpkg, Price))+geom_boxplot(aes(group=kmpkg))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat4 <- data.frame(kmpkg, Price)
+dat4 <- data.frame(train$kmpkg, train$Price)
 chart.Correlation(dat4)
 kmpkg
-#tanto aquí como en la anterior hay que pensar qué hacer con los valores que son 0
-#aplicar log al price
 ```
+La relación entre el kilometraje y el precio no va a ser diferencial ni significativa en nuestro análisis. 
+
+En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de conbustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y elnúmero de plazas que posee
 
 #AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
 
