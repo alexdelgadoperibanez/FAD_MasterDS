@@ -2,10 +2,23 @@
 title: "AnalisisDatos"
 author: "Amanda del Álamo & Alejandro Delgado"
 date: "16/11/2021"
-output: html_document
+output:
+  html_document:
+    theme: paper
+    highlight: zenburn
+    code_folding: "hide"
+    toc: yes
+    toc_float: yes
+    toc_depth: 1
+    df_print: paged
 ---
 
-```{r message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE, include = FALSE}
 library(dplyr)
 # install.packages("readr")
 library(readr)
@@ -35,23 +48,18 @@ library(PerformanceAnalytics)
 library(GGally)
 ```
 
+# DATASET
 
 ```{r Carga de datos}
-getwd()
 data <- read.csv("cochesdataP.csv", na = c("","NA","NULL",NULL,"  ","/n" ))
 head(data)
-names(data)
 ```
 
-```{r warning=FALSE, message=FALSE}
-attach(data) 
-```
-
-##DEFINICIÓN DE OBJETIVOS
+# DEFINICIÓN DE OBJETIVOS
 
 Este dataset contiene toda la información acerca de un comercio de venta de coches usados en la India. Nuestro objetivo es predecir, a través de las características de un coche, cuanto nos costaría comprarlo.
 
-##ANÁLISIS EXPLORATORIO INICIAL
+# ANÁLISIS EXPLORATORIO INICIAL
 
 La función glimpse() del paquete dplyr puede utilizarse para ver las columnas del conjunto de datos y mostrar alguna porción de ellos con respecto a cada atributo que pueda caber en una sola línea.
 
@@ -78,16 +86,49 @@ Con esta forma de visualización podemos observar mejor la naturaleza de los dat
 
 Con la función anterior hemos podido apreciar que hay datos que contienen diferentes tipos de unidades. Vamos a ver cuales son y como se dividen antes de limpiar los datos para luego saber como podemos tratarlas.
 
+## Relación entre unidades {.tabset .tabset-fade .tabset-pills}
+
+### Mileage
+
 ```{r}
-data %>% pull(Mileage) %>% str_split(" ", simplify=TRUE) %>% cbind(Fuel_Type) %>% subset(select=2:3) %>% as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
-data %>% pull(Engine) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
-data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
-data %>% pull(New_Price) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table()
+data %>% pull(Mileage) %>% 
+  str_split(" ", simplify=TRUE) %>% 
+  cbind(data$Fuel_Type) %>% 
+  subset(select=2:3) %>% 
+  as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
 ```
 
-Podemos observar que en Fuel_Type y New_Price tenemos diferentes tipos de unidades. Más adelante dividiremos en dos variables distintas.
+### Engine
 
-```{r Modificación de datos}
+```{r}
+data %>% pull(Engine) %>% 
+  str_split(" ", simplify=TRUE) %>% 
+  subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
+```
+
+### Power
+
+```{r}
+data %>% pull(Power) %>% 
+  str_split(" ", simplify=TRUE) %>% 
+  subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
+```
+
+### New Price
+
+```{r}
+data %>% pull(New_Price) %>% 
+  str_split(" ", simplify=TRUE) %>% 
+  subset(select=2) %>% table()
+```
+
+## {-}
+
+Podemos observar que en Mileage y New_Price tenemos diferentes tipos de unidades.
+Las diferentes unidades en Mileage tienen que ver con el tipo de combustible y las de New_Price se dividen en Rupias (Lakh) y Colón (Cr)
+Más adelante dividiremos en dos variables distintas.
+
+```{r Modificación de datos, results = TRUE, warning=FALSE}
 data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) -> data
 data %>% mutate(Engine = as.numeric(str_extract(Engine, "^[:graph:]+"))) -> data
 data %>% mutate(Power = as.numeric(str_extract(Power, "^[:graph:]+"))) -> data
@@ -99,51 +140,82 @@ data %>%
   mutate(Location = as.factor(Location)) %>%
   mutate(New_Price = as.numeric(str_extract(New_Price, "^[:graph:]+"))) -> data
 data %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> data
-attach(data)
 ```
 
 Hemos cambiado el tipo de variable de algunas de las columnas ya que no era el adecuado. A la variable Power se le introducen NA's por coerción debido a que tiene algun valor recogido como NA.
 También hemos modificado la grafía del dato ya que venían con las unidades en el registro.
 
-## Análisis exploratorio inicial
 
-```{r análisis variable "Year"}
-class(Year)
-unique(Year)
-h <- hist(Year)
-h
-sum(Year==2002)
-boxplot(Year,horizontal = TRUE)
-ggplot(data, aes(x=Year)) + geom_histogram(breaks=seq(1996,2020,by=1), binwidth = 0.4,  fill="blue", colour="black")
-ggplot(data, aes(x=Year)) + geom_histogram(breaks=seq(1996,2020,by=1),aes(y=..density..), binwidth = 0.4,  fill="blue", colour="black")+geom_density(colour="green", fill="green",alpha=0.3)
+## Análisis variable "Year" {.tabset .tabset-fade .tabset-pills}
+
+### Histograma
+
+```{r}
+hist(data$Year)
 ```
 
-La primera variable que vamos a analizar es "Year", hace referencia al año en que se fabricó cada coche. Se trata de una variable cuantitativa,ya que podemos calcular la diferencia entre fechas, en la que aparecen los años desde 1996 hasta 2018.  Obtenemos que en el año 1998 se contabilizan 10 coches, en el año 2000, 23, en el 2004, 135. Va aumentando el número de coches progresivamente con el paso de los años hasta llegar a 2016 donde vuelve a disminuir también progresivamente. Esta variable está definida como "integer" y así la trataremos, ya que no nos da problema y nos aporta toda la información necesaria. Además, gracias al boxplot se aprecia que el 50% de los datos se encontrarán entre 2011 y 2017.
+### Boxplot
+
+```{r}
+boxplot(data$Year, horizontal = TRUE)
+```
+
+
+### Histograma + Densidad
+
+```{r}
+ggplot(data, aes(x=Year)) + 
+  geom_histogram(breaks=seq(1996,2020,by=1),aes(y=..density..), binwidth = 0.4,  fill="blue", colour="black") +
+  geom_density(colour="green", fill="green",alpha=0.3)
+```
+
+## {-}
+
+La primera variable que vamos a analizar es "Year", hace referencia al año en que se fabricó cada coche. 
+Se trata de una variable cuantitativa, ya que podemos calcular la diferencia entre fechas, en la que aparecen los años desde 1996 hasta 2018.
+Obtenemos que en el año 1998 se contabilizan 10 coches, en el año 2000, 23, en el 2004, 135. 
+Va aumentando el número de coches progresivamente con el paso de los años hasta llegar a 2016 donde vuelve a disminuir también progresivamente. Esta variable está definida como "integer" y así la trataremos, ya que no nos da problema y nos aporta toda la información necesaria. 
+Además, gracias al boxplot se aprecia que el 50% de los datos se encontrarán entre 2011 y 2017.
+
+## Análisis variable "Kilometers_driven" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
 
 ```{r analisis variable Kilometers_driven}
-names(data)
-class(Kilometers_Driven)
-summary(Kilometers_Driven)
-histograma <- data %>% ggplot(aes(x=Kilometers_Driven)) +
+summary(data$Kilometers_Driven)
+```
+
+### Histograma + Densidad
+
+```{r}
+data %>% ggplot(aes(x=Kilometers_Driven)) +
   ggtitle("Kilómetros recorridos") +
   theme_fivethirtyeight() +
   geom_histogram(aes(y=..density..), color="white", fill="dark blue", bins = 50) + 
   geom_density() +
   scale_x_log10()
-histograma
 ```
+
+## {-}
 
 La segunda variable a analizar es "Kilometers_driven", que hace referencia a los kilometros que lleva recorridos el coche. Se trata de una variable cuantitativa expresada como integer en nuestros datos. El mínimo de kilometros recorridos por un coche de los que estamos estudiando es de 171 mientras que el máximo llega hasta 6500.000. Analizándolo al detalle se aprecia que el valor máximo es un outlier ya que está muy lejos de la media y es el único coche con tantos km recorridos. Más adelante, decidiremos que hacer con ese valor, de momento, obtenemos que la media de kilometros recorridos por los coches es de 58738 y que el 50% de los datos se encuentran entre 53000 y 73000. Además hemos aplicado escala logarítmica en el histograma para una mejor visualización
 
+## Análisis variable "Fuel_Type" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
 
 ```{r analisis variable Fuel_Type}
-names(data)
-class(Fuel_Type)
-Fuel_Type
-unique(Fuel_Type)
-ggplot(data, aes(x=Fuel_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black", ) 
-summary(Fuel_Type)
+summary(data$Fuel_Type)
 ```
+
+### Histograma
+
+```{r}
+ggplot(data, aes(x=Fuel_Type)) + 
+  geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black", ) 
+```
+
+## {-}
 
 La tercera variable que vamos a analizar es "Fuel_Type", que hace referencia al tipo de combustible que usa cada coche. Se trata de una variable cualitativa. Está representada en nuestros datos como factor y los valores que  toma son CNG,LPG, Electric, Diesel y Pretol. Vamos a describir cada uno de los valores que toma esta variable:
     -CNG: El gas natural comprimido, más conocido por la sigla GNC, es un combustible para uso vehicular que, por ser económico y ambientalmente más limpio, es considerado una alternativa sustentable para la sustitución de combustibles líquidos.
@@ -154,102 +226,203 @@ La tercera variable que vamos a analizar es "Fuel_Type", que hace referencia al 
 De Electric, eléctricos es del tipo que menos muestras poseemos, sólo 2. De LPG y CNG también poseemos pocas (1 y  56 restivamente) y es en Diesel y Petrol donde tenemos la mayoría de los datos, siendo 3852 y 3325 las muestras respectivamente. 
 Se muestra el histograma para visualizar la gran diferencia de muestras entre Diesel y Petróleo y las demás.
 
+## Análisis variable "Fuel_Type" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
 ```{r análisis variable Name}
-names(data)
-class(Name)
-summary(Name)
+summary(data$Name)
 ```
 
+## {-}
+
+## Análisis variable "Location" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
 
 ```{r analisis variable Location}
-class(Location)
-summary(Location) 
-ggplot(data, aes(x=Location)) + geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black")
+summary(data$Location) 
 ```
+
+### Histograma
+
+```{r}
+ggplot(data, aes(x=Location)) + 
+  geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black")
+```
+
+## {-}
 
 Otra de las variables es Location, que es la localización en que está disponible el coche para vender. Se trata de una variable cuantitativa que catalogamos como factor para estudiarla en función de las muestras que posea cada ciudad. La que menos coches disponibles tiene por el momento es Ahmedabad con 224 y le secunda Bangalore con 358 y por el otro extremo, tenemos a la ciudad de Hyderabad con 742 y Mumbai con el máximo de coches disponibles, 790. 
 
+## Análisis variable "Transmission" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
 ```{r analisis variable Transmission}
-class(Transmission)
-summary(Transmission)
-ggplot(data, aes(x=Transmission)) + geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black", ordered=TRUE)
+summary(data$Transmission)
 ```
+
+### Histograma
+
+```{r}
+ggplot(data, aes(x=Transmission)) + 
+  geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black", ordered=TRUE)
+```
+
+## {-}
 
 Seguimos con el análisis univariante, ahora con "Transmission". Se trata de una variable cualitativa binaria, en la que podemos distinguir entre los coches automáticos y manuales. Una transmisión manual es una caja de cambios que no puede alterar la relación de cambio por sí sola, requiriendo la intervención del conductor para hacer esto y sin embargo, una transmisión automática es una caja de cambios de automóviles u otro tipo de vehículos que puede encargarse por sí misma de cambiar la relación de cambio automáticamente a medida que el vehículo se mueve, liberando así al conductor de la tarea de cambiar de marcha manualmente. Se tienen  muestras 1720 de automáticos y 4299 de manuales. Tenemos la variable como factor en nuestros datos, en este caso, al ser sólo dos valores, es perfecto para nuestro análisis.
 
-```{r analisis variable Owner_Type}
-class(Owner_Type)
-summary(Owner_Type)
-ggplot(data, aes(x=Owner_Type)) + geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black")
+
+## Análisis variable "Owner_Type" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
+```{r}
+summary(data$Owner_Type)
 ```
+
+### Histograma
+
+```{r analisis variable Owner_Type}
+ggplot(data, aes(x=Owner_Type)) + 
+  geom_histogram(stat="count",binwidth = 0.4,  fill="dark blue", colour="black")
+```
+
+## {-}
 
 La siguiente variable a analizar es "Owner_Type", que hace referencia a la clase de propietario, es decir, si el conductor está configurado como primer, segundo o tercero. Se trata de una variable cualitativa en la que podemos distinguir entre los valores: First, Second, Third y Fourth&Above. Del valor que menos muestras tenemos es Fourth&Above con 9 de ellas, después, Third con 113, y en Second y First aumentan considerablemente (968 y 4929, respectivamente) por lo que será mucho más preciso el análisis a la hora de correlacionar variables. Realizamos el histograma para apreciar la diferencia entre el número de muestras de cada tipo.
 
+## Análisis variable "Mileage" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
 
 ```{r analisis variable Mileage}
-class(Mileage)
-summary(Mileage)
-boxplot(Mileage, col = "blue")
+summary(data$Mileage)
 ```
+
+### Boxplot
+
+```{r}
+boxplot(data$Mileage, col = "blue")
+```
+
+## {-}
 
 Seguimos con el análisis univariante de la variable "Mileage" que hace referencia al kilometraje del coche y está expresado en kilómetros por litro. Se trata de una variable cuantitativa continua que toma muchos y distintos valores que posteriormente agruparemos por intervalo. En nuestros datos está expresada como factor, lo mejor sería convertirlo a integer o float para así poder realizar gráficos para visualizar cada una de las muestras. No tiene sentido trabajarla como factor pero la trabajaremos más adelante. Tampoco se ha realizado el gráfico porque visualmente no ayuda.
 
+## Análisis variable "Engine" {.tabset .tabset-fade .tabset-pills}
 
-```{r análisis variable Engine}
-class(Engine)
-summary(Engine)
-unique(Engine)
-boxplot(Engine, col = "blue")
+### Summary
+
+```{r analisis variable Engine}
+summary(data$Engine)
 ```
+
+### Boxplot
+
+```{r}
+boxplot(data$Engine, col = "blue")
+```
+
+## {-}
 
 Esta variable, "Engine", hace referencia a la cilindrada del motor. Se trata de una variable cuantitativa discreta y que está como integer en nuestros datos. El mínimo es 72 y el máximo es 5998 siendo la media 1621 y donde el 50% de las muestras las encontramos entre 1198 y 1984.
 
+## Análisis variable "Power" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
 ```{r analisis variable Power}
-class(Power)
-summary(Power)
-boxplot(Power, col = "blue")
+summary(data$Power)
 ```
+
+### Boxplot
+
+```{r}
+boxplot(data$Power, col = "blue")
+```
+
+## {-}
 
 Esta variable hace referencia a la potencia del motor. Se trata de una variable cuantitativa continua en la que el mínimo es 34.2 y el máximo 560 con media 113.3 y donde el 50% de los datos se encuentran entre 75 y 138. Además, existen 143 valores faltantes que serán de gran importancia en nuestro análisis.
 
+## Análisis variable "Seats" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
 ```{r analisis variable Seats}
-class(Seats)
-summary(Seats)
-s <- hist(Seats, col = "blue")
-s
+summary(data$Seats)
+```
+
+### Histograma
+
+```{r}
+hist(data$Seats, col = "blue")
+```
+
+### Asientos = 0
+
+No tiene sentido que haya coches con 0 asientos, procedemos a su eliminación
+```{r}
 data %>% filter(Seats>0) -> data
 summary(data$Seats)
 ```
+## {-}
 
 Esta variable "Seats" hace referencia al número de asientos que tiene el coche. Es una variable cuantitativa discreta ya que son valores exactos y además se trata como numeric, que viene perfecto para nuestro análisis. Se aprecia que aparece una de las opciones con Seats=0 cuyo valor es NA, la hemos obviado ya que es imposible que un coche no tenga asientos. La mayoría de los coches poseen 5 asientos y se le acercan también los coches de 7 y 8 plazas, mucho más comunes en personas con muchos hijos o que necesiten los coches para transportar más personas de lo "común".
 Si nos fijamos en el summary como hemos dicho antes la media está en 5.28, aproximadamente 5 y contamos con 42 valores NA's.
 
+## Análisis variable "New_Price" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
 
 ```{r analisis variable New_price}
-class(New_Price)
-summary(New_Price)
-apply(is.na(data[, c(12,13)]), 2, mean)  #porcentaje na por columna  
+summary(data$New_Price)
 ```
+
+### NA's %
+
+```{r}
+apply(is.na(data[, c(12,13)]), 2, mean)  #porcentaje na por columna 
+```
+
+## {-}
+
 New_Price contiene 5195 NA's que conforman el 86% de los valores faltantes en esa columna. Más adelante la eliminaremos del train set cuando hagamos la división.
 
+## Análisis variable "Price" {.tabset .tabset-fade .tabset-pills}
+
+### Summary
+
 ```{r analisis variable Price}
-class(Price)
-summary(Price)
-hist_price <- data %>% ggplot(aes(x=Price)) +
+summary(data$Price)
+```
+
+### Histograma + Densidad
+
+Visualizamos Price en escala logaritmica.
+
+```{r}
+data %>% ggplot(aes(x=Price)) +
   ggtitle("Precio") +
   theme_fivethirtyeight() +
   geom_histogram(aes(y=..density..), color="white", fill="dark blue", bins = 50) + 
   geom_density() +
   scale_x_log10()
-hist_price
 ```
+
+## {-}
 
 La variable Price será nuestra variable respuesta. Trataremos de estimar el precio de un coche en base a todas las demás características. El precio está expresado en Rupias y en nuestros datos como numeric. Haciendo un summary vemos que el mínimo precio es de 0.440 y el máximo de 160 que al estar tan lejos de la media se entiende que hay pocos coches que tengan un precio tan alto. La media está en 9.47 rupias y el 50% de los coches tienen un precio de entre 3.5 y 9.95. 
 
 Una vez analizadas tanto las variables de manera univariante como sus outliers, ahora ya podemos separar el dataset en sets para train y test.
 
-#SEPARACION TRAIN/TEST
- 
+# SEPARACION TRAIN/TEST
+
+Procedemos a separar el dataset en sets de *_train_* y de *_test_*
+
 ```{r train test sets} 
 # 80% del tamaño de la muestra
 smp_size <- floor(0.8 * nrow(data))
@@ -262,28 +435,42 @@ rm(train_ind)
 ```
 
 
-##DETECCIÓN, TRATAMIENTO E IMPUTACIÓN DE DATOS 
+# DETECCIÓN, TRATAMIENTO E IMPUTACIÓN DE DATOS 
+
+## {.tabset .tabset-fade .tabset-pills}
+
+### Tabla NA's
 
 A continuación vamos a ver la cantidad de valores perdidos con la función md.pattern de la librería *mice*
 
-```{r missing data}
+```{r missing data, message=FALSE, results='hide'}
 md.pattern(train, plot = TRUE, rotate.names=TRUE)
 ```
 
+### NA's por columna
 
 Vamos a buscar en qué variables y en qué medida de nuestro conjunto de datos hay algún dato del tipo `NA`
 
+Porcentaje de NA's por columna
+
 ```{r encontrar NAs en el caso de que aparezcan en nuestro conjunto}
-apply(is.na(train), 2, mean) #porcentaje na por columna  
-apply(is.na(train), 2, which)  # Posición de NA por columna
+apply(is.na(train), 2, mean) #porcentaje NA por columna  
+#apply(is.na(train), 2, which)  # Posición de NA por columna
 #p= dim(train)[2]
 #number_na = apply(train[,c(p-1,p)],1,function(x) sum(is.na(x)))
 #table(number_na)
+```
+Número de NA's por columna
+
+```{r}
 colSums(is.na(train))
 ```
 
 Se observa claramente que al 86% de los registros les falta datos de la variable New_price, por lo que vamos a proceder a su eliminación ya que la imputación de NA es inviable. También eliminaremos la columna 'X' ya que no es más que el indice duplicado.
 
+### Eliminación Columnas
+
+Eliminamos las columnas New_Price y X
 ```{r}
 train %>% select(-New_Price) -> train
 train %>% select(-X) -> train
@@ -291,7 +478,7 @@ train %>% select(-X) -> train
 
 Podemos volver a analizar los valores faltantes ahora que hemos eliminado la columna New_Price
 
-```{r missing data2}
+```{r missing data2, message=FALSE, results='hide'}
 md.pattern(train, plot = TRUE, rotate.names=TRUE)
 ```
 
@@ -299,16 +486,16 @@ Como podemos ver ahora:
 -85 coches que tienen valores faltantes en las columnas Power
 -2 coches que no tienen datos de Mileage
 
-
-```{r}
-#train %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power))
-```
+### Datos faltantes
 
 Los datos faltantes se podrían rellenar buscando información en internet o completandolos con los datos de coches con el mismo nombre. Vamos a probar esto.
 
 ```{r}
-train %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power) | is.na(Mileage)) %>% pull(Name) %>% unique() -> missing_cars #guardamos los coches que tienen faltantes
-train %>% group_by(Name) %>% fill(Engine, Power, Seats, Mileage) %>% ungroup() -> train #sacamos de data esos coches
+train %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power) | is.na(Mileage)) %>% 
+  pull(Name) %>% unique() -> missing_cars #guardamos los coches que tienen faltantes
+train %>% group_by(Name) %>% 
+  fill(Engine, Power, Seats, Mileage) %>% ungroup() -> train #sacamos de data esos coches
+
 md.pattern(train, plot = TRUE, rotate.names=TRUE)
 ```
 
@@ -319,12 +506,16 @@ Procedemos a eleminiar todos los registros con valores faltantes en lugar de imp
 train %>% drop_na() -> train
 ```
 
-Por lo antes comentado de los nombres, vamos a crear una nueva variable llamada *Marca*, la razón de crear esta variable es la de separar la Marca del tipo de coche ya que ambos estan juntos en la variable *Name*.
+## {-}
 
-#TRANSFORMACIÓN Y CREACIÓN DE VARIABLES 
 
-Vamos a separar el nombre de las marcas de la variable name ya que en esta variable se junta tanto la marca como el modelo.
-Agrupamos por marca, creando una nueva variable.
+# TRANSFORMACIÓN Y CREACIÓN DE VARIABLES 
+
+## {.tabset .tabset-fade .tabset-pills}
+
+### Variable Make
+
+Por lo antes comentado de los nombres, vamos a crear una nueva variable llamada *Make*, la razón de crear esta variable es la de separar la Marca del tipo de coche ya que ambos estan juntos en la variable *Name*.
 
 ```{r new variable}
 str_split(train$Name, " ", simplify=TRUE) %>% subset(select=1) %>% unique() -> car_makes
@@ -338,6 +529,8 @@ make
 train %>% mutate(Make = str_to_title(make)) -> train
 ```
 
+### Variables Kmpl y Kmpkg
+
 Ahora, como al inicio detectamos que había dos unidades de medida en la variable Mileage, vamos a separar ésta variable en los dos tipos de unidades. Eliminamos Mileage puesto que ya hemos creado estas dos nuevas variables.
 
 ```{r}
@@ -347,8 +540,9 @@ train %>%
     select(-Mileage) -> train
 ```
 
+## {-}
 
-##SELECCION DE VARIABLES 
+# SELECCION DE VARIABLES 
 
 Nuestra variable respuesta va a ser: *Price*
 Por lo que en primer lugar, vamos a ver la distribución de esta variable.
@@ -394,9 +588,8 @@ Con estos gráficos podemos ver rápidamente cuáles son las variables más corr
 Vemos más detalladamente la correlación con cada variable, esta parte es fundamental para la selección de variables que posteriormente haremos en la regresión del modelo que creemos.
 
 ```{r analisis Year + Price}
-ggplot(train, aes(Year, Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat1 <- data.frame(Year, Price)
-chart.Correlation(dat1)
+ggplot(train, aes(train$Year, train$Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+data.frame(train$Year, train$Price) %>% chart.Correlation()
 ```
 Se aprecia cierta correlación entre el año de fabricación del modelo y el precio del coche. Cuanto más nuevo es, más valor tiene. No influye de manera significativa y drástica año a año pero si aumenta, aunque sea en poca proporción, el valor del coche.
 
@@ -437,7 +630,12 @@ grid.arrange(
 Los coches disponibles están bien distribuidos en cada una de las ciudades de la India y como se aprecia, no tiene mucha relación el lugar de venta con el precio que cuesta.
 
 ```{r analisis Kilometers_Driven+Precio}
-ggplot(train, aes(Kilometers_Driven, Price))+geom_boxplot(aes(group=Kilometers_Driven))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(Kilometers_Driven, Price))+
+  geom_boxplot(aes(group=Kilometers_Driven))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
 plot(train$Kilometers_Driven, train$Price)
 dat1 <- data.frame(train$Kilometers_Driven, train$Price)
 chart.Correlation(dat1)
@@ -445,7 +643,12 @@ chart.Correlation(dat1)
 La empresa de ventas de coches parece haber decidido que no es relevante el número de kilómetros recorridos con respecto al precio. Mientras el coche circule y esté en óptimas condiciones, no se tiene en cuenta el número de kilómetros que suele estar relacionado con el año de fabricaión del coche.
 
 ```{r análisis FuelType+Precio}
-ggplot(train, aes(Fuel_Type, Price))+geom_boxplot(aes(group=Fuel_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(Fuel_Type, Price))+
+  geom_boxplot(aes(group=Fuel_Type))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
 grid.arrange(
   ggplot(train, aes(reorder(Fuel_Type, Price, median), Price)) +
     geom_boxplot() +
@@ -462,7 +665,12 @@ grid.arrange(
 Lo primero que se aprecia es que la mayoria de coches son de diésel y gasolina y además son los que mayor precio tienen. Un coche diésel es más caro que uno de gasolina generalmente básicamente por el consumo que realiza cada uno de ellos.
 
 ```{r análisis Transmission+Precio}
-ggplot(train, aes(Transmission, Price))+geom_boxplot(aes(group=Transmission))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(Transmission, Price))+
+  geom_boxplot(aes(group=Transmission))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
 grid.arrange(
   ggplot(train, aes(reorder(Transmission, Price, median), Price)) +
     geom_boxplot() +
@@ -496,7 +704,12 @@ grid.arrange(
 La mayoría de coches de segunda mano son los que han pasado ya por un conductor o en su defecto por dos. Antigüedad de 3 dueños es poco común y se da pocas veces generalmente. Está estrechamente relacionado el precio con los dueños que ha tenido el coche, siendo más caros los que menos dueños han tenido, lógicamente.
 
 ```{r análisis Engine+Precio}
-ggplot(train, aes(Engine, Price))+geom_boxplot(aes(group=Engine))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(Engine, Price))+
+  geom_boxplot(aes(group=Engine))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
 d <- data.frame(train$Engine, train$Price)
 chart.Correlation(d)
 ```
@@ -505,20 +718,29 @@ Cuanto mayor sea la cilindrada del motor, mayor será el precio del coche ya que
 
 
 ```{r análisis Power+Precio}
-ggplot(train, aes(Power, Price))+geom_boxplot(aes(group=Power))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat12 <- data.frame(Power, Price)
-chart.Correlation(dat12)
+ggplot(train, aes(train$Power, train$Price))+
+  geom_boxplot(aes(group=train$Power))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
+data.frame(train$Power, train$Price) %>% chart.Correlation()
 ```
 La potencia del motor está relacionada altamente y de manera lineal con el precio del coche. A mayor potencia, mayor será el precio de compra. 
 
 ```{r  análisis Seats+Precio}
-ggplot(train, aes(Seats, Price))+geom_boxplot(aes(group=Seats))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(train$Seats, train$Price))+
+  geom_boxplot(aes(group=train$Seats))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
 grid.arrange(
-  ggplot(train, aes(reorder(Seats, Price, median), Price)) +
+  ggplot(train, aes(reorder(train$Seats, train$Price, median), train$Price)) +
     geom_boxplot() +
     scale_y_log10() + 
     coord_flip(),
-  ggplot(train, aes(reorder(Seats, Price, median))) + 
+  ggplot(train, aes(reorder(train$Seats, train$Price, median))) + 
     geom_bar(stat="count") +
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
     coord_flip(),
@@ -529,22 +751,29 @@ grid.arrange(
 Se aprecia una buena e igualada dstribución en el precio de los coches en función del número de asientos que posean. Los más caros son los biplaza debido, seguramente, a que las marcas de lujo como Lamborguini y Bently venden sobretodo deportivos biplaza. Es evidente que el número de plazas en el coche a igualdad de condiciones, afectará pero no parece altamente significativo en este dataset. También es cierto que coches biplaza sólo tenemos 11 en este dataset y es dificil sacar una conclusión con certeza.
 
 ```{r análisis kmpl+Price}
-ggplot(train, aes(kmpl, Price))+geom_boxplot(aes(group=kmpl))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat1234 <- data.frame(train$kmpl, train$Price)
-chart.Correlation(dat1234)
+ggplot(train, aes(train$kmpl, train$Price))+
+  geom_boxplot(aes(group=train$kmpl))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
+data.frame(train$kmpl, train$Price) %>% chart.Correlation()
 ```
 
 ```{r análisis kmpkg+ Price} 
-ggplot(train, aes(kmpkg, Price))+geom_boxplot(aes(group=kmpkg))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-dat4 <- data.frame(train$kmpkg, train$Price)
-chart.Correlation(dat4)
-#kmpkg
+ggplot(train, aes(train$kmpkg, train$Price))+
+  geom_boxplot(aes(group=train$kmpkg))+
+  geom_jitter(alpha=0.1)+
+  geom_smooth(method="loess")+
+  scale_y_log10()
+
+data.frame(train$kmpkg, train$Price) %>% chart.Correlation()
 ```
 La relación entre el kilometraje y el precio no va a ser diferencial ni significativa en nuestro análisis. 
 
 En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de combustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y el número de plazas que posee
 
-#AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
+# AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
 
 ```{r}
 cor(train[, c(3, 8, 9, 11)])
@@ -626,17 +855,6 @@ points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
 summary(reg.fit.select)
 ```
 
-
-```{r}
-#response <- log10(train$Price)
-#predictor.matrix <- model.matrix(Price~., train)
-#test.response <- log10(test$Price)
-#test.predictor.matrix <- model.matrix(Price~., test)
-#variables <- colnames(test.predictor.matrix)[colnames(test.predictor.matrix) %in% colnames(predictor.matrix)]
-#predictor.matrix <- predictor.matrix[,variables]
-#test.predictor.matrix <- test.predictor.matrix[,variables]
-```
-
 ```{r}
 reg.summary$cp
 plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
@@ -652,7 +870,7 @@ points(var,reg.summary$bic[var], col="red",cex=2,pch=20)
 summary(reg.fit.select)
 ```
 
-Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables:Year, Power y varios tipos de Marca. Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
+Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables: Year, Power y varios tipos de Marca. Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
 
 De nuestro análisis hemos obtenido información:
 
@@ -664,17 +882,11 @@ De nuestro análisis hemos obtenido información:
 
 Entonces, podríamos estar interesados en construir un modelo lineal usando estas variables, simplemente:
 
-```{r}
-mod_prueba=lm(log10(Price)~ Year+Fuel_Type+Power+Make,data=train)
-summary(mod_prueba)
-```
-Como Fuel_Type no es relevante en nuestro modelo, la eliminamos y nos quedamos con las demás covariables:
-
-
-```{r}
-mod_selec=lm(log10(Price)~ Year+Power+Make,data=train)
+```{r mod selec}
+mod_selec=lm(log10(Price) ~ Year+Fuel_Type+Power+Make,data=train)
 summary(mod_selec)
 ```
+
 Vamos ahora a chequear el modelo:
 
 ```{r}
@@ -682,23 +894,41 @@ print(paste("R squared:", summary(mod_selec)$r.squared))
 print(paste("MSE:", mean(mod_selec$residuals^2)))
 plot(mod_selec)
 ```
-Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 89%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+```{r}
+library("car")
+dwt(mod_selec, alternative = "two.sided")
+```
+
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos parece constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos no tienen una distribución normal en las colas. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
+
+Además, gracias al *Darwin test* sabemos que no hay evidencias de autocorrelación.
+
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+
 
 ```{r}
 AIC(lm(log(Price)~Power,data=train))
 AIC(lm(log(Price)~Power+Year,data=train))
 AIC(lm(log(Price)~Power+Year+Make,data=train))
+AIC(lm(log(Price)~Fuel_Type+Power+Year+Make,data=train))
 ```
 ```{r}
 BIC(lm(log(Price)~Power,data=train))
 BIC(lm(log(Price)~Power+Year,data=train))
 BIC(lm(log(Price)~Power+Year+Make,data=train))
+BIC(lm(log(Price)~Fuel_Type+Power+Year+Make,data=train))
 ```
-Según los criterios AIC y BIC el mejor modelo es el que contiene las 3 covariables. El criterio BIC suele ser más parsimonioso pero también detecta que el mejor modelo es el de tres variables: Power, Year y Make.
-
-
-
-
+Según los criterios AIC y BIC el mejor modelo es el que contiene las 4 covariables. El criterio BIC suele ser más parsimonioso pero también detecta que el mejor modelo es el de cuatro variables: Fuel_Type, Power, Year y Make.
 
 
 
