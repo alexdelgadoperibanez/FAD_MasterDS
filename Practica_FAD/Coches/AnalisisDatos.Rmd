@@ -80,11 +80,8 @@ Con la función anterior hemos podido apreciar que hay datos que contienen difer
 
 ```{r}
 data %>% pull(Mileage) %>% str_split(" ", simplify=TRUE) %>% cbind(Fuel_Type) %>% subset(select=2:3) %>% as.data.frame() %>% table() #Extraigo los diferentes tipos que hay y como se relacionan
-
 data %>% pull(Engine) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
-
 data %>% pull(Power) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table() # hago lo mismo para confirmar que solo hay un tipo
-
 data %>% pull(New_Price) %>% str_split(" ", simplify=TRUE) %>% subset(select=2) %>% table()
 ```
 
@@ -92,21 +89,16 @@ Podemos observar que en Fuel_Type y New_Price tenemos diferentes tipos de unidad
 
 ```{r Modificación de datos}
 data %>% mutate(Mileage = as.numeric(str_extract(Mileage, "^[:graph:]+"))) -> data
-
 data %>% mutate(Engine = as.numeric(str_extract(Engine, "^[:graph:]+"))) -> data
 data %>% mutate(Power = as.numeric(str_extract(Power, "^[:graph:]+"))) -> data
-
 data %>%
   mutate(Seats = as.integer(Seats)) -> data
-
 data %>%
   mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
   mutate(Transmission = as.factor(Transmission)) %>%
   mutate(Location = as.factor(Location)) %>%
   mutate(New_Price = as.numeric(str_extract(New_Price, "^[:graph:]+"))) -> data
-
 data %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> data
-
 attach(data)
 ```
 
@@ -122,7 +114,6 @@ h <- hist(Year)
 h
 sum(Year==2002)
 boxplot(Year,horizontal = TRUE)
-
 ggplot(data, aes(x=Year)) + geom_histogram(breaks=seq(1996,2020,by=1), binwidth = 0.4,  fill="blue", colour="black")
 ggplot(data, aes(x=Year)) + geom_histogram(breaks=seq(1996,2020,by=1),aes(y=..density..), binwidth = 0.4,  fill="blue", colour="black")+geom_density(colour="green", fill="green",alpha=0.3)
 ```
@@ -133,7 +124,6 @@ La primera variable que vamos a analizar es "Year", hace referencia al año en q
 names(data)
 class(Kilometers_Driven)
 summary(Kilometers_Driven)
-
 histograma <- data %>% ggplot(aes(x=Kilometers_Driven)) +
   ggtitle("Kilómetros recorridos") +
   theme_fivethirtyeight() +
@@ -263,14 +253,11 @@ Una vez analizadas tanto las variables de manera univariante como sus outliers, 
 ```{r train test sets} 
 # 80% del tamaño de la muestra
 smp_size <- floor(0.8 * nrow(data))
-
 # establecemos la semilla para que su partición sea reproducible
 set.seed(123)
 train_ind <- sample(seq_len(nrow(data)), size = smp_size)
-
 train <- data[train_ind, ]
 test <- data[-train_ind, ]
-
 rm(train_ind)
 ```
 
@@ -321,9 +308,7 @@ Los datos faltantes se podrían rellenar buscando información en internet o com
 
 ```{r}
 train %>% filter(is.na(Engine) | is.na(Seats) | is.na(Power) | is.na(Mileage)) %>% pull(Name) %>% unique() -> missing_cars #guardamos los coches que tienen faltantes
-
 train %>% group_by(Name) %>% fill(Engine, Power, Seats, Mileage) %>% ungroup() -> train #sacamos de data esos coches
-
 md.pattern(train, plot = TRUE, rotate.names=TRUE)
 ```
 
@@ -360,7 +345,6 @@ train %>%
     mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
     mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
     select(-Mileage) -> train
-
 ```
 
 
@@ -437,7 +421,6 @@ Por otro lado, hay muchos coches de gama media de precio decente, como Hyundai y
 
 ```{r análisis Location+Price}
 ggplot(train, aes(Location, Price))+geom_boxplot(aes(group=Location))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 grid.arrange(
   ggplot(train, aes(reorder(Location, Price, median), Price)) +
     geom_boxplot() +
@@ -455,7 +438,6 @@ Los coches disponibles están bien distribuidos en cada una de las ciudades de l
 
 ```{r analisis Kilometers_Driven+Precio}
 ggplot(train, aes(Kilometers_Driven, Price))+geom_boxplot(aes(group=Kilometers_Driven))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 plot(train$Kilometers_Driven, train$Price)
 dat1 <- data.frame(train$Kilometers_Driven, train$Price)
 chart.Correlation(dat1)
@@ -464,7 +446,6 @@ La empresa de ventas de coches parece haber decidido que no es relevante el núm
 
 ```{r análisis FuelType+Precio}
 ggplot(train, aes(Fuel_Type, Price))+geom_boxplot(aes(group=Fuel_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 grid.arrange(
   ggplot(train, aes(reorder(Fuel_Type, Price, median), Price)) +
     geom_boxplot() +
@@ -482,7 +463,6 @@ Lo primero que se aprecia es que la mayoria de coches son de diésel y gasolina 
 
 ```{r análisis Transmission+Precio}
 ggplot(train, aes(Transmission, Price))+geom_boxplot(aes(group=Transmission))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 grid.arrange(
   ggplot(train, aes(reorder(Transmission, Price, median), Price)) +
     geom_boxplot() +
@@ -500,7 +480,6 @@ En este dataset hay más coches manuales que automáticos como se aprecia pero l
 
 ```{r análisis OwnerType + Precio}
 ggplot(train, aes(Owner_Type, Price))+geom_boxplot(aes(group=Owner_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 grid.arrange(
   ggplot(train, aes(reorder(Owner_Type, Price, median), Price)) +
     geom_boxplot() +
@@ -534,7 +513,6 @@ La potencia del motor está relacionada altamente y de manera lineal con el prec
 
 ```{r  análisis Seats+Precio}
 ggplot(train, aes(Seats, Price))+geom_boxplot(aes(group=Seats))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
-
 grid.arrange(
   ggplot(train, aes(reorder(Seats, Price, median), Price)) +
     geom_boxplot() +
@@ -571,17 +549,21 @@ En conclusión, las variables que más afectan a nuestra variable respuesta, el 
 ```{r}
 cor(train[, c(3, 8, 9, 11)])
 ```
+
+
 ```{r}
 #Trabajos con las variables cuantitativas
 reg.fit.selec=regsubsets(x=train[, c(3, 8, 9, 10)], y=train$Price)
 reg.summary=summary(reg.fit.selec)
 summary(reg.fit.selec)
+
 ```
 
 Vamos a proceder a seleccionar ls variables con las que vamos a hacer la regresión, empezamos con las variables cuantitativas unicamente.
 El mejor modelo con una variable explicativa, sería el que contiene Power.
 El mejor modelo con dos variables explicativas, sería el que contiene Year y Power
-El mejor modelo con tres, el que contiene las tres.
+El mejor modelo con tres, el que contiene Year, Power y Seats
+El mejor modelo con cuatro variables es el que contiene las cuatro.
 
 
 ```{r criterios}
@@ -591,10 +573,10 @@ reg.summary$rsq
 #Estadisticos R^2 ajustado:
 reg.summary$adjr2
 ```
+El mejor modelo es el que maximiza la R² y la R² ajustada. En este caso y teniendo en cuenta sólo 4 covariables, parece claro seleccionar el modelo con 4 covariables aunque también sería correcto selecionar un modelo con 3 de ellas.
 
 ```{r}
 par(mfrow=c(1,2))
-#rsq es la R2 prque en teoria dice que el mejor modelo minimiza R2 y adjusted rsq será algo parecido a R2 ajustada que era maximizar
 plot(reg.summary$rss ,xlab="Numero de variables ",ylab="RSS",
      type="l") #aqui usamos rss
 plot(reg.summary$adjr2 ,xlab="Numero de variables ",
@@ -602,6 +584,7 @@ plot(reg.summary$adjr2 ,xlab="Numero de variables ",
 num_var <- which.max(reg.summary$adjr2)
 points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
 ```
+
 ```{r}
 reg.summary$cp
 plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
@@ -615,7 +598,7 @@ plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
 num_var <- which.min(reg.summary$bic)
 points(num_var,reg.summary$bic[num_var], col="red",cex=2,pch=20)
 ```
-
+Tanto en CP como en BIC el número óptimo de variables para seleccionar es el que minimiza la función.
 Una vez utilizados los criterios y estadísticos para seleccionar las variables significativas, en este caso cuantitativas, decidimos seleccionar las cuatro variables para nuestro modelo de regresión.
 
 
@@ -627,8 +610,14 @@ x=model.matrix(~Year+Transmission+Owner_Type+Engine+Power+Seats+Make,data=train)
 #x <- model.matrix(Price~., train)
 reg.fit.select=regsubsets(x[,-1], y=train$Price) #Quitamos la intercptación que por defecto se construye en la matriz de diseño, ya que la funcion regsubsets tambien la incluye por defecto
 reg.summary= summary(reg.fit.select)
+reg.summary
 names(reg.summary)
+```
 
+El modelo seleccionado es el que incluye las variables Year, Power y los siguientes valores de Make: Audi, BMW, Lamborghini, Land Rover, Mercedes Benz Y Jaguar.
+Al intentar incluir la variable Fuel_Type nos aparece redundancia pero es una variable con importante correlación y que consideraremos al crear el modelo de regresión. Una vez añadidas las variables factor, vamos a ver que variables seleccionamos.
+
+```{r}
 #Vamos a buscar el mejor modelo 
 reg.summary$adjr2 
 plot(reg.summary$adjr2 ,xlab="Numero de variables ", ylab="R2 ajustada",type="l")
@@ -637,17 +626,15 @@ points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
 summary(reg.fit.select)
 ```
 
+
 ```{r}
-response <- log10(train$Price)
-predictor.matrix <- model.matrix(Price~., train)
-
-test.response <- log10(test$Price)
-test.predictor.matrix <- model.matrix(Price~., test)
-
-variables <- colnames(test.predictor.matrix)[colnames(test.predictor.matrix) %in% colnames(predictor.matrix)]
-
-predictor.matrix <- predictor.matrix[,variables]
-test.predictor.matrix <- test.predictor.matrix[,variables]
+#response <- log10(train$Price)
+#predictor.matrix <- model.matrix(Price~., train)
+#test.response <- log10(test$Price)
+#test.predictor.matrix <- model.matrix(Price~., test)
+#variables <- colnames(test.predictor.matrix)[colnames(test.predictor.matrix) %in% colnames(predictor.matrix)]
+#predictor.matrix <- predictor.matrix[,variables]
+#test.predictor.matrix <- test.predictor.matrix[,variables]
 ```
 
 ```{r}
@@ -665,10 +652,49 @@ points(var,reg.summary$bic[var], col="red",cex=2,pch=20)
 summary(reg.fit.select)
 ```
 
-Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables.
+Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables:Year, Power y varios tipos de Marca. Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
+
+De nuestro análisis hemos obtenido información:
+
+-El año de fabricación del coche y la marca dan una indicación visual y un efecto significativo en el precio.
+
+-La potencia se correlaciona mejor con el precio que con el motor.
+
+-Además de estas variables, no se muestra ninguna indicación visual clara en las demás.
+
+Entonces, podríamos estar interesados en construir un modelo lineal usando estas variables, simplemente:
+
+```{r}
+mod_prueba=lm(log10(Price)~ Year+Fuel_Type+Power+Make,data=train)
+summary(mod_prueba)
+```
+Como Fuel_Type no es relevante en nuestro modelo, la eliminamos y nos quedamos con las demás covariables:
 
 
+```{r}
+mod_selec=lm(log10(Price)~ Year+Power+Make,data=train)
+summary(mod_selec)
+```
+Vamos ahora a chequear el modelo:
 
+```{r}
+print(paste("R squared:", summary(mod_selec)$r.squared))
+print(paste("MSE:", mean(mod_selec$residuals^2)))
+plot(mod_selec)
+```
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 89%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+```{r}
+AIC(lm(log(Price)~Power,data=train))
+AIC(lm(log(Price)~Power+Year,data=train))
+AIC(lm(log(Price)~Power+Year+Make,data=train))
+```
+```{r}
+BIC(lm(log(Price)~Power,data=train))
+BIC(lm(log(Price)~Power+Year,data=train))
+BIC(lm(log(Price)~Power+Year+Make,data=train))
+```
+Según los criterios AIC y BIC el mejor modelo es el que contiene las 3 covariables. El criterio BIC suele ser más parsimonioso pero también detecta que el mejor modelo es el de tres variables: Power, Year y Make.
 
 
 
