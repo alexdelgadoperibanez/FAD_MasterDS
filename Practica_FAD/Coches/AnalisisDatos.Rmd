@@ -46,6 +46,9 @@ library(leaps)
 #install.packages("PerformanceAnalytics")
 library(PerformanceAnalytics)
 library(GGally)
+#install.packages("psych")
+library(psych)
+library("car")
 ```
 
 # DATASET
@@ -519,19 +522,21 @@ Por lo antes comentado de los nombres, vamos a crear una nueva variable llamada 
 
 ```{r new variable, message=FALSE, warning=FALSE}
 str_split(train$Name, " ", simplify=TRUE) %>% subset(select=1) %>% unique() -> car_makes
-car_makes
 car_makes[car_makes=="Land"] <- "Land Rover" #Anomalía en los datos
-car_makes
 car_makes_regex <- paste(car_makes, collapse="|")
-car_makes_regex
 str_extract(train$Name, car_makes_regex) -> make
-make
 train %>% mutate(Make = str_to_title(make)) -> train
 ```
 
 ### Variables Kmpl y Kmpkg
 
-Ahora, como al inicio detectamos que había dos unidades de medida en la variable Mileage, vamos a separar ésta variable en los dos tipos de unidades. Eliminamos Mileage puesto que ya hemos creado estas dos nuevas variables.
+Al inicio detectamos que había dos unidades de medida en la variable Mileage.
+
+Los kmpkg son en realidad una métrica para los combustibles de gas licuado. Así que no está justificado convertirlos en unidades de kmpl. 
+Los coches eléctricos ni siquiera tienen la métrica del kilometraje en este conjunto de datos, algo que es de esperar.
+
+Por lo tanto, vamos a crear dos variables llamadas kmpkg y kmpl, para que la variable Mileage pueda tener diferentes coeficientes para los tipos de combustible diesel/gasolina y GNC/GLP. 
+La lógica es que kmpkg sólo tendrá valores no nulos para los coches alimentados con GNC/GPL, por lo que los coeficientes se ajustarán/aprenderán sólo de esas observaciones y viceversa.
 
 ```{r, message=FALSE, warning=FALSE}
 train %>% 
@@ -543,6 +548,10 @@ train %>%
 ## {-}
 
 # SELECCION DE VARIABLES 
+
+## {.tabset .tabset-fade .tabset-pills}
+
+### Variable Respuesta
 
 Nuestra variable respuesta va a ser: *Price*
 Por lo que en primer lugar, vamos a ver la distribución de esta variable.
@@ -564,6 +573,8 @@ train %>% ggplot() +
 
 Esto remedia la asimetría, por lo que transformaremos la variable antes de modelarla. Para la exploración seguiremos utilizando la escala logarítmica, pero no transformaremos realmente la variable *Price* en el conjunto de datos.
 
+### Correlación 
+
 Para analizar la correlación entre variables mostramos tres gráficos (utilizando las librerías `ellipse` y `corrplot`):
 
 - En el primero lo que haremos será ver la correlación con elipses. Cuanto más circular sea menos correlación habrá entre las variables y cuanto más recta más correlación habrá.
@@ -575,8 +586,6 @@ Para analizar la correlación entre variables mostramos tres gráficos (utilizan
 Lo hacemos únicamente, de momento, con las variables numéricas.
 
 ```{r corr 2, message=FALSE, warning=FALSE}
-#install.packages("psych")
-library(psych)
 corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]), method = "ellipse") 
 corPlot(train[, c(3,4, 8, 9, 11, 13, 14)], cex = 1.2, main = "Matriz de correlación")
 corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
@@ -587,12 +596,22 @@ Con estos gráficos podemos ver rápidamente cuáles son las variables más corr
 
 Vemos más detalladamente la correlación con cada variable, esta parte es fundamental para la selección de variables que posteriormente haremos en la regresión del modelo que creemos.
 
+### Year + Price
+
 ```{r analisis Year + Price, message=FALSE, warning=FALSE}
-ggplot(train, aes(train$Year, train$Price))+geom_boxplot(aes(group=Year))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
+ggplot(train, aes(train$Year, train$Price)) +
+  geom_boxplot(aes(group=Year)) +
+  geom_jitter(alpha=0.1) +
+  geom_smooth(method="loess") +
+  scale_y_log10()
+```
+```{r,message=FALSE, warning=FALSE}
 data.frame(train$Year, train$Price) %>% chart.Correlation()
 ```
+
 Se aprecia cierta correlación entre el año de fabricación del modelo y el precio del coche. Cuanto más nuevo es, más valor tiene. No influye de manera significativa y drástica año a año pero si aumenta, aunque sea en poca proporción, el valor del coche.
 
+### Make + Price
 
 ```{r analisis Make + Price, message=FALSE, warning=FALSE}
 grid.arrange(
@@ -612,6 +631,8 @@ grid.arrange(
 Lo que podemos ver es que hay mas marcas baratas que caras. Las marcas más caras son las de coches de lujo y hay muy pocos coches de este tipo en este dataset. 
 Por otro lado, hay muchos coches de gama media de precio decente, como Hyundai y Maruti. Esto nos da una pista de que la marca de un coche puede determinar su precio.
 
+### Location + Price
+
 ```{r análisis Location+Price, message=FALSE, warning=FALSE}
 ggplot(train, aes(Location, Price))+geom_boxplot(aes(group=Location))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 grid.arrange(
@@ -630,19 +651,26 @@ grid.arrange(
 
 Los coches disponibles están bien distribuidos en cada una de las ciudades de la India y como se aprecia, no tiene mucha relación el lugar de venta con el precio que cuesta.
 
+### Kilometers Driven + Price
+
 ```{r analisis Kilometers_Driven+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(Kilometers_Driven, Price))+
   geom_boxplot(aes(group=Kilometers_Driven))+
   geom_jitter(alpha=0.1)+
   geom_smooth(method="loess")+
   scale_y_log10()
-
+```
+```{r,message=FALSE, warning=FALSE}
 plot(train$Kilometers_Driven, train$Price)
-dat1 <- data.frame(train$Kilometers_Driven, train$Price)
-chart.Correlation(dat1)
+```
+```{r, message=FALSE, warning=FALSE}
+data.frame(train$Kilometers_Driven, train$Price) %>%
+  chart.Correlation()
 ```
 
 La empresa de ventas de coches parece haber decidido que no es relevante el número de kilómetros recorridos con respecto al precio. Mientras el coche circule y esté en óptimas condiciones, no se tiene en cuenta el número de kilómetros que suele estar relacionado con el año de fabricaión del coche.
+
+### Fuel Type + Price
 
 ```{r análisis FuelType+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(Fuel_Type, Price))+
@@ -667,6 +695,8 @@ grid.arrange(
 
 Lo primero que se aprecia es que la mayoria de coches son de diésel y gasolina y además son los que mayor precio tienen. Un coche diésel es más caro que uno de gasolina generalmente básicamente por el consumo que realiza cada uno de ellos.
 
+### Transmission + Price
+
 ```{r análisis Transmission+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(Transmission, Price))+
   geom_boxplot(aes(group=Transmission))+
@@ -690,6 +720,8 @@ grid.arrange(
 
 En este dataset hay más coches manuales que automáticos como se aprecia pero los automáticos son más caros. Esto es porque ofrecen mayor comodidad, la conducción es más segura y atenta al tráfico al no tener que estar pendiente del pedal y la palanca, aparte de la diferencia de consumo entre ambos.
 
+### Owner Type + Price
+
 ```{r análisis OwnerType + Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(Owner_Type, Price))+geom_boxplot(aes(group=Owner_Type))+geom_jitter(alpha=0.1)+geom_smooth(method="loess")+scale_y_log10()
 grid.arrange(
@@ -708,6 +740,8 @@ grid.arrange(
 
 La mayoría de coches de segunda mano son los que han pasado ya por un conductor o en su defecto por dos. Antigüedad de 3 dueños es poco común y se da pocas veces generalmente. Está estrechamente relacionado el precio con los dueños que ha tenido el coche, siendo más caros los que menos dueños han tenido, lógicamente.
 
+### Engine + Price
+
 ```{r análisis Engine+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(Engine, Price))+
   geom_boxplot(aes(group=Engine))+
@@ -715,13 +749,14 @@ ggplot(train, aes(Engine, Price))+
   geom_smooth(method="loess")+
   scale_y_log10()
 
-d <- data.frame(train$Engine, train$Price)
-chart.Correlation(d)
+data.frame(train$Engine, train$Price) %>% 
+  chart.Correlation()
 ```
 
 Atendiendo a los gráficos se tiene una alta correlación entre la cilindrada del motor y el precio del coche. 
 Cuanto mayor sea la cilindrada del motor, mayor será el precio del coche ya que es un factor determinante en la potencia del coche y en el combustible que éste consume.
 
+### Power + Price
 
 ```{r análisis Power+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(train$Power, train$Price))+
@@ -734,6 +769,8 @@ data.frame(train$Power, train$Price) %>% chart.Correlation()
 ```
 
 La potencia del motor está relacionada altamente y de manera lineal con el precio del coche. A mayor potencia, mayor será el precio de compra. 
+
+### Seats + Price
 
 ```{r  análisis Seats+Precio, message=FALSE, warning=FALSE}
 ggplot(train, aes(train$Seats, train$Price))+
@@ -756,8 +793,9 @@ grid.arrange(
 )
 ```
 
-
 Se aprecia una buena e igualada dstribución en el precio de los coches en función del número de asientos que posean. Los más caros son los biplaza debido, seguramente, a que las marcas de lujo como Lamborguini y Bently venden sobretodo deportivos biplaza. Es evidente que el número de plazas en el coche a igualdad de condiciones, afectará pero no parece altamente significativo en este dataset. También es cierto que coches biplaza sólo tenemos 11 en este dataset y es dificil sacar una conclusión con certeza.
+
+### Kmpl/Kmpkg + Price
 
 ```{r análisis kmpl+Price, message=FALSE, warning=FALSE}
 ggplot(train, aes(train$kmpl, train$Price))+
@@ -784,6 +822,8 @@ La relación entre el kilometraje y el precio no va a ser diferencial ni signifi
 
 En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de combustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y el número de plazas que posee
 
+## {-}
+
 # AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
 
 ```{r, message=FALSE, warning=FALSE}
@@ -796,7 +836,6 @@ cor(train[, c(3, 8, 9, 11)])
 reg.fit.selec=regsubsets(x=train[, c(3, 8, 9, 10)], y=train$Price)
 reg.summary=summary(reg.fit.selec)
 summary(reg.fit.selec)
-
 ```
 
 Vamos a proceder a seleccionar ls variables con las que vamos a hacer la regresión, empezamos con las variables cuantitativas unicamente.
@@ -805,18 +844,23 @@ El mejor modelo con dos variables explicativas, sería el que contiene Year y Po
 El mejor modelo con tres, el que contiene Year, Power y Seats
 El mejor modelo con cuatro variables es el que contiene las cuatro.
 
-
+### Estadisticos R²:
 ```{r criterios, message=FALSE, warning=FALSE}
-names(reg.summary) #criterios o estadisticos para comparar modelos
+#names(reg.summary) #criterios o estadisticos para comparar modelos
 #Estadisticos R^2:
 reg.summary$rsq
+```
+
+### Estadisticos R² ajustado:
+
+```{r, message=FALSE, warning=FALSE}
 #Estadisticos R^2 ajustado:
 reg.summary$adjr2
 ```
 
 El mejor modelo es el que maximiza la R² y la R² ajustada. En este caso y teniendo en cuenta sólo 4 covariables, parece claro seleccionar el modelo con 4 covariables aunque también sería correcto selecionar un modelo con 3 de ellas.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, results='hide'}
 par(mfrow=c(1,2))
 plot(reg.summary$rss ,xlab="Numero de variables ",ylab="RSS",
      type="l") #aqui usamos rss
@@ -826,14 +870,18 @@ num_var <- which.max(reg.summary$adjr2)
 points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
 ```
 
-```{r, message=FALSE, warning=FALSE}
+### CP
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
 reg.summary$cp
 plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
 num_var <- which.min(reg.summary$cp)
 points(num_var,reg.summary$cp[num_var], col="red",cex=2,pch=20)
 ``` 
 
-```{r, message=FALSE, warning=FALSE}
+### BIC
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
 reg.summary$bic
 plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
 num_var <- which.min(reg.summary$bic)
@@ -853,7 +901,6 @@ x=model.matrix(~Year+Transmission+Owner_Type+Engine+Power+Seats+Make,data=train)
 reg.fit.select=regsubsets(x[,-1], y=train$Price) #Quitamos la intercptación que por defecto se construye en la matriz de diseño, ya que la funcion regsubsets tambien la incluye por defecto
 reg.summary= summary(reg.fit.select)
 reg.summary
-names(reg.summary)
 ```
 
 El modelo seleccionado es el que incluye las variables Year, Power y los siguientes valores de Make: Audi, BMW, Lamborghini, Land Rover, Mercedes Benz Y Jaguar.
@@ -868,7 +915,7 @@ points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
 summary(reg.fit.select)
 ```
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, results='hide'}
 reg.summary$cp
 plot(reg.summary$cp ,xlab="Numero de variables ",ylab="Cp",type="l")
 var <- which.min(reg.summary$cp)
@@ -909,7 +956,6 @@ plot(mod_selec)
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-library("car")
 dwt(mod_selec, alternative = "two.sided")
 ```
 
