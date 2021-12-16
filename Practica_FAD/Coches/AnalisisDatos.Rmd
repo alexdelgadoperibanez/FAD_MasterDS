@@ -229,13 +229,6 @@ La tercera variable que vamos a analizar es "Fuel_Type", que hace referencia al 
 De Electric, eléctricos es del tipo que menos muestras poseemos, sólo 2. De LPG y CNG también poseemos pocas (1 y  56 restivamente) y es en Diesel y Petrol donde tenemos la mayoría de los datos, siendo 3852 y 3325 las muestras respectivamente. 
 Se muestra el histograma para visualizar la gran diferencia de muestras entre Diesel y Petróleo y las demás.
 
-## Análisis variable "Fuel_Type" {.tabset .tabset-fade .tabset-pills}
-
-### Summary
-
-```{r análisis variable Name, message=FALSE, warning=FALSE}
-summary(data$Name)
-```
 
 ## {-}
 
@@ -822,6 +815,14 @@ La relación entre el kilometraje y el precio no va a ser diferencial ni signifi
 
 En conclusión, las variables que más afectan a nuestra variable respuesta, el precio, son: la marca, el tipo de combustible, el tipo de transmision, la cilindrada y la potencia y en menor medida pero que también analizaremos: el año de fabricación, los dueños que ha tenido y el número de plazas que posee
 
+### Engine + Power
+
+```{r}
+plot(train$Engine,train$Power)
+train %>% select(Price, Engine, Power) %>% mutate(Price=log10(Price)) %>% cor() %>% ggcorrplot(lab=TRUE)
+```
+Existe una alta correlación entre las variables Engine y Power, al igual que en el mundo real, la cilindrada del motor determina la potencia de éste. Es por eso que después en el modelo nos valdrá con incluir solamente una de las dos. 
+
 ## {-}
 
 # AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
@@ -927,7 +928,6 @@ reg.summary$bic
 plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
 var <- which.min(reg.summary$bic)
 points(var,reg.summary$bic[var], col="red",cex=2,pch=20)
-summary(reg.fit.select)
 ```
 
 Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables: Year, Power y varios tipos de Marca. Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
