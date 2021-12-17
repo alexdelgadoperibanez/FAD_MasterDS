@@ -647,14 +647,14 @@ Los coches disponibles están bien distribuidos en cada una de las ciudades de l
 ### Kilometers Driven + Price
 
 ```{r analisis Kilometers_Driven+Precio, message=FALSE, warning=FALSE}
-ggplot(train, aes(Kilometers_Driven, Price))+
+ggplot(train, aes(log(Kilometers_Driven), Price))+
   geom_boxplot(aes(group=Kilometers_Driven))+
   geom_jitter(alpha=0.1)+
   geom_smooth(method="loess")+
   scale_y_log10()
 ```
 ```{r,message=FALSE, warning=FALSE}
-plot(train$Kilometers_Driven, train$Price)
+plot(log(train$Kilometers_Driven), train$Price)
 ```
 ```{r, message=FALSE, warning=FALSE}
 data.frame(train$Kilometers_Driven, train$Price) %>%
@@ -821,6 +821,7 @@ En conclusión, las variables que más afectan a nuestra variable respuesta, el 
 plot(train$Engine,train$Power)
 train %>% select(Price, Engine, Power) %>% mutate(Price=log10(Price)) %>% cor() %>% ggcorrplot(lab=TRUE)
 ```
+
 Existe una alta correlación entre las variables Engine y Power, al igual que en el mundo real, la cilindrada del motor determina la potencia de éste. Es por eso que después en el modelo nos valdrá con incluir solamente una de las dos. 
 
 ## {-}
