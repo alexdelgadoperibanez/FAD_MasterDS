@@ -913,7 +913,6 @@ reg.summary$adjr2
 plot(reg.summary$adjr2 ,xlab="Numero de variables ", ylab="R2 ajustada",type="l")
 num_var <- which.max(reg.summary$adjr2)
 points(num_var,reg.summary$adjr2[num_var], col="red",cex=2,pch=20)
-summary(reg.fit.select)
 ```
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
