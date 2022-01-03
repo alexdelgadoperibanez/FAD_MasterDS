@@ -20,35 +20,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r message=FALSE, warning=FALSE, include = FALSE}
 library(dplyr)
-# install.packages("readr")
 library(readr)
-# install.packages("mice")
 library(mice)
-#install.packages("stringr")
 library(stringr)
-#install.packages("ggplot2")
 library(ggplot2)
-#install.packages("tidyverse")
 library(tidyverse)
 library(gridExtra)
 library(gmodels)
-#install.packages("Hmisc")
 library(Hmisc)
-#install.packages("ggthemes")
 library(ggthemes)
-#install.packages("ellipse")
 library(ellipse)
 library(corrplot)
 library(ggcorrplot)
-#install.packages("corrplot")
 library(corrplot)
 library(leaps)
-#install.packages("PerformanceAnalytics")
 library(PerformanceAnalytics)
 library(GGally)
-#install.packages("psych")
 library(psych)
-library("car")
 ```
 
 # DATASET
@@ -61,6 +49,21 @@ head(data)
 # DEFINICIÓN DE OBJETIVOS
 
 Este dataset contiene toda la información acerca de un comercio de venta de coches usados en la India. Nuestro objetivo es predecir, a través de las características de un coche, cuanto nos costaría comprarlo.
+
+# SEPARACION TRAIN/TEST
+
+Procedemos a separar el dataset en sets de *_train_* y de *_test_*
+
+```{r train test sets, message=FALSE, warning=FALSE} 
+# 80% del tamaño de la muestra
+smp_size <- floor(0.8 * nrow(data))
+# establecemos la semilla para que su partición sea reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(data)), size = smp_size)
+train <- data[train_ind, ]
+test <- data[-train_ind, ]
+rm(train_ind)
+```
 
 # ANÁLISIS EXPLORATORIO INICIAL
 
@@ -201,7 +204,12 @@ data %>% ggplot(aes(x=Kilometers_Driven)) +
 
 ## {-}
 
-La segunda variable a analizar es "Kilometers_driven", que hace referencia a los kilometros que lleva recorridos el coche. Se trata de una variable cuantitativa expresada como integer en nuestros datos. El mínimo de kilometros recorridos por un coche de los que estamos estudiando es de 171 mientras que el máximo llega hasta 6500.000. Analizándolo al detalle se aprecia que el valor máximo es un outlier ya que está muy lejos de la media y es el único coche con tantos km recorridos. Más adelante, decidiremos que hacer con ese valor, de momento, obtenemos que la media de kilometros recorridos por los coches es de 58738 y que el 50% de los datos se encuentran entre 53000 y 73000. Además hemos aplicado escala logarítmica en el histograma para una mejor visualización
+La segunda variable a analizar es "Kilometers_driven", que hace referencia a los kilometros que lleva recorridos el coche. Se trata de una variable cuantitativa expresada como integer en nuestros datos. El mínimo de kilometros recorridos por un coche de los que estamos estudiando es de 171 mientras que el máximo llega hasta 6500.000. Analizándolo al detalle se aprecia que el valor máximo es un outlier ya que está muy lejos de la media y es el único coche con tantos km recorridos. Más adelante, decidiremos que hacer con ese valor, de momento, obtenemos que la media de kilometros recorridos por los coches es de 58738 y que el 50% de los datos se encuentran entre 53000 y 73000. Además hemos aplicado escala logarítmica en el histograma para una mejor visualización.
+
+```{r}
+train %>% filter(Kilometers_Driven>4e5)
+```
+Es llamativo que un coche del año 2017 tenga 6500000 kilómetros recorridos, pero puede ser posible, así que lo dejamos así. 
 
 ## Análisis variable "Fuel_Type" {.tabset .tabset-fade .tabset-pills}
 
@@ -413,22 +421,9 @@ data %>% ggplot(aes(x=Price)) +
 
 La variable Price será nuestra variable respuesta. Trataremos de estimar el precio de un coche en base a todas las demás características. El precio está expresado en Rupias y en nuestros datos como numeric. Haciendo un summary vemos que el mínimo precio es de 0.440 y el máximo de 160 que al estar tan lejos de la media se entiende que hay pocos coches que tengan un precio tan alto. La media está en 9.47 rupias y el 50% de los coches tienen un precio de entre 3.5 y 9.95. 
 
-Una vez analizadas tanto las variables de manera univariante como sus outliers, ahora ya podemos separar el dataset en sets para train y test.
+Una vez analizadas tanto las variables de manera univariante como sus outliers, ahora ya podemos detectar y tratar los valores faltantes.
 
-# SEPARACION TRAIN/TEST
 
-Procedemos a separar el dataset en sets de *_train_* y de *_test_*
-
-```{r train test sets, message=FALSE, warning=FALSE} 
-# 80% del tamaño de la muestra
-smp_size <- floor(0.8 * nrow(data))
-# establecemos la semilla para que su partición sea reproducible
-set.seed(123)
-train_ind <- sample(seq_len(nrow(data)), size = smp_size)
-train <- data[train_ind, ]
-test <- data[-train_ind, ]
-rm(train_ind)
-```
 
 
 # DETECCIÓN, TRATAMIENTO E IMPUTACIÓN DE DATOS 
@@ -688,6 +683,19 @@ grid.arrange(
 
 Lo primero que se aprecia es que la mayoria de coches son de diésel y gasolina y además son los que mayor precio tienen. Un coche diésel es más caro que uno de gasolina generalmente básicamente por el consumo que realiza cada uno de ellos.
 
+Pero, tiene relación el tipo de combustible con los kilómetros recorridos? 
+
+### Fuel_Type + Kilometers_driven
+
+```{r}
+train %>% ggplot(aes(x=Fuel_Type, y=log(Kilometers_Driven), fill=Transmission)) +geom_boxplot()+ggtitle ("Km recorridos según el tipo de combustible por tipo de transmisión") +theme (plot.title = element_text(size=rel(1.25), vjust=2, face="bold", color="black")) 
+```
+
+```{r}
+train %>% ggplot(aes(x=log(Kilometers_Driven), y=log(Price), fill=Fuel_Type)) +geom_boxplot()+ggtitle ("Precio según los km recorridos por tipo de combustible") +theme (plot.title = element_text(size=rel(1.25), vjust=2, face="bold", color="black")) 
+```
+Con esto podemos apreciar que los kilómetros que recorramos sí importa en qué tipo de coche lo hagamos puesto que no es lo mismo recorrer 100.000 km con un coche Diésel que con un coche de gasolina.  Un factor clave que a menudo hace caer la balanza del lado de los diésel es que la mayoría de compradores prefiere gastar más en la adquisición de un coche diésel,que como podemos ver en la gráfica, son más caros, que pagar más en los repostajes por haber comprado un gasolina. Es como si uno hiciera una inversión mayor al principio y luego ya fuese toda una vida útil del coche de ahorro.
+
 ### Transmission + Price
 
 ```{r análisis Transmission+Precio, message=FALSE, warning=FALSE}
@@ -712,6 +720,12 @@ grid.arrange(
 ```
 
 En este dataset hay más coches manuales que automáticos como se aprecia pero los automáticos son más caros. Esto es porque ofrecen mayor comodidad, la conducción es más segura y atenta al tráfico al no tener que estar pendiente del pedal y la palanca, aparte de la diferencia de consumo entre ambos.
+
+
+```{r}
+train %>% ggplot(aes(x=Fuel_Type, y=Price, fill=Transmission)) +geom_boxplot()+ggtitle ("Precio de los coches según el tipo de combustible por tipo de transmisión") +theme (plot.title = element_text(size=rel(1.25), vjust=2, face="bold", color="black"))
+```
+Una vez más, esto confirmó que el vehículo de gasolina es más barato que el diésel.
 
 ### Owner Type + Price
 
