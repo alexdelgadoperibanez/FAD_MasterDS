@@ -50,20 +50,6 @@ head(data)
 
 Este dataset contiene toda la información acerca de un comercio de venta de coches usados en la India. Nuestro objetivo es predecir, a través de las características de un coche, cuanto nos costaría comprarlo.
 
-# SEPARACION TRAIN/TEST
-
-Procedemos a separar el dataset en sets de *_train_* y de *_test_*
-
-```{r train test sets, message=FALSE, warning=FALSE} 
-# 80% del tamaño de la muestra
-smp_size <- floor(0.8 * nrow(data))
-# establecemos la semilla para que su partición sea reproducible
-set.seed(123)
-train_ind <- sample(seq_len(nrow(data)), size = smp_size)
-train <- data[train_ind, ]
-test <- data[-train_ind, ]
-rm(train_ind)
-```
 
 # ANÁLISIS EXPLORATORIO INICIAL
 
@@ -150,6 +136,21 @@ data %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Thi
 
 Hemos cambiado el tipo de variable de algunas de las columnas ya que no era el adecuado. A la variable Power se le introducen NA's por coerción debido a que tiene algun valor recogido como NA.
 También hemos modificado la grafía del dato ya que venían con las unidades en el registro.
+
+# SEPARACION TRAIN/TEST
+
+Procedemos a separar el dataset en sets de *_train_* y de *_test_*
+
+```{r train test sets, message=FALSE, warning=FALSE} 
+# 80% del tamaño de la muestra
+smp_size <- floor(0.8 * nrow(data))
+# establecemos la semilla para que su partición sea reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(data)), size = smp_size)
+train <- data[train_ind, ]
+test <- data[-train_ind, ]
+rm(train_ind)
+```
 
 
 ## Análisis variable "Year" {.tabset .tabset-fade .tabset-pills}
@@ -516,6 +517,19 @@ str_extract(train$Name, car_makes_regex) -> make
 train %>% mutate(Make = str_to_title(make)) -> train
 ```
 
+```{r}
+#Hacemos una divisíón de los coches por marca en cuanto a si son de gama baja, media o alta
+train %>% 
+  mutate(
+    Gama = case_when( 
+      train$Make=="Datsun" |train$Make=="Smart" |train$Make=="Tata" |train$Make=="Fiat" |train$Make=="Chevrolet" |train$Make=="Ambassador" ~ "Gama baja",
+      train$Make=="Skoda"|train$Make=="Renault" |train$Make=="Ford" |train$Make=="Honda"|train$Make=="Volkswagen" |train$Make=="Hyundai" |train$Make=="Nissan" |train$Make=="Maruti" ~ "Gama media",
+      train$Make=="Bentley"|train$Make=="Porsche" |train$Make=="Land Rover" |train$Make=="Jaguar" |train$Make=="Mini" |train$Make=="Mercedes-Benz" |train$Make=="Audi" |train$Make=="Bmw" |train$Make=="Jeep" |train$Make=="Volvo" |train$Make=="Isuzu" |train$Make=="Mitsubishi" |train$Make=="Toyota" |train$Make=="Force" |train$Make=="Mahindra"~ "Gama alta"
+    )
+  ) -> train
+
+train$Gama <- as.factor(train$Gama)
+```
 ### Variables Kmpl y Kmpkg
 
 Al inicio detectamos que había dos unidades de medida en la variable Mileage.
@@ -574,9 +588,9 @@ Para analizar la correlación entre variables mostramos tres gráficos (utilizan
 Lo hacemos únicamente, de momento, con las variables numéricas.
 
 ```{r corr 2, message=FALSE, warning=FALSE}
-corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]), method = "ellipse") 
-corPlot(train[, c(3,4, 8, 9, 11, 13, 14)], cex = 1.2, main = "Matriz de correlación")
-corrplot(cor(train[, c(3,4, 8, 9, 11, 13, 14)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
+corrplot(cor(train[, c(3,4, 8, 9, 11, 14, 15)]), method = "ellipse") 
+corPlot(train[, c(3,4, 8, 9, 11, 14, 15)], cex = 1.2, main = "Matriz de correlación")
+corrplot(cor(train[, c(3,4, 8, 9, 11, 14, 15)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
          addrect =2,rect.col = 3,rect.lwd = 3)  
 ```
 
@@ -615,9 +629,27 @@ grid.arrange(
       layout_matrix=t(c(1,1,2))
 )
 ```
-
 Lo que podemos ver es que hay mas marcas baratas que caras. Las marcas más caras son las de coches de lujo y hay muy pocos coches de este tipo en este dataset. 
 Por otro lado, hay muchos coches de gama media de precio decente, como Hyundai y Maruti. Esto nos da una pista de que la marca de un coche puede determinar su precio.
+
+Como hemos observado que muchas de las marcas de coche seguían una distribución parecida en cuanto al precio, se han agrupado en 3 gamas: gama baja, gama media y gama alta. Así, su visualización y la posterior utilidad de la marca en el modelo de regresión lineal será más frutífera y simplificada.
+
+```{r analisis Gama + Price, message=FALSE, warning=FALSE}
+grid.arrange(
+  ggplot(train, aes(reorder(Gama, Price, median), Price)) +
+    geom_boxplot() +
+    scale_y_log10() + 
+    coord_flip(),
+  ggplot(train, aes(reorder(Gama, Price, median))) + 
+    geom_bar(stat="count") +
+    theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+    coord_flip(),
+      ncol=3, nrow=1,
+      layout_matrix=t(c(1,1,2))
+)
+```
+Los coches de gama media representan la mayoría de muestras en nuestro dataset. Después, los de gama alta y por último los que menos relevancia tienen en nuestros datos, de momento, son los de gama baja. Esta agrupación favorece tanto la representación de los datos de manera más ordenada como la visualización de los mismos. Además, no tendría sentido meter tantas marcas en un modelo de regresión lineal de manera unitaria. 
+
 
 ### Location + Price
 
@@ -642,17 +674,17 @@ Los coches disponibles están bien distribuidos en cada una de las ciudades de l
 ### Kilometers Driven + Price
 
 ```{r analisis Kilometers_Driven+Precio, message=FALSE, warning=FALSE}
-ggplot(train, aes(log(Kilometers_Driven), Price))+
+ggplot(train, aes(log(Kilometers_Driven), log(Price)))+
   geom_boxplot(aes(group=Kilometers_Driven))+
   geom_jitter(alpha=0.1)+
   geom_smooth(method="loess")+
   scale_y_log10()
 ```
 ```{r,message=FALSE, warning=FALSE}
-plot(log(train$Kilometers_Driven), train$Price)
+plot(log(train$Kilometers_Driven), log(train$Price))
 ```
 ```{r, message=FALSE, warning=FALSE}
-data.frame(train$Kilometers_Driven, train$Price) %>%
+data.frame(log(train$Kilometers_Driven), log(train$Price)) %>%
   chart.Correlation()
 ```
 
@@ -750,14 +782,13 @@ La mayoría de coches de segunda mano son los que han pasado ya por un conductor
 ### Engine + Price
 
 ```{r análisis Engine+Precio, message=FALSE, warning=FALSE}
-ggplot(train, aes(Engine, Price))+
+ggplot(train, aes(Engine, log(Price)))+
   geom_boxplot(aes(group=Engine))+
   geom_jitter(alpha=0.1)+
   geom_smooth(method="loess")+
   scale_y_log10()
 
-data.frame(train$Engine, train$Price) %>% 
-  chart.Correlation()
+data.frame(train$Engine, log(train$Price)) %>% chart.Correlation()
 ```
 
 Atendiendo a los gráficos se tiene una alta correlación entre la cilindrada del motor y el precio del coche. 
@@ -811,17 +842,18 @@ ggplot(train, aes(train$kmpl, train$Price))+
   geom_smooth(method="loess")+
   scale_y_log10()
 
-data.frame(train$kmpl, train$Price) %>% chart.Correlation()
+data.frame(train$kmpl, log(train$Price)) %>% chart.Correlation()
 ```
 
+
 ```{r análisis kmpkg+ Price, message=FALSE, warning=FALSE} 
-ggplot(train, aes(train$kmpkg, train$Price))+
+ggplot(train, aes(log(train$kmpkg), log(train$Price)))+
   geom_boxplot(aes(group=train$kmpkg))+
   geom_jitter(alpha=0.1)+
   geom_smooth(method="loess")+
   scale_y_log10()
 
-data.frame(train$kmpkg, train$Price) %>% chart.Correlation()
+data.frame(log(train$kmpkg), log(train$Price)) %>% chart.Correlation()
 ```
 
 
@@ -854,15 +886,14 @@ reg.summary=summary(reg.fit.selec)
 summary(reg.fit.selec)
 ```
 
-Vamos a proceder a seleccionar ls variables con las que vamos a hacer la regresión, empezamos con las variables cuantitativas unicamente.
+Vamos a proceder a seleccionar las variables con las que vamos a hacer la regresión, empezamos con las variables cuantitativas unicamente.
 El mejor modelo con una variable explicativa, sería el que contiene Power.
 El mejor modelo con dos variables explicativas, sería el que contiene Year y Power
-El mejor modelo con tres, el que contiene Year, Power y Seats
+El mejor modelo con tres, el que contiene Year, Power y Engine
 El mejor modelo con cuatro variables es el que contiene las cuatro.
 
 ### Estadisticos R²:
 ```{r criterios, message=FALSE, warning=FALSE}
-#names(reg.summary) #criterios o estadisticos para comparar modelos
 #Estadisticos R^2:
 reg.summary$rsq
 ```
@@ -874,7 +905,7 @@ reg.summary$rsq
 reg.summary$adjr2
 ```
 
-El mejor modelo es el que maximiza la R² y la R² ajustada. En este caso y teniendo en cuenta sólo 4 covariables, parece claro seleccionar el modelo con 4 covariables aunque también sería correcto selecionar un modelo con 3 de ellas.
+El mejor modelo es el que maximiza la R² y la R² ajustada. En este caso y teniendo en cuenta sólo 4 covariables, podríamos realizar un modelo con ellas pero siempre que se pueda simplificar y ello no reduzca los estadísticos en gran medida, puede ser práctico escoger el modelo con dos covariables.
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
 par(mfrow=c(1,2))
@@ -903,27 +934,22 @@ plot(reg.summary$bic ,xlab="Numero de variables ",ylab="Bic",type="l")
 num_var <- which.min(reg.summary$bic)
 points(num_var,reg.summary$bic[num_var], col="red",cex=2,pch=20)
 ```
-
-Tanto en CP como en BIC el número óptimo de variables para seleccionar es el que minimiza la función.
-Una vez utilizados los criterios y estadísticos para seleccionar las variables significativas, en este caso cuantitativas, decidimos seleccionar las cuatro variables para nuestro modelo de regresión.
-
+El criterio de información de Akaike (AIC), el criterio de información de Akaike corregido (AICc) y el criterio de información bayesiano (BIC) son medidas de la calidad relativa de un modelo que representan el ajuste y el número de términos en el modelo.
+Una vez utilizados los criterios y estadísticos para seleccionar las variables significativas, en este caso cuantitativas, y aunque los criterios no indiquen lo mismo. Tomando la iniciativa y mirando los estadísticos, se ve conveniente escoger las variables Year y Power para explicar el modelo. Así, conseguimos que se simplifique y consideramos que se ajustan bien a los datos, además, falta aún añadir las variables cualitativas. 
 
 Ahora vamos a realizar lo mismo pero añadiendo las variables que estan como factor en nuestros datos.
 
 ```{r, message=FALSE, warning=FALSE}
-#x=model.matrix(~Year+Transmission+Fuel_Type+Owner_Type+Engine+Power+Seats+Make,data=train)
-x=model.matrix(~Year+Transmission+Owner_Type+Engine+Power+Seats+Make,data=train)
-#x <- model.matrix(Price~., train)
-reg.fit.select=regsubsets(x[,-1], y=train$Price) #Quitamos la intercptación que por defecto se construye en la matriz de diseño, ya que la funcion regsubsets tambien la incluye por defecto
+x=model.matrix(~Year+Transmission+Owner_Type+Engine+Power+Seats+Gama,data=train)
+reg.fit.select=regsubsets(x[,-1], y=train$Price) 
+#Quitamos la intercptación que por defecto se construye en la matriz de diseño, ya que la funcion regsubsets tambien la incluye por defecto
 reg.summary= summary(reg.fit.select)
 reg.summary
 ```
 
-El modelo seleccionado es el que incluye las variables Year, Power y los siguientes valores de Make: Audi, BMW, Lamborghini, Land Rover, Mercedes Benz Y Jaguar.
-Al intentar incluir la variable Fuel_Type nos aparece redundancia pero es una variable con importante correlación y que consideraremos al crear el modelo de regresión. Una vez añadidas las variables factor, vamos a ver que variables seleccionamos.
+Parece ser que los coches de gama baja y gama media serán importantes en la creación de un modelo explicativo de los datos. Al intentar incluir la variable Fuel_Type nos aparece redundancia pero es una variable con importante correlación y que consideraremos al crear el modelo de regresión. Una vez añadidas las variables factor, vamos a ver que variables seleccionamos.
 
 ```{r , message=FALSE, warning=FALSE}
-#Vamos a buscar el mejor modelo 
 reg.summary$adjr2 
 plot(reg.summary$adjr2 ,xlab="Numero de variables ", ylab="R2 ajustada",type="l")
 num_var <- which.max(reg.summary$adjr2)
@@ -944,11 +970,308 @@ var <- which.min(reg.summary$bic)
 points(var,reg.summary$bic[var], col="red",cex=2,pch=20)
 ```
 
-Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es el que contiene 8 covariables: Year, Power y varios tipos de Marca. Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
+Gracias a los métodos para saber cual es el mejor modelo y al summary se obtiene que el mejor modelo de regresión lineal multiple es es el que contiene: Year, Transmission manual, OwnerType second, Engine, Power, Seats, Gama baja y Gama media y con 6 covariables sería el modelo formado por: Year, Transmission manual, Power, Seats, Gama baja y gama media.  Teniendo en cuenta la variable Fuel_Type también, vamos a añadirla al modelo.
+
+Para ajustar un modelo de regresión lineal múltiple mediante mínimos cuadrados, se utiliza la función lm(). Mediante esta función ajustamos una recta de regresión, con Price como variable respuesta.
+Los posibles modelos que podemos utilizar para explicar nuestros datos,teniendo en cuenta el análisis anterior,son:
+
+```{r}
+mod0=lm(log10(Price) ~ Year+Power,data=train) #2 variables
+mod1=lm(log10(Price) ~ Year+Fuel_Type+Power,data=train) #2 variables +fuel_type
+mod2=lm(log10(Price) ~ Year+Power+Gama,data=train) #3variables
+mod3=lm(log10(Price) ~ Year+Fuel_Type+Power+Gama,data=train) #3 variables +fuel
+mod4=lm(log10(Price) ~ Year+Power+Seats+Gama,data=train) #4 variables
+mod5=lm(log10(Price) ~ Year+Fuel_Type+Power+Seats+Gama,data=train) #4 var + fuel_type
+mod6=lm(log10(Price) ~ Year+ Transmission+Power+Seats+Gama,data=train) #5 var
+mod7=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Power+Seats+Gama,data=train) #5 var + fuel
+mod8=lm(log10(Price) ~ Year+Transmission+Owner_Type+Power+Seats+Gama,data=train) #6var
+mod9=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Owner_Type+Power+Seats+Gama,data=train) #6var + fuel
+mod10=lm(log10(Price) ~ Year+Transmission+Owner_Type+Power+Engine+Seats+Gama,data=train) #7var
+mod11=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Owner_Type+Power+Engine+Seats+Gama,data=train) #7var+fuel 
+```
+
+Vamos a chequearlos para ver cual obtiene mejores estadísticos:
+
+```{r}
+library(carData)
+library(car)
+library(lmtest)
+library(olsrr)
+library(performance)
+library(see)
+library(lme4)
+library(patchwork)
+compare_performance(mod0,mod1,mod2,mod3,mod4,mod5,mod6,mod7,mod8,mod9,mod10,mod11, rank=TRUE)
+plot(compare_performance(mod0,mod1,mod2,mod3,mod4,mod5,mod6,mod7,mod8,mod9,mod10,mod11, rank=TRUE))
+```
+
+Analizando cada uno de los modelos, sus índices y en qué medida afecta el aumento o disminución de variables, se decide que los mejores modelos hasta el momento son:
+-El modelo nº 2 tiene como variables: Year, Power y Gama 
+-El modelo nº 3 tiene como variables: Year, Fuel_Type, Power y Gama
+-El modelo nº 6 tiene como variables: Year, Transmission, Power, Seats y Gama
+-El modelo nº 7 tiene como variables: Year,Fuel_Type,Transmission,Power,Seats y Gama
+-El modelo nº 11 tiene como variables: Year, Fuel_Type, Transmission, Owner_Type, Power, Engine, Seats y Gama
+
+```{r}
+compare_performance(mod2,mod3,mod6,mod7,mod11, rank=TRUE)
+plot(compare_performance(mod2,mod3,mod6,mod7,mod11, rank=TRUE))
+```
+
+Se va a analizar primero el modelo con más variables, el modelo 11:
+
+```{r}
+summary(mod11)
+```
+
+Si observamos los p-valores de los test de hipótesis para los coeficientes individuales, observamos que para alguna variable no se puede rechazar que el coeficiente sea cero. Eliminamos por tanto la variable "Seats" de nuestro modelo 11. 
+
+```{r}
+mod11=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Owner_Type+Power+Engine+Gama,data=train)
+summary(mod11)
+```
+
+En algunos casos, para que la relación entre la variable respuesta y los regresores sea lineal, estos requerirán de una transformación. Por ejemplo, observemos la relación entre la variable Price y Power:
+
+```{r}
+train %>% ggplot(aes(x= Power, y=Price)) + 
+  geom_point()+
+  geom_smooth()
+```
+
+Se puede observar, que claramente no existe una relación lineal entre ambas. Pero si aplicamos una transformación no lineal, la relación entre ambas log(Power) y log(Price) pasa a ser lineal aproximadamente.
+
+```{r}
+train %>% ggplot(aes(x= log(Power), y=log(Price))) + 
+  geom_point()+
+  geom_smooth()
+```
+
+
+```{r}
+mod11=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Owner_Type+log(Power)+Engine+Gama,data=train)  
+summary(mod11)
+```
+
+Después de construir el modelo de regresión, con la variable transformada, se observa que el valor del coeficiente relacionado con la variable Power es mucho mayor. Además, el ajuste mejora considerablemente pasando de un R²adj=0.891 a R²adj=0.897. Haciendo una diagnósis del modelo:
+
+```{r}
+check_model(mod11)
+plot(mod11)
+```
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos es constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos siguen una distribución normal excepto en las colas que varía un poco. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
+
+```{r}
+dwtest(mod11, alternative = "two.sided")
+vif(mod11)
+```
+
+Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autocorrelación. 
+Por otro lado, tenemos un problema de multicolinealidad cuando las variables explicativas (regresores) están relacionadas entre sí, de forma que solapan información para predecir la respuesta.
+Cuando tenemos multicolinealidad, la estimacion de los coeficientes del modelo no es muy estable y por tanto los errores de estimacion son grandes. Utilizamos el VIF para comprobarlo y vemos que no tenemos valores elevados, por tanto no hay problemas de multicolinealidad. También lo podemos comprobar gracias al gráfico ''Collinearity'' . Aunque entre los distintos tipos de gasolina si que exista cierta colinealidad, ello no afectará al modelo.
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. Como conclusión a este modelo diríamos que se adecúa a los datos, pero veamos si reduciendo el número de variables, es decir, simplificando el problema, podemos mantener la buena explicatividad que necesitamos.
+
+--------------------------------
+
+Se va a analizar ahora el siguiente modelo, el modelo 7:
+
+```{r}
+summary(mod7)
+```
+
+Si observamos los p-valores de los test de hipótesis para los coeficientes individuales, observamos que para alguna variable no se puede rechazar que el coeficiente sea cero. Eliminamos por tanto la variable "Seats" de nuestro modelo 7. Además, gracias al análisis de antes, podemos meter Power transformada como logaritmo para permitirle esa linealidad con el precio.
+
+```{r}
+mod7=lm(log10(Price) ~ Year+Fuel_Type+Transmission+log(Power)+Gama,data=train) 
+summary(mod7)
+```
+
+Después de construir el modelo de regresión, con la variable transformada, se observa que el valor del coeficiente relacionado con la variable Power es mayor en 1 unidad. Además, el ajuste mejora considerablemente pasando de un R²adj=0.89 a R²adj=0.896. Haciendo una diagnósis del modelo:
+
+```{r}
+check_model(mod7)
+plot(mod7)
+```
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos es constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos siguen una distribución normal excepto en las colas que varía un poco. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
+
+```{r}
+dwtest(mod7, alternative = "two.sided")
+vif(mod7)
+```
+
+Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autocorrelación. 
+Utilizamos el VIF y el gráfico de ''Collinearity'' para analizar la colinealidad de las variables y vemos que no tenemos valores elevados, excepto entre los diferentes tipos de fuente de gasolina entre ellos, por tanto no hay problemas de multicolinealidad.
+
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+
+--------------------------------------------------------------------------
+
+
+Se va a analizar ahora el siguiente modelo, el modelo 6:
+
+```{r}
+summary(mod6)
+```
+
+Si observamos los p-valores de los test de hipótesis para los coeficientes individuales, observamos que para alguna variable no se puede rechazar que el coeficiente sea cero. Eliminamos por tanto la variable "Seats" de nuestro modelo 7. Además, gracias al análisis de antes, podemos meter Power transformada como logaritmo para permitirle esa linealidad con el precio.
+
+```{r}
+mod6=lm(log10(Price) ~ Year+ Transmission+log(Power)+Seats+Gama,data=train)
+summary(mod6)
+```
+
+Al transformar Power para lograr linealidad, se aprecia que la variable Seats deja de ser significativa por lo que procedemos a eliminarla:
+
+```{r}
+mod6=lm(log10(Price) ~ Year+ Transmission+log(Power)+Gama,data=train)
+summary(mod6)
+```
+
+Después de construir el modelo de regresión, con la variable transformada, se observa que el valor del coeficiente relacionado con la variable Power es mayor en 1 unidad. Además, el ajuste mejora considerablemente pasando de un R²adj=0.874 a R²adj=0.885. Haciendo una diagnósis del modelo:
+
+```{r}
+check_model(mod6)
+plot(mod6)
+```
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos es constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos siguen una distribución normal excepto en las colas que varía un poco. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
+
+```{r}
+dwtest(mod6, alternative = "two.sided")
+vif(mod6)
+```
+
+Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autocorrelación. 
+Utilizamos el VIF y el gráfico de la colinealidad para comprobar ello y vemos que no tenemos valores elevados, excepto entre los diferentes tipos de fuente de gasolina entre ellos, por tanto no hay problemas de multicolinealidad.
+
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+----------------------------
+
+Se va a analizar ahora el siguiente modelo, el modelo 3:
+
+```{r}
+summary(mod3)
+```
+
+Si observamos los p-valores de los test de hipótesis para los coeficientes individuales, observamos que para alguna variable no se puede rechazar que el coeficiente sea cero. Además, gracias al análisis de antes, podemos meter Power transformada como logaritmo para permitirle esa linealidad con el precio.
+
+```{r}
+mod3=lm(log10(Price) ~ Year+Fuel_Type+log(Power)+Gama,data=train)
+summary(mod3)
+```
+
+Después de construir el modelo de regresión, con la variable transformada, se observa que el valor del coeficiente relacionado con la variable Power es mayor en 1 unidad. Haciendo una diagnósis del modelo:
+
+```{r}
+check_model(mod3)
+plot(mod3)
+```
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos es constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos siguen una distribución normal excepto en las colas que varía un poco. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook
+
+```{r}
+dwtest(mod3, alternative = "two.sided")
+vif(mod3)
+```
+
+Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autocorrelación. 
+Utilizamos el VIF para comprobar la multicolinealidad y vemos que no tenemos valores elevados, por tanto no hay problemas de multicolinealidad.
+
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+------------------------------
+
+Se va a analizar ahora el siguiente modelo, el modelo 2:
+
+```{r}
+summary(mod2)
+```
+
+Si observamos los p-valores de los test de hipótesis para los coeficientes individuales, observamos que para alguna variable no se puede rechazar que el coeficiente sea cero. Eliminamos por tanto la variable "Seats" de nuestro modelo 7. Además, gracias al análisis de antes, podemos meter Power transformada como logaritmo para permitirle esa linealidad con el precio.
+
+```{r}
+mod2=lm(log10(Price) ~ Year+log(Power)+Gama,data=train)
+summary(mod2)
+```
+Después de construir el modelo de regresión, con la variable transformada, se observa que el valor del coeficiente relacionado con la variable Power es mayor en 1 unidad. Además, el ajuste mejora considerablemente pasando de un R²adj=0.866 a R²adj=0.877. Haciendo una diagnósis del modelo:
+
+```{r}
+check_model(mod2)
+plot(mod2)
+```
+
+
+En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
+
+La *varianza* de los residuos es constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
+Lo que si se observa es la aparición de puntos candidatos a ser outliers.
+
+Con el *Q-Q Plot* vemos que los residuos siguen una distribución normal excepto en las colas que varía un poco. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
+
+En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
+
+```{r}
+dwtest(mod2, alternative = "two.sided")
+vif(mod2)
+```
+
+Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autocorrelación. 
+Utilizamos el VIF para comprobar la colinealidad y vemos que no tenemos valores elevados, por tanto no hay problemas de multicolinealidad.
+
+Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
+
+```{r}
+ols_coll_diag(mod2)
+ols_plot_diagnostics(mod2)
+avPlots(mod2)
+```
+
+
+```{r}
+summary(mod2)
+anova(mod2)
+```
+
+Todas las variables seleccionadas son altamente significativas. Fijándonos en la tabla anova, vemos que el pvalor del estadístico F es muy pequeño por lo que cada una de las variables regresoras explica bien linealmente el modelo, la que más linealidad muestra con la variable explicada,Price, es Power, a la que le realizamos esa transformación para aumentar la linealidad.
+
+
+
+----------------------------
 
 De nuestro análisis hemos obtenido información:
 
--El año de fabricación del coche y la marca dan una indicación visual y un efecto significativo en el precio.
+-El año de fabricación del coche y la gama en función de la marca dan una indicación visual y un efecto significativo en el precio.
 
 -La potencia se correlaciona mejor con el precio que con el motor.
 
@@ -957,7 +1280,7 @@ De nuestro análisis hemos obtenido información:
 Entonces, podríamos estar interesados en construir un modelo lineal usando estas variables, simplemente:
 
 ```{r mod selec, message=FALSE, warning=FALSE}
-mod_selec=lm(log10(Price) ~ Year+Fuel_Type+Power+Make,data=train)
+mod_selec=lm(log10(Price) ~ Year+Fuel_Type+Power+Gama,data=train)
 summary(mod_selec)
 ```
 
@@ -969,42 +1292,43 @@ print(paste("MSE:", mean(mod_selec$residuals^2)))
 plot(mod_selec)
 ```
 
-```{r, message=FALSE, warning=FALSE}
-dwt(mod_selec, alternative = "two.sided")
+```{r}
+#install.packages("lme4")
+#install.packages("performance")
+#install.packages("see")
+#install.packages('patchwork')
+
+check_model(mod_selec)
+check_heteroscedasticity(mod_selec)
+model_performance(mod_selec)
+compare_performance(mod_selec)
+
 ```
-
-
-En el gráfico de *Residuos vs Ajustes* se observa que la media de los residuos es prácticamente cero, luego la linealidad del modelo no se viola.
-
-La *varianza* de los residuos parece constante por lo que tampoco se viola la homocedasticidad del modelo, el ajuste es bueno.
-Lo que si se observa es la aparición de puntos candidatos a ser outliers.
-
-Con el *Q-Q Plot* vemos que los residuos no tienen una distribución normal en las colas. Por tanto no se puede asumir que los estimadores de los coeficientes tengan una distrbución normal.
-
-En el gráfico de *Residuals vs Leverage* observamos que hay puntos con alto leverage pero ninguno cae fuera de los limites de la distancia de Cook.
-
-Además, gracias al *Darwin test* sabemos que no hay evidencias de autocorrelación.
-
-Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R cuadrado de aproximadamente el 90%. Realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. 
-
-
+```{r}
+r2(mod_selec)
+```
 
 ```{r, message=FALSE, warning=FALSE}
 AIC(lm(log(Price)~Power,data=train))
 AIC(lm(log(Price)~Power+Year,data=train))
-AIC(lm(log(Price)~Power+Year+Make,data=train))
-AIC(lm(log(Price)~Fuel_Type+Power+Year+Make,data=train))
+AIC(lm(log(Price)~Power+Year+Gama,data=train))
+AIC(lm(log(Price)~Fuel_Type+Power+Year+Gama,data=train))
 ```
 
 ```{r, message=FALSE, warning=FALSE}
 BIC(lm(log(Price)~Power,data=train))
 BIC(lm(log(Price)~Power+Year,data=train))
-BIC(lm(log(Price)~Power+Year+Make,data=train))
-BIC(lm(log(Price)~Fuel_Type+Power+Year+Make,data=train))
+BIC(lm(log(Price)~Power+Year+Gama,data=train))
+BIC(lm(log(Price)~Fuel_Type+Power+Year+Gama,data=train))
 ```
 
 Según los criterios AIC y BIC el mejor modelo es el que contiene las 4 covariables. El criterio BIC suele ser más parsimonioso pero también detecta que el mejor modelo es el de cuatro variables: Fuel_Type, Power, Year y Make.
 
+seleccion automatica de variables
+
+```{r}
+modelo <- leaps::regsubsets(log(Price)~., train,really.big=T)
+```
 
 
 
