@@ -37,6 +37,14 @@ library(leaps)
 library(PerformanceAnalytics)
 library(GGally)
 library(psych)
+library(carData)
+library(car)
+library(lmtest)
+library(olsrr)
+library(performance)
+library(see)
+library(lme4)
+library(patchwork)
 ```
 
 # DATASET
@@ -230,10 +238,14 @@ ggplot(train, aes(x=Fuel_Type)) +
 ## {-}
 
 La tercera variable que vamos a analizar es "Fuel_Type", que hace referencia al tipo de combustible que usa cada coche. Se trata de una variable cualitativa. Está representada en nuestros datos como factor y los valores que  toma son CNG,LPG, Electric, Diesel y Pretol. Vamos a describir cada uno de los valores que toma esta variable:
-    -CNG: El gas natural comprimido, más conocido por la sigla GNC, es un combustible para uso vehicular que, por ser económico y ambientalmente más limpio, es considerado una alternativa sustentable para la sustitución de combustibles líquidos.
-    -LPG: El gas licuado del petróleo es la mezcla de gases licuados presentes en el gas natural o disueltos en el petróleo. Lleva consigo procesos físicos y químicos por ejemplo el uso de metano.
-    -Diésel: El diésel o dísel, también denominado gasóleo o gasoil, es un hidrocarburo líquido de densidad sobre 850 kg/m³, compuesto fundamentalmente por parafinas y utilizado principalmente como combustible en calefacción y en motores diésel. Su poder calorífico inferior es de 35,86 MJ/l.
-    -Petrol: La gasolina es formada con el petróleo refinado, utilizado principalmente como combustible, es esencial para la red mundial de transporte, el combustible primario que hace funcionar los motores de combustión interna que mueven la mayoría de los automóviles y otros sistemas de transporte.
+
+  -CNG: El gas natural comprimido, más conocido por la sigla GNC, es un combustible para uso vehicular que, por ser económico y ambientalmente más limpio, es considerado una alternativa sustentable para la sustitución de combustibles líquidos.
+    
+  -LPG: El gas licuado del petróleo es la mezcla de gases licuados presentes en el gas natural o disueltos en el petróleo. Lleva consigo procesos físicos y químicos por ejemplo el uso de metano.
+    
+  -Diésel: El diésel o dísel, también denominado gasóleo o gasoil, es un hidrocarburo líquido de densidad sobre 850 kg/m³, compuesto fundamentalmente por parafinas y utilizado principalmente como combustible en calefacción y en motores diésel. Su poder calorífico inferior es de 35,86 MJ/l.
+    
+  -Petrol: La gasolina es formada con el petróleo refinado, utilizado principalmente como combustible, es esencial para la red mundial de transporte, el combustible primario que hace funcionar los motores de combustión interna que mueven la mayoría de los automóviles y otros sistemas de transporte.
     
 De Electric, eléctricos es del tipo que menos muestras poseemos, sólo 2. De LPG y CNG también poseemos pocas (1 y  56 restivamente) y es en Diesel y Petrol donde tenemos la mayoría de los datos, siendo 3852 y 3325 las muestras respectivamente. 
 Se muestra el histograma para visualizar la gran diferencia de muestras entre Diesel y Petróleo y las demás.
@@ -351,7 +363,7 @@ boxplot(train$Power, col = "blue")
 
 ## {-}
 
-Esta variable hace referencia a la potencia del motor. Se trata de una variable cuantitativa continua en la que el mínimo es 34.2 y el máximo 560 con media 113.3 y donde el 50% de los datos se encuentran entre 75 y 138. Además, existen 143 valores faltantes que serán de gran importancia en nuestro análisis.
+Esta variable hace referencia a la potencia del motor. Se trata de una variable cuantitativa continua en la que el mínimo es 34.2 y el máximo 560 con media 113.3 y donde el 50% de los datos se encuentran entre 75 y 138. Además, existen 113 valores faltantes que serán de gran importancia en nuestro análisis.
 
 ## Análisis variable "Seats" {.tabset .tabset-fade .tabset-pills}
 
@@ -370,6 +382,7 @@ hist(train$Seats, col = "blue")
 ### Asientos = 0
 
 No tiene sentido que haya coches con 0 asientos, procedemos a su eliminación
+
 ```{r, message=FALSE, warning=FALSE}
 train%>% filter(Seats>0) -> train
 summary(train$Seats)
@@ -377,7 +390,7 @@ summary(train$Seats)
 ## {-}
 
 Esta variable "Seats" hace referencia al número de asientos que tiene el coche. Es una variable cuantitativa discreta ya que son valores exactos y además se trata como numeric, que viene perfecto para nuestro análisis. Se aprecia que aparece una de las opciones con Seats=0 cuyo valor es NA, la hemos obviado ya que es imposible que un coche no tenga asientos. La mayoría de los coches poseen 5 asientos y se le acercan también los coches de 7 y 8 plazas, mucho más comunes en personas con muchos hijos o que necesiten los coches para transportar más personas de lo "común".
-Si nos fijamos en el summary como hemos dicho antes la media está en 5.28, aproximadamente 5 y contamos con 42 valores NA's.
+Si nos fijamos en el summary como hemos dicho antes la media está en 5.28, aproximadamente 5 y contamos con 34 valores NA's.
 
 ## Análisis variable "New_Price" {.tabset .tabset-fade .tabset-pills}
 
@@ -395,7 +408,7 @@ apply(is.na(train[, c(12,13)]), 2, mean)  #porcentaje na por columna
 
 ## {-}
 
-New_Price contiene 5195 NA's que conforman el 86% de los valores faltantes en esa columna. Más adelante la eliminaremos del train set cuando hagamos la división.
+New_Price contiene 4105 NA's que conforman el 86% de los valores faltantes en esa columna. Más adelante la eliminaremos del train set cuando hagamos la división.
 
 ## Análisis variable "Price" {.tabset .tabset-fade .tabset-pills}
 
@@ -420,7 +433,7 @@ train%>% ggplot(aes(x=Price)) +
 
 ## {-}
 
-La variable Price será nuestra variable respuesta. Trataremos de estimar el precio de un coche en base a todas las demás características. El precio está expresado en Rupias y en nuestros datos como numeric. Haciendo un summary vemos que el mínimo precio es de 0.440 y el máximo de 160 que al estar tan lejos de la media se entiende que hay pocos coches que tengan un precio tan alto. La media está en 9.47 rupias y el 50% de los coches tienen un precio de entre 3.5 y 9.95. 
+La variable Price será nuestra variable respuesta. Trataremos de estimar el precio de un coche en base a todas las demás características. El precio está expresado en Rupias y en nuestros datos como numeric. Haciendo un summary vemos que el mínimo precio es de 0.440 y el máximo de 160 que al estar tan lejos de la media se entiende que hay pocos coches que tengan un precio tan alto. La media está en 9.47 rupias y el 50% de los coches tienen un precio de entre 3.5 y 9.92. 
 
 Una vez analizadas tanto las variables de manera univariante como sus outliers, ahora ya podemos detectar y tratar los valores faltantes.
 
@@ -549,13 +562,14 @@ train %>%
 
 ## {-}
 
-# SELECCION DE VARIABLES 
+# SELECCIÓN DE VARIABLES 
 
 ## {.tabset .tabset-fade .tabset-pills}
 
 ### Variable Respuesta
 
-Nuestra variable respuesta va a ser: *Price*
+Nuestra variable respuesta va a ser: *Price*.
+
 Por lo que en primer lugar, vamos a ver la distribución de esta variable.
 
 ```{r, message=FALSE, warning=FALSE}
@@ -873,7 +887,7 @@ Existe una alta correlación entre las variables Engine y Power, al igual que en
 
 ## {-}
 
-# AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESION LINEAL MÚLTIPLE
+# AJUSTE, INTERPRETACIÓN Y DIAGNOSIS DEL MODELO DE REGRESIÓN LINEAL MÚLTIPLE
 
 ```{r, message=FALSE, warning=FALSE}
 cor(train[, c(3, 8, 9, 11)])
@@ -996,24 +1010,22 @@ mod11=lm(log10(Price) ~ Year+Fuel_Type+Transmission+Owner_Type+Power+Engine+Seat
 Vamos a chequearlos para ver cual obtiene mejores estadísticos:
 
 ```{r, message=FALSE,warning=FALSE}
-library(carData)
-library(car)
-library(lmtest)
-library(olsrr)
-library(performance)
-library(see)
-library(lme4)
-library(patchwork)
+
 compare_performance(mod0,mod1,mod2,mod3,mod4,mod5,mod6,mod7,mod8,mod9,mod10,mod11, rank=TRUE)
 plot(compare_performance(mod0,mod1,mod2,mod3,mod4,mod5,mod6,mod7,mod8,mod9,mod10,mod11, rank=TRUE))
 ```
 
 Analizando cada uno de los modelos, sus índices y en qué medida afecta el aumento o disminución de variables, se decide que los mejores modelos hasta el momento son:
-- El modelo nº 2 tiene como variables: Year, Power y Gama 
-- El modelo nº 3 tiene como variables: Year, Fuel_Type, Power y Gama
-- El modelo nº 6 tiene como variables: Year, Transmission, Power, Seats y Gama
-- El modelo nº 7 tiene como variables: Year,Fuel_Type,Transmission,Power,Seats y Gama
-- El modelo nº 11 tiene como variables: Year, Fuel_Type, Transmission, Owner_Type, Power, Engine, Seats y Gama
+
+-El modelo nº 2 tiene como variables: Year, Power y Gama 
+
+-El modelo nº 3 tiene como variables: Year, Fuel_Type, Power y Gama
+
+-El modelo nº 6 tiene como variables: Year, Transmission, Power, Seats y Gama
+
+-El modelo nº 7 tiene como variables: Year,Fuel_Type,Transmission,Power,Seats y Gama
+
+-El modelo nº 11 tiene como variables: Year, Fuel_Type, Transmission, Owner_Type, Power, Engine, Seats y Gama
 
 ```{r}
 compare_performance(mod2,mod3,mod6,mod7,mod11, rank=TRUE)
@@ -1080,9 +1092,13 @@ Además, gracias al *Durbin Watson test* sabemos que no hay evidencias de autoco
 Por otro lado, tenemos un problema de multicolinealidad cuando las variables explicativas (regresores) están relacionadas entre sí, de forma que solapan información para predecir la respuesta.
 Cuando tenemos multicolinealidad, la estimacion de los coeficientes del modelo no es muy estable y por tanto los errores de estimación son grandes. Utilizamos el VIF para comprobarlo.
 Los límites de referencia que se suelen emplear son:
-    - VIF = 1: Ausencia total de colinealidad.
-    - 1 < VIF < 5: La regresión puede verse afectada por cierta colinealidad.
-    - 5 < VIF < 10: Causa de preocupación.
+
+  -VIF = 1: Ausencia total de colinealidad.
+  
+  -1 < VIF < 5: La regresión puede verse afectada por cierta colinealidad.
+  
+  -5 < VIF < 10: Causa de preocupación.
+  
 y vemos que no tenemos valores elevados, por tanto no hay problemas de multicolinealidad. También lo podemos comprobar gracias al gráfico ''Collinearity'' . Aunque entre los distintos tipos de gasolina si que exista cierta colinealidad, ello no afectará al modelo.
 Parece que no hay violaciones a los supuestos de OLS. Nuestro modelo parece decente, con un R2 adj de aproximadamente el 90%, realmente bueno ya para un modelo lineal. OLS son las distancias verticales entre las respuestas observadas en la muestra y las respuestas del modelo. Como conclusión a este modelo diríamos que se adecúa a los datos, pero veamos si reduciendo el número de variables, es decir, simplificando el problema, podemos mantener la buena explicatividad que necesitamos.
 
@@ -1289,9 +1305,12 @@ ks.test(residuos, 'pnorm')
 
 Se contrasta la hipótesis nula de que los residuos del modelo se distribuyen según una distribución Normal. Al obtener un p.valor menor que 0.05 rechazamos H0 y por consiguiente se tiene que los residuos no siguen una distribución Normal. Sin embargo, debido a que los modelos lineales en general son robustos, proseguiremos con el análisis asumiendo cierta normalidad. 
 Obtenemos:
-    -Valores ajustados: valores ajustados (valores de la variable respuesta) para las observaciones originales de la predictora.
-    -Residuos: diferencia entre valor observado de la respuesta y valor ajustado por el modelo.
-    -Estadísticos: residuos estudentizados del modelo ajustado.
+
+-Valores ajustados: valores ajustados (valores de la variable respuesta) para las observaciones originales de la predictora.
+    
+-Residuos: diferencia entre valor observado de la respuesta y valor ajustado por el modelo.
+    
+-Estadísticos: residuos estudentizados del modelo ajustado.
 
 Ahora, vamos a analizar si existen observaciones influyentes y/o anómalas:
 
