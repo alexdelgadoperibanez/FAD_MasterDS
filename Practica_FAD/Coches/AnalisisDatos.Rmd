@@ -1,16 +1,19 @@
 ---
-title: "Análisis de Datos: Precio de los coches en la India"
+title: 'Análisis de Datos: Precio de los coches en la India'
 author: "Amanda del Álamo & Alejandro Delgado"
 date: "16/11/2021"
 output:
   html_document:
     theme: paper
     highlight: zenburn
-    code_folding: "hide"
+    code_folding: hide
     toc: yes
     toc_float: yes
     toc_depth: 1
     df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: '1'
 ---
 
 ```{r setup, include=FALSE, warning=FALSE,message=FALSE}
@@ -1408,5 +1411,136 @@ plot(exp(pred),log(test$Price),col="blue", xlab = "Precio según el modelo",
      ylab = "Precio observado", main="Representación del precio predicho frente al observado")
 ```
 
+#Análisis de componentes principales
+
+El análisis de componentes principales (en inglés, PCA) es una técnica utilizada para describir un conjunto de datos en términos de nuevas variables denominadas componentes no correlacionadas. Estas nuevas componentes se construyen a partir de las variables existentes, eso sí, debemos asegurarnos de que las variables utilizadas en PCA sean variables cuantitativas (no podemos usar variables cualitativas ni categóricas). Con esta técnica se pretende reducir la dimensionalidad del problema en cuestión.
+
+```{r}
+str(train)
+train
+corrplot(cor(train[, c(3,4, 8, 9, 14, 15)]), method = "ellipse") 
+corPlot(train[, c(3,4, 8, 9, 14, 15)], cex = 1.2, main = "Matriz de correlación")
+corrplot(cor(train[, c(3,4, 8, 9, 14, 15)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
+         addrect =2,rect.col = 3,rect.lwd = 3)  
+```
+```{r}
+cortest(cor(train[, c(3,4, 8, 9, 14, 15)]))
+```
+Tenemos evidencias para decir que las correlaciones son distintas de 0
+
+
+```{r}
+pca1 <- prcomp(train[, c(3,4, 8, 9, 14, 15)])
+```
+
+```{r}
+plot(pca1)
+```
+```{r}
+summary(pca1)
+```
+En nuestro conjunto de datos inicial, todas nuestras variables eran cuantitativas (menos la variable respuesta, que no utilizamos en aprendizaje no supervisado), sin embargo, las variables categorizadas que hemos creado no lo son. Así que haremos el análisis de componentes principales escalando las variables: Kilometers_Driven, Power, Seats, kmpl y kmpg.
+
+```{r}
+pca2 <- prcomp(train[, c(3,4, 8, 9, 14, 15)], scale=T)
+
+pca2
+
+```
+Aquí arriba, podemos ver los diferentes pesos que otorga el análisis de componentes principales a cada una de las variables iniciales escaladas. Por ejemplo: en la primera componente principal (PC1), vemos que sobre todo se enfrentan las variables Engine y Power contra kmpl; en la segunda componente principal (PC2), vemos que se enfrenta la variable kmpg contra kmpl, Power,Year y Engine; en la tercera componente principal (PC3) se enfrentan los kilómetros que lleva recorridos el coche contra el año de fabricación y la variable kmpkg.
+
+Sin embargo, aquí resulta difícil ver algo claro e intuitivo, así que haremos un pequeño resumen y un gráfico multivariante para mostrar la información más relevante del PCA.
+
+```{r}
+plot(pca2)
+biplot(pca2)
+```
+
+En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el teorema 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este dos teoremas ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
+
+
+```{r}
+library(factoextra)
+fviz_pca_var(pca2,axes = c(1,2), col.var = "cos2", alpha.var = "contrib" ) + theme_grey()
+```
+
+La suma de cos2 de una variable determinada sobre cada factor es 1. Esto significa que cada vector debería estar tocando el perímetro de la circunferencia unidad, pero no lo está haciendo ninguna prácticamente, ¿por qué?. Si observamos por ejemplo la variable Engine(al igual que Power), vemos que está muy cerca de tocar dicho perímetro, su proyección sobre las dimensiones 1 y 2 (componentes) indica su contribución a éstas, pero aún le falta algo de contribución que debe estar repartida por otra u otras dimensiones. Si está variable solo tuviese peso sobre las dos primeras dimensiones estaría tocando la circunferencia.
+
+Podemos colorear las observaciones según alguna variable. Además podemos hacer que las variables que más contribuyen en este plano factorial, se resalten más que las que menos influencia tienen. También tenemos la posibilidad de dibujar elipses alrededor de cada grupo con un cierto nivel de confianza.
+
+Como se aprecia en los gráficos anteriores, no tiene mucho sentido representar la segunda componente principal ya que no realiza un correcto enfrentamiento de variables y no nos aporta nada.
+
+```{r}
+PC1= pca2[[2]][,1]
+PC2= pca2[[2]][,2]
+PC3= pca2[[2]][,3]
+componentes_princ <- cbind(PC1,PC2,PC3)
+componentes_princ
+library(ade4)
+```
+
+
+```{r}
+fviz_pca_ind(pca2,axes=c(1,3), col.ind = train$Gama, alpha.ind = "contrib" ) + theme_grey()
+```
+
+```{r}
+fviz_pca_ind( pca2,axes=c(1,3),  habillage = as.factor( train$Gama ), addEllipses = TRUE, ellipse.level = 0.99 )
+```
+
+```{r}
+fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Make, alpha.ind = "contrib" ) + theme_grey()
+```
+```{r}
+fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Fuel_Type, alpha.ind = "contrib" ) + theme_grey()
+```
+
+```{r}
+fviz_pca_ind( pca2, axes=c(1,3),habillage = as.factor( train$Fuel_Type ), addEllipses = TRUE, ellipse.level = 0.99 )
+```
+
+
+```{r}
+fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Transmission, alpha.ind = "contrib" ) + theme_grey()
+```
+
+```{r}
+fviz_pca_ind( pca2, axes=c(1,3),habillage = as.factor( train$Transmission ), addEllipses = TRUE, ellipse.level = 0.99 )
+```
+
+```{r}
+fviz_pca_ind( pca2,axes=c(1,3), col.ind = train$Location, alpha.ind = "contrib" ) + theme_grey()
+```
+
+```{r}
+fviz_pca_biplot( pca2, axes=c(1,3),col.ind = train$Gama )
+```
+
+```{r}
+summary(pca2)
+```
+
+Por otro lado, podemos decir que lo que más nos interesa de este resumen es la proporción de la varianza total que consigue explicar cada componente principal. Según el resumen que acabamos de mostrar arriba, vemos que la varianza total explicada no aumenta mucho a partir de la tercera o cuarta componente principal (y que con todas las componentes principales, evidentemente, la varianza explicada es el 100%). Para visualizar esto haremos un gráfico de barras:
+
+```{r}
+screeplot(pca2, xlab="PCs")
+```
+A la luz de los datos visuales recabados parece evidente que nos tenemos que quedar con las 3 primeras componentes principales (PC1, PC2 y PC3), pero no está tan claro que debemos hacer con la cuarta(PC4).
+
+```{r}
+library(psych)
+scree(train[, c(3,4, 8, 9, 14, 15)],main ="Grafico_de_Sedimentacion")
+```
+El grafico de Sedimentacion nos muestra la cantidad óptima de componentes a tomar en el análisis, siendo los valores por encima de la linea de 1.0 los más aceptables.
+
+```{r}
+fa.parallel(train[, c(3,4, 8, 9, 14, 15)],fa="pc")
+```
+Según los resultados del Análisis paralelo, el número de componentes deberá ser 3. 
+
+```{r}
+
+s.corcircle(componentes_princ[,-2], sub="PC1 Y PC3")
+```
 
 
