@@ -1449,19 +1449,75 @@ pca2
 ```
 Aquí arriba, podemos ver los diferentes pesos que otorga el análisis de componentes principales a cada una de las variables iniciales escaladas. Por ejemplo: en la primera componente principal (PC1), vemos que sobre todo se enfrentan las variables Engine y Power contra kmpl; en la segunda componente principal (PC2), vemos que se enfrenta la variable kmpg contra kmpl, Power,Year y Engine; en la tercera componente principal (PC3) se enfrentan los kilómetros que lleva recorridos el coche contra el año de fabricación y la variable kmpkg.
 
+```{r}
+summary(pca2)
+```
+La inercia de las primeras dimensiones muestra si existen relaciones fuertes entre las variables y sugiere el número de dimensiones que se deben estudiar.
+
+Las dos primeras dimensiones de análisis expresan el 59,83% de la inercia total del conjunto de datos; eso quiere decir que el 59.83% de los individuos (o variables) nublan la variabilidad total es explicada por el plano. Este porcentaje es relativamente alto y, por lo tanto, el primer plano representa bien la variabilidad de los datos. Este valor es muy superior al valor de referencia que equivale al 34,95%, por lo que la variabilidad explicada por este plano es muy significativa (el valor de referencia es el cuantil 0,95 de la distribución de porcentajes de inercia obtenida simulando 1689 tablas de datos de tamaño equivalente sobre la base de una distribución normal).
+
+A partir de estas observaciones, conviene interpretar también las dimensiones mayores o iguales a la tercera.
+
 Sin embargo, aquí resulta difícil ver algo claro e intuitivo, así que haremos un pequeño resumen y un gráfico multivariante para mostrar la información más relevante del PCA.
+
+Estudio del Plano 1:2
+
+```{r}
+PC1= pca2[[2]][,1]
+PC2= pca2[[2]][,2]
+PC3= pca2[[2]][,3]
+PC4= pca2[[2]][,4]
+
+componentes_princ <- cbind(PC1,PC2,PC3,PC4)
+componentes_princ
+library(ade4)
+```
 
 ```{r}
 plot(pca2)
 biplot(pca2)
+s.corcircle(componentes_princ[,-3], sub="PC1 Y PC2")
+
 ```
 
-En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el teorema 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este dos teoremas ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
+En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el teorema 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este teorema ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
+
+La dimensión 1 opone individuos caracterizados por una coordenada fuertemente positiva en el eje (a la derecha del gráfico) a individuos caracterizados por una coordenada fuertemente negativa en el eje (a la izquierda del gráfico).
+
+El grupo 1 (caracterizado por una coordenada positiva en el eje) comparte:
+  -valores altos para la variable kmpkg.
+  -valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
+
+El grupo 2 (caracterizado por una coordenada positiva en el eje) comparte:
+  -valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
+  -valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
+
+El grupo 3 (caracterizado por una coordenada negativa en el eje) comparte:
+  -valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
+  -valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
+
+La dimensión 2 opone individuos caracterizados por una coordenada fuertemente positiva en el eje (en la parte superior del gráfico) a individuos caracterizados por una coordenada fuertemente negativa en el eje (en la parte inferior del gráfico).
+
+El grupo 1 (caracterizado por una coordenada positiva en el eje) comparte:
+  -valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
+  -valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
+
+El grupo 2 (caracterizado por una coordenada positiva en el eje) comparte:
+  -valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
+  -valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
+
+El grupo 3 (caracterizado por una coordenada negativa en el eje) comparte:
+  -valores altos para la variable kmpkg.
+  -valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
+
 
 
 ```{r}
 library(factoextra)
+
 fviz_pca_var(pca2,axes = c(1,2), col.var = "cos2", alpha.var = "contrib" ) + theme_grey()
+fviz_pca_var(pca2,axes = c(1,3), col.var = "cos2", alpha.var = "contrib" ) + theme_grey()
+
 ```
 
 La suma de cos2 de una variable determinada sobre cada factor es 1. Esto significa que cada vector debería estar tocando el perímetro de la circunferencia unidad, pero no lo está haciendo ninguna prácticamente, ¿por qué?. Si observamos por ejemplo la variable Engine(al igual que Power), vemos que está muy cerca de tocar dicho perímetro, su proyección sobre las dimensiones 1 y 2 (componentes) indica su contribución a éstas, pero aún le falta algo de contribución que debe estar repartida por otra u otras dimensiones. Si está variable solo tuviese peso sobre las dos primeras dimensiones estaría tocando la circunferencia.
@@ -1470,50 +1526,19 @@ Podemos colorear las observaciones según alguna variable. Además podemos hacer
 
 Como se aprecia en los gráficos anteriores, no tiene mucho sentido representar la segunda componente principal ya que no realiza un correcto enfrentamiento de variables y no nos aporta nada.
 
-```{r}
-PC1= pca2[[2]][,1]
-PC2= pca2[[2]][,2]
-PC3= pca2[[2]][,3]
-componentes_princ <- cbind(PC1,PC2,PC3)
-componentes_princ
-library(ade4)
-```
+
 
 
 ```{r}
-fviz_pca_ind(pca2,axes=c(1,3), col.ind = train$Gama, alpha.ind = "contrib" ) + theme_grey()
-```
-
-```{r}
-fviz_pca_ind( pca2,axes=c(1,3),  habillage = as.factor( train$Gama ), addEllipses = TRUE, ellipse.level = 0.99 )
-```
-
-```{r}
-fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Make, alpha.ind = "contrib" ) + theme_grey()
-```
-```{r}
-fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Fuel_Type, alpha.ind = "contrib" ) + theme_grey()
-```
-
-```{r}
-fviz_pca_ind( pca2, axes=c(1,3),habillage = as.factor( train$Fuel_Type ), addEllipses = TRUE, ellipse.level = 0.99 )
-```
-
-
-```{r}
-fviz_pca_ind( pca2, axes=c(1,3),col.ind = train$Transmission, alpha.ind = "contrib" ) + theme_grey()
-```
-
-```{r}
-fviz_pca_ind( pca2, axes=c(1,3),habillage = as.factor( train$Transmission ), addEllipses = TRUE, ellipse.level = 0.99 )
-```
-
-```{r}
-fviz_pca_ind( pca2,axes=c(1,3), col.ind = train$Location, alpha.ind = "contrib" ) + theme_grey()
-```
-
-```{r}
-fviz_pca_biplot( pca2, axes=c(1,3),col.ind = train$Gama )
+#fviz_pca_ind(pca2,axes=c(1,2), col.ind = train$Gama, alpha.ind = "contrib" ) + theme_grey()
+#fviz_pca_ind( pca2,axes=c(1,2),  habillage = as.factor( train$Gama ), addEllipses = TRUE, ellipse.level = 0.99 )
+#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Make, alpha.ind = "contrib" ) + theme_grey()
+#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Fuel_Type, alpha.ind = "contrib" ) + theme_grey()
+#fviz_pca_ind( pca2, axes=c(1,2),habillage = as.factor( train$Fuel_Type ), addEllipses = TRUE, ellipse.level = 0.99 )
+#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Transmission, alpha.ind = "contrib" ) + theme_grey()
+#fviz_pca_ind( pca2, axes=c(1,2),habillage = as.factor( train$Transmission ), addEllipses = TRUE, ellipse.level = 0.99 )
+#fviz_pca_ind( pca2,axes=c(1,2), col.ind = train$Location, alpha.ind = "contrib" ) + theme_grey()
+#fviz_pca_biplot( pca2, axes=c(1,2),col.ind = train$Gama )
 ```
 
 ```{r}
@@ -1525,12 +1550,14 @@ Por otro lado, podemos decir que lo que más nos interesa de este resumen es la 
 ```{r}
 screeplot(pca2, xlab="PCs")
 ```
-A la luz de los datos visuales recabados parece evidente que nos tenemos que quedar con las 3 primeras componentes principales (PC1, PC2 y PC3), pero no está tan claro que debemos hacer con la cuarta(PC4).
+
+Una estimación del número correcto de ejes a interpretar sugiere restringir el análisis a la descripción de los 3 primeros ejes. Estos ejes presentan una inercia superior a las obtenidas por el cuantil 0,95 de las distribuciones aleatorias (78,56% frente a 51,79%). Esta observación sugiere que solo estos ejes llevan una información real. En consecuencia, la descripción se situará en estos ejes.
 
 ```{r}
 library(psych)
 scree(train[, c(3,4, 8, 9, 14, 15)],main ="Grafico_de_Sedimentacion")
 ```
+
 El grafico de Sedimentacion nos muestra la cantidad óptima de componentes a tomar en el análisis, siendo los valores por encima de la linea de 1.0 los más aceptables.
 
 ```{r}
@@ -1538,9 +1565,18 @@ fa.parallel(train[, c(3,4, 8, 9, 14, 15)],fa="pc")
 ```
 Según los resultados del Análisis paralelo, el número de componentes deberá ser 3. 
 
+Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirven para realizar una correcta redimensión de los datos. Nos damos cuenta de que nuestro problema es bastante difícil de resolver, dado que es complicado ver algún tipo de separación o tendencia de los coches en función de las variables categóricas o incluso en cuanto al precio. Aún así, si nos fijamos, en los gráficos que enfrentan PC1 con PC2, PC1 con PC3 y PC2 con PC3, parece que los coches de gama media y gama alta están más dispersos que los de gama baja.
+
+```{r}
+#library(FactoMineR)
+#library(FactoInvestigate)
+#res = PCA(train[, c(3,4, 8, 9, 14, 15)], graph=FALSE)
+#Investigate(res) 
+```
+
+
 ```{r}
 
-s.corcircle(componentes_princ[,-2], sub="PC1 Y PC3")
 ```
 
 
