@@ -1411,7 +1411,7 @@ plot(exp(pred),log(test$Price),col="blue", xlab = "Precio según el modelo",
      ylab = "Precio observado", main="Representación del precio predicho frente al observado")
 ```
 
-#Análisis de componentes principales
+# Análisis de componentes principales
 
 El análisis de componentes principales (en inglés, PCA) es una técnica utilizada para describir un conjunto de datos en términos de nuevas variables denominadas componentes no correlacionadas. Estas nuevas componentes se construyen a partir de las variables existentes, eso sí, debemos asegurarnos de que las variables utilizadas en PCA sean variables cuantitativas (no podemos usar variables cualitativas ni categóricas). Con esta técnica se pretende reducir la dimensionalidad del problema en cuestión.
 
@@ -1574,9 +1574,65 @@ Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirve
 #Investigate(res) 
 ```
 
+# Regrasión logística
 
 ```{r}
 
+train <- train[,-13]
+
+#Hacemos una divisíón de los coches en gama baja-media y gama alta para poder realizar la regresión logística sobre ella
+
+train %>% 
+  mutate(
+    Gama = case_when( 
+      train$Make=="Datsun" |train$Make=="Smart" |train$Make=="Tata" |train$Make=="Fiat" |train$Make=="Chevrolet" |train$Make=="Ambassador" |
+      train$Make=="Skoda"|train$Make=="Renault" |train$Make=="Ford" |train$Make=="Honda"|train$Make=="Volkswagen" |train$Make=="Hyundai" |train$Make=="Nissan" |train$Make=="Maruti" ~ "Gama baja-media",
+      train$Make=="Bentley"|train$Make=="Porsche" |train$Make=="Land Rover" |train$Make=="Jaguar" |train$Make=="Mini" |train$Make=="Mercedes-Benz" |train$Make=="Audi" |train$Make=="Bmw" |train$Make=="Jeep" |train$Make=="Volvo" |train$Make=="Isuzu" |train$Make=="Mitsubishi" |train$Make=="Toyota" |train$Make=="Force" |train$Make=="Mahindra"~ "Gama alta"
+    )
+  ) -> train
+
+train$Gama <- as.factor(train$Gama)
 ```
+
+```{r}
+table(train$Gama)
+ggplot(train, aes(x = Power, y = Price, color = Gama)) + geom_point()
+ggplot(train, aes(x = Engine, y = Price, color = Gama)) + geom_point()
+ggplot(train, aes(x = Transmission, y = Price, color = Gama)) + geom_point()
+ggplot(train, aes(x = Seats, y = Price, color = Gama)) + geom_point()
+ggplot(train, aes(x = Owner_Type, y = Price, color = Gama)) + geom_point()
+```
+
+
+```{r}
+# modelos lineales generalizados estimados por MLE
+logit <- glm( 
+  Gama ~Power+Seats+Transmission+Owner_Type+Engine, 
+  data = train, 
+  family = binomial()
+)
+summary(logit)
+
+logit2 <- glm( 
+  Gama ~Owner_Type+Seats+Transmission+Engine, 
+  data = train, 
+  family = binomial()
+)
+summary(logit2)
+
+logit3 <- glm( 
+  Gama ~Power+Seats+Transmission+Engine, 
+  data = train, 
+  family = binomial()
+)
+summary(logit3)
+```
+
+La interpretación de los p-valores es similar a la del modelo lineal. Podemos ver que las variables Engine,Power,Seats y Transmission son significativas en el modelo (p-valor mucho menor de 0.05), mientras que la variable Owner_Type influye más en un modelo que en otro.
+
+En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: $η=log(p1−p)$,
+siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/1−p$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Seats (-0.52) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama disminuye 0.52 unidades por cada unidad que aumenta la variable Seats.
+
+
 
 
