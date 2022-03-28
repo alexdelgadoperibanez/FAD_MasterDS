@@ -81,6 +81,29 @@ library(dplyr)
 data %>% select(-Price.mod2) -> data
 data %>% select(-X) -> data
 head(data)
+data %>%
+  mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
+  mutate(Transmission = as.factor(Transmission)) %>%
+  mutate(Location = as.factor(Location)) -> data
+data %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> data
+
+data %>%
+  mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
+  mutate(Transmission = as.factor(Transmission)) %>%
+  mutate(Location = as.factor(Location)) -> data
+
+dataTest %>%
+  mutate(Name = as.factor(Name)) %>%
+  mutate(Make = as.factor(Make)) %>%
+  mutate(Seats = as.factor(Seats))%>%
+  mutate(Gama = as.factor(Gama))-> dataTest
+
+data %>%
+  mutate(Name = as.factor(Name)) %>%
+  mutate(Make = as.factor(Make)) %>%
+  mutate(Seats = as.factor(Seats))-> data
+
+dataTest %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> dataTest
 ```
 
 ## Análisis no supervisado
@@ -549,16 +572,16 @@ for (i in 1:50){
   precisioni = medidaPrecision(ti)
   precisionesknn[i] = precisioni
 }
-precisionesknn
+#precisionesknn
 ```
 
 
 Aquí podemos observar las precisiones que obtenemos en función de los vecinos que escogemos (en un intervalo de 1 a 50), pero podemos visualizarlo mucho mejor en el siguiente gráfico, donde marcamos el máximo en color rojo.
 
 ```{r knn 3}
-plot(precisionesknn,xlab="Número de vecinos",ylab="Precisión",type="l",col=3, main="Precisión en función de los vecinos elegidos")
-points(precisionesknn)
-points(which.max(precisionesknn),max(precisionesknn), col=2, pch=19,cex=1.5)
+#plot(precisionesknn,xlab="Número de vecinos",ylab="Precisión",type="l",col=3, main="Precisión en función de los vecinos elegidos")
+#points(precisionesknn)
+#points(which.max(precisionesknn),max(precisionesknn), col=2, pch=19,cex=1.5)
 ```
 
 
@@ -568,7 +591,133 @@ Por tanto, tomando un vecino, tenemos una precisión del `r round(precisionesknn
 
 
 ```{r, include=FALSE}
-pknn <- precisionesknn[1]
+#pknn <- precisionesknn[1]
 ```
 
 
+
+# Árboles de decisión
+
+Los árboles de decisión se construyen en base al cumplimiento o no de ciertos criterios en torno a las variables explicativas de los datos. Digamos que comenzamos comprobando un cierto criterio sobre la variable más explicativa. Si el criterio se cumple, nos vamos por una rama; si no, nos vamos por la otra. Por cada una de ellas, volveremos a comprobar otro cierto criterio, y así hasta llegar a las hojas. Las hojas clasifican a los datos en un grupo u otro. Todo esto lo explicaremos mucho mejor cuando construyamos nuestros árboles de decisión.
+
+Primero veremos cuál es el valor óptimo de `cp` (parámetro de complejidad que combina la tasa de error con la profundidad del árbol). Para ello, construiremos un árbol muy complejo, y en función de los resultados que obtengamos lo "podaremos".
+
+```{r árboles de decisión 1}
+# aquí no hace falta poner la semilla porque no es un algoritmo aleatorio
+# set.seed(09122020)
+#install.packages("rpart")
+library(rpart)
+#install.packages("rpart.plot")
+library(rpart.plot)
+#no metemos ni price ni make pq ambas son usadas para dividir la variable respuesta en dos gamas distintas
+arbolDecisionInfoComplejo <- rpart(data[,15] ~., data[,c(2:10,13,14)], cp=0.001,  method="class",parms=list(split="information"))
+plotcp(arbolDecisionInfoComplejo)
+
+```
+
+En el gráfico vemos que el mínimo se encuentra en torno al 0,0036, así que para obtener el mejor compromiso entre error y profundidad nos quedaremos con un valor de `cp`=0,004, porque tenemos que tener en cuenta que cuanto más pequeño sea este valor, más complejo y profundo será el árbol y menos error tendremos, sin embargo, corremos el riesgo de sobreajustar el modelo (problema de *overfitting*). Por otro lado, podemos usar dos criterios diferentes: el de información y el de Gini. Usaremos los dos y comprobaremos con cuál obtenemos una mayor precisión.
+
+Comenzamos con el árbol de decisión utilizando el criterio de información.
+
+```{r}
+arbolDecision <- rpart(data[,15] ~., data[,c(2:10,13,14)], cp=0.004,  method="class",parms=list(split="information"))
+arbolDecision
+```
+
+Aquí tenemos nuestro árbol de decisión. Como vemos, la primera pregunta (2 y 3) que le hará a un nuevo coche es si su motor es mayor o igual  o menor a 1690. Si es mayor o igual a 1690, le preguntará si la potencia es inferior a 164.2 (preguntas 4 y 5); y si es que no, preguntará si el tipo de combustible es de diésel o petróleo(preg 8 y 9). Si es de diésel, entonces habrá que fijarse en el número de asientos que posea el coche. En este punto del árbol, si el número de asientos es 7, se volverá a clasificar por el motor, en función de si es mayor a 2299 en el que cerraremos la rama del árbol observando si la variable kmpl es inferior a 10. Así se ha llegado a un nodo hoja (marcados en asterisco) como por ejemplo llegar hasta la condición 69 y cumplirla, donde se clasifica el coche en gama media-baja o gama alta (dependiendo de la hoja en cuestión a la que haya llegado el coche).
+Como acabamos de señalar, las variables más informativas de nuestro árbol son el motor y la potencia de los coches. Tiene sentido que esto sea así, y que la primera característica sobre la que "pregunte" el árbol para clasificar a un nuevo coche sea Engine. ¿Por qué? Porque tal y como vimos, en la sección del análisis exploratorio de datos, justo era ésta la covariable más relacionada con gama de los coches. Así que los resultados obtenidos son perfectamente coherentes con todo el estudio realizado hasta el momento.
+
+Aquí tenemos las preguntas que se han hecho a lo largo del árbol.
+
+```{r árboles de decisión 3}
+labels(arbolDecision, pretty=T)
+```
+
+Los errores que se cometen en cada hoja y el error total del árbol:
+
+```{r}
+printcp(arbolDecision)
+# Para pintar un árbol
+# Mejor mirar el esquema anterior
+rpart.plot(arbolDecision, uniform=T);
+# Otra forma para pintarlo:
+library(rattle)
+fancyRpartPlot(arbolDecision)
+```
+
+
+Vamos a comprobar la precisión del árbol con los mismos datos con los que ha sido construido.
+
+```{r árboles de decisión 5}
+predArbolInfo1 = predict(arbolDecision, data[,c(2:10,13,14)])
+# Redondeamos la predicción para obtener un resultado 0-1
+predArbolInfo1 = round(predArbolInfo1)
+tArb1 = table(predArbolInfo1, data[,15])
+medidaPrecision(tArb1)
+```
+
+Obtenemos una precisión del %, lo que esperamos que disminuya al utilizar nuevos datos. Vamos a ver como clasifica nuestro árbol a nuevos teoremas. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
+
+```{r árboles de decisión 6}
+
+
+predArbolInfo2 = predict(arbolDecision,dataTest[,c(2:10,14,15)])
+# Redondeamos la predicción para obtener un resultado 0-1
+predArbolInfo2 = round(predArbolInfo2)
+
+tArb2 = table(predArbolInfo2, dataTest[,13])
+medidaPrecision(tArb2)
+```
+
+Efectivamente vemos como la precisión del % es menor, aunque tampoco ha disminuido mucho, lo que nos indica que es un buen árbol y que no hemos sobreajustado el modelo.
+
+Por último, vamos a ver cuál es la precisión que obtenemos utilizando el criterio de Ginni.
+
+Construimos un nuevo árbol:
+
+```{r árboles de decisión 7}
+arbolDecisionGini <- rpart(data[,15] ~., data=data[,c(2:10,13,14)], cp=0.004, parms=list(split="gini"))
+arbolDecisionGini
+```
+
+Que utiliza las siguientes condiciones acerca de las características de los coches con los errores siguientes:
+
+```{r árboles de decisión 8}
+labels(arbolDecisionGini, pretty=T)
+printcp(arbolDecisionGini)
+
+# Para pintar el árbol
+rpart.plot(arbolDecisionGini, uniform=T);
+#text(arbolDecisionGini, all=T, pretty=0, fancy=T, use.n=T, fwidth=0.3, fheight=0.3)
+# Otra forma para pintarlo
+#fancyRpartPlot(arbolDecisionGini)
+```
+
+Así que en en nuestro conjunto de entrenamiento obtenemos la siguiente precisión:
+
+```{r árboles de decisión 9}
+predArbolGini1 = predict(arbolDecisionGini,data[,c(2:10,13,14)])
+# Redondeamos la predicción para obtener un resultado 0-1
+predArbolGini1 = round(predArbolGini1)
+
+tArb3 = table(predArbolGini1, data[,15])
+medidaPrecision(tArb3)
+```
+
+Y en con el conjunto de prueba obtenemos una precisión:
+
+```{r árboles de decisión 10}
+predArbolGini2 = predict(arbolDecisionGini, dataTest[,c(2:10,14,15)])
+predArbolGini2=round(predArbolGini2)
+tArb4 = table(predArbolGini2,dataTest[,13])
+pArb = medidaPrecision(tArb4)
+pArb
+```
+
+Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son idénticas para ambos métodos (información y Gini), así que la precisión que conseguimos utilizando árboles de decisión es de un %.
+
+
+
+# Bosques aleatorios
+
+# Máquinas de vectores de soporte (SVM: Support Vector Machines)
