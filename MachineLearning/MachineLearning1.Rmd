@@ -555,8 +555,6 @@ dataTest[,c(1:12,14,15)]
 ```
 
 
-
-
 ```{r}
 # Calculamos con un bucle las precisiones de modelos con 1, 2, 3, ..., 50 vecinos
 library(caret)
@@ -593,6 +591,8 @@ Por tanto, tomando un vecino, tenemos una precisión del `r round(precisionesknn
 ```{r, include=FALSE}
 #pknn <- precisionesknn[1]
 ```
+
+
 
 
 
@@ -652,21 +652,22 @@ Vamos a comprobar la precisión del árbol con los mismos datos con los que ha s
 predArbolInfo1 = predict(arbolDecision, data[,c(2:10,13,14)])
 # Redondeamos la predicción para obtener un resultado 0-1
 predArbolInfo1 = round(predArbolInfo1)
-tArb1 = table(predArbolInfo1, data[,15])
+tArb1 = table(predArbolInfo1[,1], data[,15])
+tArb2 = table(predArbolInfo1[,2], data[,15])
 medidaPrecision(tArb1)
+medidaPrecision(tArb2)
 ```
 
 Obtenemos una precisión del %, lo que esperamos que disminuya al utilizar nuevos datos. Vamos a ver como clasifica nuestro árbol a nuevos teoremas. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
 
 ```{r árboles de decisión 6}
-
-
 predArbolInfo2 = predict(arbolDecision,dataTest[,c(2:10,14,15)])
 # Redondeamos la predicción para obtener un resultado 0-1
 predArbolInfo2 = round(predArbolInfo2)
-
-tArb2 = table(predArbolInfo2, dataTest[,13])
-medidaPrecision(tArb2)
+tArb3 = table(predArbolInfo2[,1], dataTest[,13])
+tArb4 = table(predArbolInfo2[,2], dataTest[,13])
+medidaPrecision(tArb3)
+medidaPrecision(tArb4)
 ```
 
 Efectivamente vemos como la precisión del % es menor, aunque tampoco ha disminuido mucho, lo que nos indica que es un buen árbol y que no hemos sobreajustado el modelo.
@@ -699,9 +700,10 @@ Así que en en nuestro conjunto de entrenamiento obtenemos la siguiente precisi�
 predArbolGini1 = predict(arbolDecisionGini,data[,c(2:10,13,14)])
 # Redondeamos la predicción para obtener un resultado 0-1
 predArbolGini1 = round(predArbolGini1)
-
-tArb3 = table(predArbolGini1, data[,15])
-medidaPrecision(tArb3)
+tArb5 = table(predArbolGini1[,1], data[,15])
+tArb6 = table(predArbolGini1[,2], data[,15])
+medidaPrecision(tArb5)
+medidaPrecision(tArb6)
 ```
 
 Y en con el conjunto de prueba obtenemos una precisión:
@@ -709,9 +711,12 @@ Y en con el conjunto de prueba obtenemos una precisión:
 ```{r árboles de decisión 10}
 predArbolGini2 = predict(arbolDecisionGini, dataTest[,c(2:10,14,15)])
 predArbolGini2=round(predArbolGini2)
-tArb4 = table(predArbolGini2,dataTest[,13])
-pArb = medidaPrecision(tArb4)
-pArb
+tArb7 = table(predArbolGini2[,1],dataTest[,13])
+tArb8 = table(predArbolGini2[,2],dataTest[,13])
+pArb1 = medidaPrecision(tArb7)
+pArb2 = medidaPrecision(tArb8)
+pArb1
+pArb2
 ```
 
 Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son idénticas para ambos métodos (información y Gini), así que la precisión que conseguimos utilizando árboles de decisión es de un %.
@@ -721,3 +726,64 @@ Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de p
 # Bosques aleatorios
 
 # Máquinas de vectores de soporte (SVM: Support Vector Machines)
+
+```{r svm 1}
+library(e1071)
+svmdata = data[,c(2:10,13,14,15)]
+```
+
+```{r svm 2}
+# Creamos el conjunto de Train y Test
+
+ind <- sample(2,nrow(svmdata), replace= TRUE, prob = c(0.7,0.3))
+trainSet <- svmdata[ind==2,]
+testSet <- svmdata[ind==1,]
+```
+
+```{r svm 3}
+# Entrenamos el modelo
+model <- svm(Gama~., data = trainSet, kernel="radial")
+prediccion <- predict(model, newdata= testSet[-12])
+```
+
+```{r svm 4}
+# Resultado y porcentaje de acierto
+#plot(model, data = svmdata, Bwt~Hwt)
+MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC
+accuracy <- (sum(diag(MC)))/(sum(MC))
+accuracy
+```
+```{r svm 5}
+# Resultado y porcentaje de acierto
+#plot(model, data = svmdata, Bwt~Hwt)
+model2 <- svm(Gama~., data = trainSet, kernel="linear")
+prediccion <- predict(model2, newdata= testSet[-12])
+
+MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC
+accuracy <- (sum(diag(MC)))/(sum(MC))
+accuracy
+```
+```{r svm 6}
+# Resultado y porcentaje de acierto
+#plot(model, data = svmdata, Bwt~Hwt)
+model3 <- svm(Gama~., data = trainSet, kernel="sigmoid")
+prediccion <- predict(model3, newdata= testSet[-12])
+
+MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC
+accuracy <- (sum(diag(MC)))/(sum(MC))
+accuracy
+```
+```{r svm 7}
+# Resultado y porcentaje de acierto
+#plot(model, data = svmdata, Bwt~Hwt)
+model4 <- svm(Gama~., data = trainSet, kernel="polynomial")
+prediccion <- predict(model4, newdata= testSet[-12])
+
+MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC
+accuracy <- (sum(diag(MC)))/(sum(MC))
+accuracy
+```
