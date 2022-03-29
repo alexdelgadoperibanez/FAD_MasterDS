@@ -658,7 +658,7 @@ medidaPrecision(tArb1)
 medidaPrecision(tArb2)
 ```
 
-Obtenemos una precisión del %, lo que esperamos que disminuya al utilizar nuevos datos. Vamos a ver como clasifica nuestro árbol a nuevos teoremas. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
+Obtenemos una precisión del 97%, lo que esperamos que disminuya al utilizar nuevos datos. Vamos a ver como clasifica nuestro árbol a nuevos teoremas. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
 
 ```{r árboles de decisión 6}
 predArbolInfo2 = predict(arbolDecision,dataTest[,c(2:10,14,15)])
@@ -670,7 +670,7 @@ medidaPrecision(tArb3)
 medidaPrecision(tArb4)
 ```
 
-Efectivamente vemos como la precisión del % es menor, aunque tampoco ha disminuido mucho, lo que nos indica que es un buen árbol y que no hemos sobreajustado el modelo.
+Efectivamente vemos como la precisión del 95% es menor, aunque tampoco ha disminuido mucho, lo que nos indica que es un buen árbol y que no hemos sobreajustado el modelo.
 
 Por último, vamos a ver cuál es la precisión que obtenemos utilizando el criterio de Ginni.
 
@@ -719,11 +719,89 @@ pArb1
 pArb2
 ```
 
-Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son idénticas para ambos métodos (información y Gini), así que la precisión que conseguimos utilizando árboles de decisión es de un %.
-
-
+Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son muy buenas también con Gini, en este caso se obtiene un 95% en entrenamiento y un 93% en test por lo que consideramos buenos árboles de decisión.
 
 # Bosques aleatorios
+
+Un bosque de árboles o bosque aleatorio es un conjunto de árboles de decisión tales que los nodos de cada árbol dependen de los valores de un subconjunto de variables muestreado aleatoriamente. Es decir, para construir cada árbol se escogen un subconjunto del total de las variables explicativas. Cuando tenemos el bosque construido lo que hacemos es "pasar" los nuevos datos por todos los árboles del bosque. Cada árbol clasificará al dato en una clase, y el bosque, finalmente, clasificará al dato en la clase en la que más árboles hayan coincidido.
+
+Una vez que sabemos qué es un bosque aleatorio cabe preguntarse cuál es el número óptimo de árboles que debemos construir y cuántas variables queremos que se seleccionen para cada
+uno de los árboles. Para descubrir esto, probaremos con distintos valores de cada uno y nos quedaremos con el que mejor medida de precisión nos proporcione.
+
+```{r bosques aleatorios 1}
+# Ponemos una semilla para obtener siempre el mismo bosque (es un método aleatorio)
+set.seed(16122020)
+
+# PARÁMETROS DE LA FUNCIÓN
+# ntrees = número de árboles del bosque
+# mtry = número de variables de cada árbol
+# replace = FALSE si queremos que las variables sean distintas o TRUE si se puediese tomar dos veces la misma variable
+# importance = si queremos dar diferentes pesos a los árboles
+
+# Probaremos con 10, 50, 100, 200, y 1000 árboles en el bosque
+numArbolesRF <- c(10,50,100,200,500,1000)
+
+# Aquí guardaremos el mejor modelo junto con el número de variables que tiene cada árbol, el número de árboles del bosque, la matriz de confusión asociada y la medida de precisión.
+datosBosqueAleatorio <- vector("list",5)
+library(randomForest)
+for (v in data[,c(2:10,13,14)]) {                 # v será el número de variables de cada árbol
+  for (a in numArbolesRF) {       # a será el número de árboles del bosque
+    
+    bosqueAleatorio <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=a, importance=FALSE, proximity=TRUE, mtry=v, replace=FALSE)
+    predRF <- predict(bosqueAleatorio, dataTest[,c(2:10,14,15)])
+    tRF <- table(predRF, as.factor(dataTest[,13]))
+    prRF <- medidaPrecision(tRF)
+    
+    if ((v==1 && a==numArbolesRF[1])){
+      datosBosqueAleatorio[[1]] <- bosqueAleatorio
+      datosBosqueAleatorio[[2]] <- v
+      datosBosqueAleatorio[[3]] <- a
+      datosBosqueAleatorio[[4]] <- tRF
+      datosBosqueAleatorio[[5]] <- prRF
+    }
+    else if (as.numeric(prRF) > as.numeric(datosBosqueAleatorio[[5]])){
+      datosBosqueAleatorio[[1]] <- bosqueAleatorio
+      datosBosqueAleatorio[[2]] <- v
+      datosBosqueAleatorio[[3]] <- a
+      datosBosqueAleatorio[[4]] <- tRF
+      datosBosqueAleatorio[[5]] <- prRF
+    }
+  }              
+}
+```
+
+```{r bosques aleatorios 2}
+predRF <- predict(datosBosqueAleatorio[[1]],dataTest[,c(2:10,14,15)])
+tRF <- table(predRF,dataTest[,13])
+pRF <- medidaPrecision(tRF)
+```
+
+Además, resultaría interesante comprobar cuáles son las variables más informativas de todas las variables explicativas disponibles, es decir, sobre qué características de los teoremas se hacen más preguntas en los árboles del bosque aleatorio conseguido.
+
+```{r bosques aleatorios 3}
+varImpPlot(datosBosqueAleatorio[[1]])
+```
+
+
+Así haciendolo facil... : 
+
+```{r}
+modelo <- randomForest(data$Gama~., data=data[,c(2:10,13,14)])
+modelo
+```
+```{r}
+modelo$importance
+```
+```{r}
+predicciones <- predict(modelo, dataTest[,c(2:10,14,15)])
+mc <- with(dataTest[,c(2:10,14,15)],table(predicciones, dataTest$Gama))
+```
+
+```{r}
+# % correcto
+100 * sum(diag(mc)) / sum(mc)
+```
+
 
 # Máquinas de vectores de soporte (SVM: Support Vector Machines)
 
