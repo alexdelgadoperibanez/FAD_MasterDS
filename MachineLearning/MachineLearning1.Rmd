@@ -87,10 +87,10 @@ data %>%
   mutate(Location = as.factor(Location)) -> data
 data %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> data
 
-data %>%
+dataTest %>%
   mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
   mutate(Transmission = as.factor(Transmission)) %>%
-  mutate(Location = as.factor(Location)) -> data
+  mutate(Location = as.factor(Location)) -> dataTest
 
 dataTest %>%
   mutate(Name = as.factor(Name)) %>%
@@ -116,7 +116,6 @@ El análisis de componentes principales (en inglés, PCA) es una técnica utiliz
 
 ```{r}
 library(corrplot)
-library()
 str(data)
 data
 corrplot(cor(data[, c(3,4, 8, 9, 14, 15)]), method = "ellipse") 
@@ -160,7 +159,7 @@ summary(pca2)
 
 La inercia de las primeras dimensiones muestra si existen relaciones fuertes entre las variables y sugiere el número de dimensiones que se deben estudiar.
 
-Las dos primeras dimensiones de análisis expresan el 59,83% de la inercia total del conjunto de datos; eso quiere decir que el 59.83% de los individuos (o variables) nublan la variabilidad total es explicada por el plano. Este porcentaje es relativamente alto y, por lo tanto, el primer plano representa bien la variabilidad de los datos. Este valor es muy superior al valor de referencia que equivale al 34,95%, por lo que la variabilidad explicada por este plano es muy significativa (el valor de referencia es el cuantil 0,95 de la distribución de porcentajes de inercia obtenida simulando 1689 tablas de datos de tamaño equivalente sobre la base de una distribución normal).
+Las dos primeras dimensiones de análisis expresan el 59,83% de la inercia total del conjunto de datos; eso quiere decir que el 59.83% de los individuos (o variables) nublan la variabilidad total que es explicada por el plano. Este porcentaje es relativamente alto y, por lo tanto, el primer plano representa bien la variabilidad de los datos. Este valor es muy superior al valor de referencia que equivale al 34,95%, por lo que la variabilidad explicada por este plano es muy significativa (el valor de referencia es el cuantil 0,95 de la distribución de porcentajes de inercia obtenida simulando 1689 tablas de datos de tamaño equivalente sobre la base de una distribución normal).
 
 A partir de estas observaciones, conviene interpretar también las dimensiones mayores o iguales a la tercera.
 
@@ -232,9 +231,6 @@ Podemos colorear las observaciones según alguna variable. Además podemos hacer
 
 Como se aprecia en los gráficos anteriores, no tiene mucho sentido representar la segunda componente principal ya que no realiza un correcto enfrentamiento de variables y no nos aporta nada.
 
-
-
-
 ```{r}
 #fviz_pca_ind(pca2,axes=c(1,2), col.ind = train$Gama, alpha.ind = "contrib" ) + theme_grey()
 #fviz_pca_ind( pca2,axes=c(1,2),  habillage = as.factor( train$Gama ), addEllipses = TRUE, ellipse.level = 0.99 )
@@ -264,7 +260,7 @@ library(psych)
 scree(data[, c(3,4, 8, 9, 14, 15)],main ="Grafico_de_Sedimentacion")
 ```
 
-El grafico de Sedimentacion nos muestra la cantidad óptima de componentes a tomar en el análisis, siendo los valores por encima de la linea de 1.0 los más aceptables.
+El grafico de sedimentación nos muestra la cantidad óptima de componentes a tomar en el análisis, siendo los valores por encima de la linea de 1.0 los más aceptables.
 
 ```{r}
 fa.parallel(data[, c(3,4, 8, 9, 14, 15)],fa="pc")
@@ -281,64 +277,7 @@ Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirve
 #Investigate(res) 
 ```
 
-# Regresión logística
 
-Hacemos una división de los coches en gama baja-media y gama alta para poder realizar la regresión logística sobre la nueva variable. 
-
-```{r}
-
-data <- data[,-13]
-data %>% 
-  mutate(
-    Gama = case_when( 
-      data$Make=="Datsun" |data$Make=="Smart" |data$Make=="Tata" |data$Make=="Fiat" |data$Make=="Chevrolet" |data$Make=="Ambassador" |
-      data$Make=="Skoda"|data$Make=="Renault" |data$Make=="Ford" |data$Make=="Honda"|data$Make=="Volkswagen" |data$Make=="Hyundai" |data$Make=="Nissan" |data$Make=="Maruti" ~ "Gama baja-media",
-      data$Make=="Bentley"|data$Make=="Porsche" |data$Make=="Land Rover" |data$Make=="Jaguar" |data$Make=="Mini" |data$Make=="Mercedes-Benz" |data$Make=="Audi" |data$Make=="Bmw" |data$Make=="Jeep" |data$Make=="Volvo" |data$Make=="Isuzu" |data$Make=="Mitsubishi" |data$Make=="Toyota" |data$Make=="Force" |data$Make=="Mahindra"~ "Gama alta"
-    )
-  ) -> data
-
-data$Gama <- as.factor(data$Gama)
-```
-
-
-```{r}
-table(data$Gama)
-ggplot(data, aes(x = Power, y = Price, color = Gama)) + geom_point()
-ggplot(data, aes(x = Engine, y = Price, color = Gama)) + geom_point()
-ggplot(data, aes(x = Transmission, y = Price, color = Gama)) + geom_point()
-ggplot(data, aes(x = Seats, y = Price, color = Gama)) + geom_point()
-ggplot(data, aes(x = Owner_Type, y = Price, color = Gama)) + geom_point()
-```
-
-
-```{r}
-# modelos lineales generalizados estimados por MLE
-logit <- glm( 
-  Gama ~Power+Seats+Transmission+Owner_Type+Engine, 
-  data = data, 
-  family = binomial()
-)
-summary(logit)
-
-logit2 <- glm( 
-  Gama ~Owner_Type+Seats+Transmission+Engine, 
-  data = data, 
-  family = binomial()
-)
-summary(logit2)
-
-logit3 <- glm( 
-  Gama ~Power+Seats+Transmission+Engine, 
-  data = data, 
-  family = binomial()
-)
-summary(logit3)
-```
-
-La interpretación de los p-valores es similar a la del modelo lineal. Podemos ver que las variables Engine,Power,Seats y Transmission son significativas en el modelo (p-valor mucho menor de 0.05), mientras que la variable Owner_Type influye más en un modelo que en otro.
-
-En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: $η=log(p1−p)$,
-siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/1−p$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Seats (-0.52) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama disminuye 0.52 unidades por cada unidad que aumenta la variable Seats.
 
 # k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
 
@@ -485,8 +424,87 @@ rect.hclust(hc2, k=10, border = "blue")
 
 ## Análisis supervisado
 
-Y en segundo lugar, terminaremos aplicando los algoritmos de aprendizaje supervisado.
-Antes de comenzar con ello, lo que debemos hacer es definir una medida de precisión para contrastar los datos una vez que tengamos cada matriz de confusión y comparar los resultados que nos ofrecen cada uno de los métodos que empleemos. En nuestro caso, la variable respuesta no está muy bien balanceada:
+# Regresión logística
+
+Hacemos una división de los coches en gama baja-media y gama alta para poder realizar la regresión logística sobre la nueva variable. 
+
+```{r}
+
+data <- data[,-13]
+data %>% 
+  mutate(
+    Gama = case_when( 
+      data$Make=="Datsun" |data$Make=="Smart" |data$Make=="Tata" |data$Make=="Fiat" |data$Make=="Chevrolet" |data$Make=="Ambassador" |
+      data$Make=="Skoda"|data$Make=="Renault" |data$Make=="Ford" |data$Make=="Honda"|data$Make=="Volkswagen" |data$Make=="Hyundai" |data$Make=="Nissan" |data$Make=="Maruti" ~ "Baja-media",
+      data$Make=="Bentley"|data$Make=="Porsche" |data$Make=="Land Rover" |data$Make=="Jaguar" |data$Make=="Mini" |data$Make=="Mercedes-Benz" |data$Make=="Audi" |data$Make=="Bmw" |data$Make=="Jeep" |data$Make=="Volvo" |data$Make=="Isuzu" |data$Make=="Mitsubishi" |data$Make=="Toyota" |data$Make=="Force" |data$Make=="Mahindra"~ "Alta"
+    )
+  ) -> data
+
+data$Gama <- as.factor(data$Gama)
+
+
+library(dplyr)
+#dataTest %>% select(-Mileage) -> dataTest
+dataTest %>% select(-X) -> dataTest
+head(dataTest)
+dataTest%>%drop_na() -> dataTest
+dataTest %>% 
+    mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
+    mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
+    select(-Mileage) -> dataTest
+
+dataTest %>% 
+  mutate(
+    Gama = case_when( 
+      dataTest$Make=="Datsun" |dataTest$Make=="Smart" |dataTest$Make=="Tata" |dataTest$Make=="Fiat" |dataTest$Make=="Chevrolet" |dataTest$Make=="Ambassador" |
+      dataTest$Make=="Skoda"|dataTest$Make=="Renault" |dataTest$Make=="Ford" |dataTest$Make=="Honda"|dataTest$Make=="Volkswagen" |dataTest$Make=="Hyundai" |dataTest$Make=="Nissan" |dataTest$Make=="Maruti" ~ "Baja-media",
+      dataTest$Make=="Bentley"|dataTest$Make=="Porsche" |dataTest$Make=="Land Rover" |dataTest$Make=="Jaguar" |dataTest$Make=="Mini" |dataTest$Make=="Mercedes-Benz" |dataTest$Make=="Audi" |dataTest$Make=="Bmw" |dataTest$Make=="Jeep" |dataTest$Make=="Volvo" |dataTest$Make=="Isuzu" |dataTest$Make=="Mitsubishi" |dataTest$Make=="Toyota" |dataTest$Make=="Force" |dataTest$Make=="Mahindra"~ "Alta"
+    )
+  ) -> dataTest
+
+```
+
+
+```{r}
+table(data$Gama)
+ggplot(data, aes(x = Power, y = Price, color = Gama)) + geom_point()
+ggplot(data, aes(x = Engine, y = Price, color = Gama)) + geom_point()
+ggplot(data, aes(x = Transmission, y = Price, color = Gama)) + geom_point()
+ggplot(data, aes(x = Seats, y = Price, color = Gama)) + geom_point()
+ggplot(data, aes(x = Owner_Type, y = Price, color = Gama)) + geom_point()
+```
+
+
+```{r}
+# modelos lineales generalizados estimados por MLE
+logit <- glm( 
+  Gama ~Power+Seats+Transmission+Owner_Type+Engine, 
+  data = data, 
+  family = binomial()
+)
+summary(logit)
+
+logit2 <- glm( 
+  Gama ~Owner_Type+Seats+Transmission+Engine, 
+  data = data, 
+  family = binomial()
+)
+summary(logit2)
+
+logit3 <- glm( 
+  Gama ~Power+Transmission+Engine, 
+  data = data, 
+  family = binomial()
+)
+summary(logit3)
+```
+
+La interpretación de los p-valores es similar a la del modelo lineal. Podemos ver que las variables Engine,Power y Transmission son significativas en el modelo (p-valor mucho menor de 0.05), mientras que la variable Seats y Owner_Type influyen más en un modelo que en otro.
+
+En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: $η=log(p1−p)$,
+siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/1−p$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama disminuye aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.
+
+Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida de precisión para contrastar los datos una vez que tengamos cada matriz de confusión y comparar los resultados que nos ofrecen cada uno de los métodos que empleemos. En nuestro caso, la variable respuesta no está muy bien balanceada:
 
 ```{r análisis supervisado}
 summary(data$Gama)
@@ -523,78 +541,71 @@ medidaPrecision <- function(matrizDeConfusion){
 
 El método de los k-vecinos más cercanos consiste en clasificar a un nuevo individuo en función de la categoría de sus $k$ vecinos más cercanos, es decir, clasificaremos un coche en gama alta o gama media-baja en función de la gama de los teoremas más cercanos a él (con cercanía nos referimos a similitud entre sus características).
 
-Una vez que tenemos definida nuestra medida de precisión y sabemos que el algoritmo utiliza las distancias euclídeas, tenemos que preguntarnos cuál es el número de vecinos más cercanos que deberíamos escoger para comparar cada coche. Usamos la siguiente fórmula que nos da un número orientativo de vecinos:
 
-
-```{r knn 2}
+```{r}
 # Ponemos una semilla para que siempre nos salga el mismo resultado (el algoritmo es aleatorio)
 set.seed(07122020)
-library(dplyr)
-#dataTest %>% select(-Mileage) -> dataTest
-dataTest %>% select(-X) -> dataTest
-head(dataTest)
-dataTest%>%drop_na() -> dataTest
-dataTest %>% 
-    mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
-    mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
-    select(-Mileage) -> dataTest
-
-dataTest %>% 
-  mutate(
-    Gama = case_when( 
-      dataTest$Make=="Datsun" |dataTest$Make=="Smart" |dataTest$Make=="Tata" |dataTest$Make=="Fiat" |dataTest$Make=="Chevrolet" |dataTest$Make=="Ambassador" |
-      dataTest$Make=="Skoda"|dataTest$Make=="Renault" |dataTest$Make=="Ford" |dataTest$Make=="Honda"|dataTest$Make=="Volkswagen" |dataTest$Make=="Hyundai" |dataTest$Make=="Nissan" |dataTest$Make=="Maruti" ~ "Gama baja-media",
-      dataTest$Make=="Bentley"|dataTest$Make=="Porsche" |dataTest$Make=="Land Rover" |dataTest$Make=="Jaguar" |dataTest$Make=="Mini" |dataTest$Make=="Mercedes-Benz" |dataTest$Make=="Audi" |dataTest$Make=="Bmw" |dataTest$Make=="Jeep" |dataTest$Make=="Volvo" |dataTest$Make=="Isuzu" |dataTest$Make=="Mitsubishi" |dataTest$Make=="Toyota" |dataTest$Make=="Force" |dataTest$Make=="Mahindra"~ "Gama alta"
-    )
-  ) -> dataTest
 ```
 
 
 ```{r}
-dataTest[,c(1:12,14,15)]
-```
-
-
-```{r}
-# Calculamos con un bucle las precisiones de modelos con 1, 2, 3, ..., 50 vecinos
 library(caret)
 library(ggplot2)
 library(lattice)
 library(class)
 library(cluster)
 library(lift)
-precisionesknn <- array(0,50)
-for (i in 1:50){
-  prediccion_knni= knn(data[,1:14], dataTest[,c(1:12,14,15)], k=i , cl=data$Gama)
-  ti = table(prediccion_knni, dataTest$Gama)
-  precisioni = medidaPrecision(ti)
-  precisionesknn[i] = precisioni
-}
-#precisionesknn
 ```
 
 
-Aquí podemos observar las precisiones que obtenemos en función de los vecinos que escogemos (en un intervalo de 1 a 50), pero podemos visualizarlo mucho mejor en el siguiente gráfico, donde marcamos el máximo en color rojo.
-
-```{r knn 3}
-#plot(precisionesknn,xlab="Número de vecinos",ylab="Precisión",type="l",col=3, main="Precisión en función de los vecinos elegidos")
-#points(precisionesknn)
-#points(which.max(precisionesknn),max(precisionesknn), col=2, pch=19,cex=1.5)
+```{r}
+trainX <- data[,c(2:10,13,14)]
+preProcValues <- preProcess(x = trainX,method = c("center", "scale"))
+preProcValues
 ```
 
 
-Resulta evidente que el número óptimo de vecinos que debemos escoger es `r which.max(precisionesknn)`, y como además es un número impar no nos genera ningún tipo de problema.
+```{r}
+set.seed(400)
+ctrl <- trainControl(method="repeatedcv",repeats = 3) #,classProbs=TRUE,summaryFunction = twoClassSummary)
+knnFit <- train(Gama ~ ., data = data[,c(2:10,13,14,15)], method = "knn", trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
 
-Por tanto, tomando un vecino, tenemos una precisión del `r round(precisionesknn[1]*100,2)`% para el conjunto de prueba y, evidentemente, una precisión del 100% para el conjunto de entrenamiento, ya que al escoger un vecino del conjunto de entrenamiento y comparar en ese conjunto, cada coche se comparará consigo mismo, y por tanto, se clasificará en su propia clase (es decir, con un vecino, cuando probamos con el conjunto de entrenamiento no hay lugar a error).
+#Output of kNN fit
+knnFit
+```
 
+```{r}
+#Plotting yields Number of Neighbours Vs accuracy (based on repeated cross validation)
+plot(knnFit)
+```
 
-```{r, include=FALSE}
-#pknn <- precisionesknn[1]
+```{r}
+knnPredict <- predict(knnFit,newdata =dataTest[,c(2:10,13,14,15)])
+knnPredict
+data$Gama <- factor(data$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
+dataTest$Gama <- factor(dataTest$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
+
+#Get the confusion matrix to see accuracy value and other parameter values
+confusionMatrix(knnPredict, dataTest$Gama )
+```
+
+```{r}
+accuracy <- mean(knnPredict == dataTest$Gama)
+accuracy
+
 ```
 
 
+```{r}
+error = 1-accuracy
+error
+```
 
+```{r}
+table(knnPredict,dataTest$Gama)
+```
 
+Por tanto, tomando el número óptimo de vecinos para realizar las predicciones, tenemos una precisión del 91'5%.
 
 # Árboles de decisión
 
@@ -802,6 +813,31 @@ mc <- with(dataTest[,c(2:10,14,15)],table(predicciones, dataTest$Gama))
 100 * sum(diag(mc)) / sum(mc)
 ```
 
+
+
+
+nuevooooooooooooooooooooooooooooooo
+
+```{r}
+#RANDOM Forest Cleveland
+library(randomForest)
+set.seed(1234567)
+forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
+forest1
+```
+
+```{r}
+dataTest[,c(2:10,14,15)]
+forest1
+predict(forest1, newdata=nuevo_df, type='response')
+
+y.pred.test.rf=predict(forest1, dataTest[,c(2:10,14,15)], type='response')
+table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
+y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
+table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
+print(table.libreria.test)
+print(table.libreria.train)
+```
 
 # Máquinas de vectores de soporte (SVM: Support Vector Machines)
 
