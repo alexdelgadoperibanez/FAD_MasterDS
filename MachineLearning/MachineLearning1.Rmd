@@ -750,58 +750,6 @@ Un bosque de árboles o bosque aleatorio es un conjunto de árboles de decisión
 Una vez que sabemos qué es un bosque aleatorio cabe preguntarse cuál es el número óptimo de árboles que debemos construir y cuántas variables queremos que se seleccionen para cada
 uno de los árboles. Para descubrir esto, probaremos con distintos valores de cada uno y nos quedaremos con el que mejor medida de precisión nos proporcione.
 
-Así haciendolo facil... : 
-
-```{r}
-#modelo <- randomForest(data$Gama~., data=data[,c(2:10,13,14)])
-#modelo
-```
-
-```{r}
-#modelo$importance
-```
-```{r}
-#predicciones <- predict(modelo, dataTest[,c(2:10,14,15)])
-#mc <- with(dataTest[,c(2:10,14,15)],table(predicciones, dataTest$Gama))
-```
-
-```{r}
-# % correcto
-#100 * sum(diag(mc)) / sum(mc)
-```
-
-
-
-
-nuevooooooooooooooooooooooooooooooo
-
-```{r}
-#RANDOM Forest Cleveland
-library(randomForest)
-library(quantregForest)
-set.seed(1234567)
-forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
-q <- quantregForest(data[,c(2:10,13,14)], as.factor(data[,15]))
-forest1
-```
-
-```{r}
-dataTest[,c(2:10,14,15)]
-forest1
-# predict(forest1, newdata=nuevo_df, type='response')
-tree <- predict(q, newdata= xtest)
-# xtest <- rbind(forest1[1, ] , dataTest)
-# xtest <- xtest[-1,]
-# y.pred.test.rf=predict(forest1, xtest[,c(2:10,14,15)], type='response')
-# table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
-# table.libreria.test=table(tree, as.factor(dataTest[,13]))
-# y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
-# table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
-# print(table.libreria.test)
-# print(table.libreria.train)
-```
-
-# LO NUEVO DE RANDOMFOREST
 ```{r prueba Ranger}
 library(ranger)
 set.seed(123)
@@ -814,8 +762,10 @@ modelo <- ranger(
 )
 
 ```
+
 ```{r}
 predicciones <- predict(modelo, data = dataTest[,c(2:10,14,15)])
+predicciones
 test_rmse <- sqrt(mean((predicciones - as.factor(data[,15]))^2))
 paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
 ```
@@ -886,6 +836,7 @@ accuracy
 ```
 
 ### Kernel -> Polinomial
+
 ```{r svm 7}
 # Resultado y porcentaje de acierto
 #plot(model, data = svmdata, Bwt~Hwt)
@@ -900,13 +851,355 @@ accuracy
 
 Aún que los resultados son parecidos en 3 de los 4 kernels, hay uno que sobresale y es el kernel "Radial" 
 
-## Ajuste de hiperparámetros
+# Ajuste de los hiperparámetros del modelo 
 
-k-NN
+## Regresión logística
+
+El método glm de caret emplea la función glm() del paquete básico de R. Este algoritmo no tiene ningún hiperparámetro pero, para que efectúe una regresión logística, hay que indicar family = "binomial".
+
+```{r}
+library(doMC)
+registerDoMC(cores = 4)
+```
+
+```{r}
+# HIPERPARÁMETROS, NÚMERO DE REPETICIONES Y SEMILLAS PARA CADA REPETICIÓN
+particiones  <- 10
+repeticiones <- 5
+```
+
+
+```{r}
+# Hiperparámetros
+hiperparametros <- data.frame(parameter = "none")
+
+set.seed(123)
+seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
+for (i in 1:(particiones * repeticiones)) {
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))
+}
+seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
+
+```
+
+
+```{r}
+# DEFINICIÓN DEL ENTRENAMIENTO
+control_train <- trainControl(method = "repeatedcv", number = particiones,
+                              repeats = repeticiones, seeds = seeds,
+                              returnResamp = "final", verboseIter = FALSE,
+                              allowParallel = TRUE)
+```
+
+
+```{r}
+# AJUSTE DEL MODELO
+set.seed(34220)
+modelo_logistic <- train(Gama ~ ., data = data[,c(2:10,13,14,15)],
+                         method = "glm",
+                         tuneGrid = hiperparametros,
+                         metric = "Accuracy",
+                         trControl = control_train,
+                         family = "binomial")
+modelo_logistic
+```
+Empleando un modelo de regresión logística se consigue un accuracy promedio de validación del 93%.
+
+## k-NN
 
 Ahora aplicamos la busqueda bayesiana para encontrar el mejor número de vecinos para el kNN.
 
 ```{r}
+library(foreach)
+library(iterators)
+library(parallel)
+```
+
+
+```{r}
+# Hiperparámetros
+hiperparametros <- data.frame(k = c(1, 2, 5, 10, 15, 20, 30, 50))
+
+set.seed(123)
+seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
+for (i in 1:(particiones * repeticiones)) {
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros)) 
+}
+seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
+```
+
+```{r}
+# DEFINICIÓN DEL ENTRENAMIENTO
+library(caret)
+library(ggplot2)
+library(lattice)
+control_train <- trainControl(method = "repeatedcv", number = particiones,
+                              repeats = repeticiones, seeds = seeds,
+                              returnResamp = "final", verboseIter = FALSE,
+                              allowParallel = TRUE)
+```
+
+
+```{r}
+# AJUSTE DEL MODELO
+
+set.seed(34220)
+modelo_knn <- train(Gama~ ., data = data[,c(2:10,13,14,15)],
+                    method = "knn",
+                    tuneGrid = hiperparametros,
+                    metric = "Accuracy",
+                    trControl = control_train)
+modelo_knn
+```
+
+```{r}
+# REPRESENTACIÓN GRÁFICA
+ggplot(modelo_knn, highlight = TRUE) +
+  scale_x_continuous(breaks = hiperparametros$k) +
+  labs(title = "Evolución del accuracy del modelo KNN", x = "K") +
+  theme_bw()
+```
+
+Con un modelo kNN con k=5 se consigue un accuracy de validación promedio del 89'7%. 
+
+## Árboles de decisión
+
+```{r}
+# Hiperparámetros
+hiperparametros <- data.frame(parameter = "none")
+
+set.seed(123)
+seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
+for (i in 1:(particiones * repeticiones)) {
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))
+}
+seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
+```
+
+
+```{r}
+# DEFINICIÓN DEL ENTRENAMIENTO
+control_train <- trainControl(method = "repeatedcv", number = particiones,
+                              repeats = repeticiones, seeds = seeds,
+                              returnResamp = "final", verboseIter = FALSE,
+                              allowParallel = TRUE)
+```
+
+```{r}
+# AJUSTE DEL MODELO
+set.seed(34220)
+modelo_C50Tree <- train(Gama~ ., data = data[,c(2:10,13,14,15)],
+                    method = "C5.0Tree",
+                    tuneGrid = hiperparametros,
+                    metric = "Accuracy",
+                    trControl = control_train)
+modelo_C50Tree
+```
+
+```{r}
+summary(modelo_C50Tree$finalModel)
+```
+
+Empleando como modelo un árbol simple C5.0, se consigue un accuracy promedio de validación del 98'1%.
+
+## Random Forest
+
+El método ranger de caret emplea la función ranger() del paquete ranger. Este algoritmo tiene 3 hiperparámetros:
+
+  - mtry: número predictores seleccionados aleatoriamente en cada árbol.
+
+  - min.node.size: tamaño mínimo que tiene que tener un nodo para poder ser dividido.
+
+  - splitrule: criterio de división.
+
+Aunque caret también incluye el método rf con la función rf() del paquete randomForest, este último solo permite optimizar el hiperparámetro mtry.
+
+```{r}
+# Hiperparámetros
+hiperparametros <- expand.grid(mtry = c(3, 4, 5, 7),
+                               min.node.size = c(2, 3, 4, 5, 10, 15, 20, 30),
+                               splitrule = "gini")
+
+set.seed(123)
+seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
+for (i in 1:(particiones * repeticiones)) {
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))
+}
+seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
+```
+
+```{r}
+# DEFINICIÓN DEL ENTRENAMIENTO
+control_train <- trainControl(method = "repeatedcv", number = particiones,
+                              repeats = repeticiones, seeds = seeds,
+                              returnResamp = "final", verboseIter = FALSE,
+                              allowParallel = TRUE)
 
 ```
 
+
+```{r}
+# AJUSTE DEL MODELO
+
+set.seed(34220)
+modelo_rf <- train(Gama ~ ., data = data[,c(2:10,13,14,15)],
+                   method = "ranger",
+                   tuneGrid = hiperparametros,
+                   metric = "Accuracy",
+                   trControl = control_train,
+                   # Número de árboles ajustados
+                   num.trees = 500)
+modelo_rf
+```
+
+
+```{r}
+modelo_rf$finalModel
+```
+
+
+```{r}
+# REPRESENTACIÓN GRÁFICA
+ggplot(modelo_rf, highlight = TRUE) +
+  scale_x_continuous(breaks = 1:30) +
+  labs(title = "Evolución del accuracy del modelo Random Forest") +
+  guides(color = guide_legend(title = "mtry"),
+         shape = guide_legend(title = "mtry")) +
+  theme_bw()
+```
+Empleando un modelo random forest con mtry = 7, min.node.size = 2 y splitrule = "gini", se consigue un accuracy promedio de validación del 98'4%. 
+
+## SVM
+
+El método svmRadial de caret emplea la función ksvm() del paquete kernlab. Este algoritmo tiene 2 hiperparámetros:
+
+  - sigma: coeficiente del kernel radial.
+  
+  - C: penalización por violaciones del margen del hiperplano.
+
+
+```{r}
+# Hiperparámetros
+hiperparametros <- expand.grid(sigma = c(0.001, 0.01, 0.1, 0.5, 1),
+                               C = c(1 , 20, 50, 100, 200, 500, 700))
+
+set.seed(123)
+seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
+for (i in 1:(particiones * repeticiones)) {
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))
+}
+seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
+```
+
+```{r}
+# DEFINICIÓN DEL ENTRENAMIENTO
+control_train <- trainControl(method = "repeatedcv", number = particiones,
+                              repeats = repeticiones, seeds = seeds,
+                              returnResamp = "final", verboseIter = FALSE,
+                              allowParallel = TRUE)
+
+```
+
+
+```{r}
+# AJUSTE DEL MODELO
+
+set.seed(342)
+modelo_svmrad <- train(Gama ~ ., data = data[,c(2:10,13,14,15)],
+                   method = "svmRadial",
+                   tuneGrid = hiperparametros,
+                   metric = "Accuracy",
+                   trControl = control_train)
+modelo_svmrad
+```
+
+```{r}
+modelo_svmrad$finalModel
+```
+
+```{r}
+# REPRESENTACIÓN GRÁFICA
+ggplot(modelo_svmrad, highlight = TRUE) +
+  labs(title = "Evolución del accuracy del modelo SVM Radial") +
+  theme_bw()
+```
+
+Empleando un modelo SVM Radial con sigma = 0.01 y C = 20, se consigue un accuracy promedio de validación del 93%. 
+
+# Evaluación y comparación de modelos
+
+Para poder determinar si un método es superior a otro, no es suficiente con comparar los mínimos (o máximos dependiendo de la métrica) que ha conseguido cada uno, sino que hay que tener en cuenta sus varianzas para determinar si existen evidencias suficientes de superioridad.
+
+Al tratarse de modelos entrenados y validados sobre los mismos datos, mismas particiones y en el mismo orden (siempre que se haya asegurado la reproducibilidad mediante semillas), se pueden emplear métodos estadísticos para datos dependientes.
+
+```{r}
+modelos <- list(KNN = modelo_knn, logistic = modelo_logistic,
+                arbol = modelo_C50Tree, rf = modelo_rf,
+                SVMradial = modelo_svmrad)
+
+resultados_resamples <- resamples(modelos)
+```
+
+
+```{r}
+# Se trasforma el dataframe devuelto por resamples() para separar el nombre del
+# modelo y las métricas en columnas distintas.
+metricas_resamples <- resultados_resamples$values %>%
+                         gather(key = "modelo", value = "valor", -Resample) %>%
+                         separate(col = "modelo", into = c("modelo", "metrica"),
+                                  sep = "~", remove = TRUE)
+```
+
+
+```{r}
+metricas_resamples %>% 
+  group_by(modelo, metrica) %>% 
+  summarise(media = mean(valor)) %>%
+  spread(key = metrica, value = media) %>%
+  arrange(desc(Accuracy))
+```
+
+```{r}
+metricas_resamples %>%
+  filter(metrica == "Accuracy") %>%
+  group_by(modelo) %>% 
+  summarise(media = mean(valor)) %>%
+  ggplot(aes(x = reorder(modelo, media), y = media, label = round(media, 2))) +
+    geom_segment(aes(x = reorder(modelo, media), y = 0,
+                     xend = modelo, yend = media),
+                     color = "grey50") +
+    geom_point(size = 7, color = "firebrick") +
+    geom_text(color = "white", size = 2.5) +
+    scale_y_continuous(limits = c(0, 1)) +
+    # Accuracy basal
+    geom_hline(yintercept = 0.88, linetype = "dashed") +
+    labs(title = "Validación: Accuracy medio repeated-CV",
+         subtitle = "Modelos ordenados por media",
+         x = "modelo") +
+    coord_flip() +
+    theme_bw()
+```
+
+```{r}
+metricas_resamples %>% filter(metrica == "Accuracy") %>%
+  group_by(modelo) %>% 
+  mutate(media = mean(valor)) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(modelo, media), y = valor, color = modelo)) +
+    geom_boxplot(alpha = 0.6, outlier.shape = NA) +
+    geom_jitter(width = 0.1, alpha = 0.6) +
+    scale_y_continuous(limits = c(0, 1)) +
+    # Accuracy basal
+    geom_hline(yintercept = 0.88, linetype = "dashed") +
+    theme_bw() +
+    labs(title = "Validación: Accuracy medio repeated-CV",
+         subtitle = "Modelos ordenados por media") +
+    coord_flip() +
+    theme(legend.position = "none")
+```
+El modelo random forest consigue el accuracy promedio más alto, seguido muy de cerca por el árbol de decisión y SVM. Para determinar si las diferencias entre ellos son significativas, se recurre a test estadísticos.
+
+
+# Curva de ROC
+
+# Redes bayesianas y/o GAM
