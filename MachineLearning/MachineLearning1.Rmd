@@ -778,31 +778,58 @@ nuevooooooooooooooooooooooooooooooo
 ```{r}
 #RANDOM Forest Cleveland
 library(randomForest)
+library(quantregForest)
 set.seed(1234567)
-#forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
-#forest1
+forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
+q <- quantregForest(data[,c(2:10,13,14)], as.factor(data[,15]))
+forest1
 ```
 
 ```{r}
-#dataTest[,c(2:10,14,15)]
-#forest1
-#predict(forest1, newdata=nuevo_df, type='response')
+dataTest[,c(2:10,14,15)]
+forest1
+# predict(forest1, newdata=nuevo_df, type='response')
+tree <- predict(q, newdata= xtest)
+# xtest <- rbind(forest1[1, ] , dataTest)
+# xtest <- xtest[-1,]
+# y.pred.test.rf=predict(forest1, xtest[,c(2:10,14,15)], type='response')
+# table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
+# table.libreria.test=table(tree, as.factor(dataTest[,13]))
+# y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
+# table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
+# print(table.libreria.test)
+# print(table.libreria.train)
+```
 
-#y.pred.test.rf=predict(forest1, dataTest[,c(2:10,14,15)], type='response')
-#table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
-#y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
-#table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
-#print(table.libreria.test)
-#print(table.libreria.train)
+# LO NUEVO DE RANDOMFOREST
+```{r prueba Ranger}
+library(ranger)
+set.seed(123)
+
+modelo <- ranger(
+  formula = as.factor(data[,15]) ~ .,
+  data = data[,c(2:10,13,14)],
+  num.trees = 10,
+  seed = 123
+)
+
+```
+```{r}
+predicciones <- predict(modelo, data = dataTest[,c(2:10,14,15)])
+test_rmse <- sqrt(mean((predicciones - as.factor(data[,15]))^2))
+paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
 ```
 
 ## Máquinas de vectores de soporte (SVM: Support Vector Machines)
+
+Vamos a aplicar SVM a nuestros datos.
 
 ```{r svm 1}
 library(e1071)
 svmdata = data[,c(2:10,13,14,15)]
 ```
 
+Lo primero que hacemos es obtener los conjuntos de train y test de los datos que vamos a usar.
 ```{r svm 2}
 # Creamos el conjunto de Train y Test
 
@@ -810,6 +837,10 @@ ind <- sample(2,nrow(svmdata), replace= TRUE, prob = c(0.7,0.3))
 trainSet <- svmdata[ind==2,]
 testSet <- svmdata[ind==1,]
 ```
+
+Realizamos el entrenamiento del modelo. Vamosa probar los distintos kernels.
+
+### Kernel -> Radial
 
 ```{r svm 3}
 # Entrenamos el modelo
@@ -825,6 +856,9 @@ MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+### Kernel -> Lineal
+
 ```{r svm 5}
 # Resultado y porcentaje de acierto
 #plot(model, data = svmdata, Bwt~Hwt)
@@ -836,6 +870,9 @@ MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+### Kernel -> Sigmoide
+
 ```{r svm 6}
 # Resultado y porcentaje de acierto
 #plot(model, data = svmdata, Bwt~Hwt)
@@ -847,6 +884,8 @@ MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+### Kernel -> Polinomial
 ```{r svm 7}
 # Resultado y porcentaje de acierto
 #plot(model, data = svmdata, Bwt~Hwt)
@@ -859,6 +898,7 @@ accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
 
+Aún que los resultados son parecidos en 3 de los 4 kernels, hay uno que sobresale y es el kernel "Radial" 
 
 ## Ajuste de hiperparámetros
 
