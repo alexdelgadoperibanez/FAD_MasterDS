@@ -766,7 +766,7 @@ modelo <- ranger(
 ```{r}
 predicciones <- predict(modelo, data = dataTest[,c(2:10,14,15)])
 predicciones
-test_rmse <- sqrt(mean((predicciones - as.factor(data[,15]))^2))
+test_rmse <- sqrt(mean((predicciones - as.factor(data[,13]))^2))
 paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
 ```
 
@@ -1198,6 +1198,44 @@ metricas_resamples %>% filter(metrica == "Accuracy") %>%
     theme(legend.position = "none")
 ```
 El modelo random forest consigue el accuracy promedio más alto, seguido muy de cerca por el árbol de decisión y SVM. Para determinar si las diferencias entre ellos son significativas, se recurre a test estadísticos.
+
+
+### Test de Friedman para comparar el accuracy de los modelos 
+
+```{r}
+matriz_metricas <- metricas_resamples %>% filter(metrica == "Accuracy") %>%
+                   spread(key = modelo, value = valor) %>%
+                   select(-Resample, -metrica) %>% as.matrix()
+friedman.test(y = matriz_metricas)
+```
+Para un nivel de significancia (α = 0.05), el test de Friedman sí encuentra evidencias para rechazar la hipótesis nula de que los  clasificadores consiguen la misma precisión, sin embargo, no determina que par o pares son diferentes. Para identificarlos, se recurre a contrastes post HOC.
+
+La función diff() del paquete caret recibe como argumento los resultados de validación de dos o más modelos extraídos con resample() y hace comparaciones por pares aplicando un t-test pareado con correcciones por comparaciones múltiples. Esta función no permite mucha flexibilidad en cuanto a las comparaciones, por lo que, una vez extraídos los datos con resample(), suele ser preferible emplear otras funciones disponibles en R.
+
+
+```{r}
+# Comparaciones múltiples con un test suma de rangos de Wilcoxon
+metricas_accuracy <- metricas_resamples %>% filter(metrica == "Accuracy")
+comparaciones  <- pairwise.wilcox.test(x = metricas_accuracy$valor, 
+                                        g = metricas_accuracy$modelo,
+                                        paired = TRUE,
+                                        p.adjust.method = "holm")
+
+# Se almacenan los p_values en forma de dataframe
+comparaciones <- comparaciones$p.value %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "modeloA") %>%
+  gather(key = "modeloB", value = "p_value", -modeloA) %>%
+  na.omit() %>%
+  arrange(modeloA) 
+
+comparaciones
+```
+
+
+Acorde a las comparaciones por pares, no existen evidencias suficientes para considerar que la capacidad predictiva de los modelos es distinta.
+
+
 
 
 # Curva de ROC
