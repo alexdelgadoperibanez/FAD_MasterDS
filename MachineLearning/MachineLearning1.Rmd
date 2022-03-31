@@ -1,5 +1,5 @@
 ---
-title: "MachineLearning1"
+title: "PRÁCTICA MACHINE LEARNING I"
 author: "Amanda Del Álamo Caballero y Alejandro Delgado Peribáñez"
 date: "23/3/2022"
 output:
@@ -9,7 +9,7 @@ output:
     code_folding: hide
     toc: yes
     toc_float: yes
-    toc_depth: 1
+    toc_depth: 2
     df_print: paged
   pdf_document:
     toc: yes
@@ -63,11 +63,14 @@ En nuestro caso no utilizarán la etiqueta de si los teoremas son resolubles o n
 
 * **Algoritmos supervisados**: Utilizan un conjunto de datos etiquetados y con ellas intentan encontrar relaciones entre las características y las etiquetas para predecir en nuevos datos.
 En nuestro caso utilizarán la etiqueta de si los teoremas son resolubles o no.
-
+  
+  + Regresión logística 
   + Los k-vecinos más cercanos (k-NN: The k-nearest neighbours) (Basado en la información)
   + Árboles de decisión (Basado en la información)
   + Bosques aleatorios (Basado en la información)
   + Máquinas de vectores de soporte (SVM: Support Vector Machines) (Basado en el error)
+  
+Se carga, limpia, visualiza y secciona el conjunto de datos: 
 
 ```{r Carga de datos, message=FALSE, warning=FALSE}
 data <- read.csv("train-ML.csv", na = c("","NA","NULL",NULL,"  ","/n" ))
@@ -106,11 +109,11 @@ data %>%
 dataTest %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", "Third", "Fourth & Above"))) -> dataTest
 ```
 
-## Análisis no supervisado
+# Análisis no supervisado
 
 Comenzaremos viendo los algoritmos de aprendizaje no supervisado en primer lugar.
 
-# Análisis de componentes principales
+## Análisis de componentes principales
 
 El análisis de componentes principales (en inglés, PCA) es una técnica utilizada para describir un conjunto de datos en términos de nuevas variables denominadas componentes no correlacionadas. Estas nuevas componentes se construyen a partir de las variables existentes, eso sí, debemos asegurarnos de que las variables utilizadas en PCA sean variables cuantitativas (no podemos usar variables cualitativas ni categóricas). Con esta técnica se pretende reducir la dimensionalidad del problema en cuestión.
 
@@ -142,7 +145,7 @@ plot(pca1)
 summary(pca1)
 ```
 
-En nuestro conjunto de datos inicial, todas nuestras variables eran cuantitativas (menos la variable respuesta, que no utilizamos en aprendizaje no supervisado), sin embargo, las variables categorizadas que hemos creado no lo son. Así que haremos el análisis de componentes principales escalando las variables: Kilometers_Driven, Power, Seats, kmpl y kmpg.
+En nuestro conjunto de datos inicial, todas nuestras variables eran cuantitativas (menos la variable respuesta, que no utilizamos en aprendizaje no supervisado), sin embargo, las variables categorizadas que hemos creado no lo son. Así que haremos el análisis de componentes principales escalando las variables: Kilometers_Driven, Power, kmpl y kmpg.
 
 ```{r}
 pca2 <- prcomp(data[, c(3,4, 8, 9, 14, 15)], scale=T)
@@ -185,35 +188,41 @@ s.corcircle(componentes_princ[,-3], sub="PC1 Y PC2")
 
 ```
 
-En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el teorema 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este teorema ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
+En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el coche 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este coche ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
 
 La dimensión 1 opone individuos caracterizados por una coordenada fuertemente positiva en el eje (a la derecha del gráfico) a individuos caracterizados por una coordenada fuertemente negativa en el eje (a la izquierda del gráfico).
 
 El grupo 1 (caracterizado por una coordenada positiva en el eje) comparte:
-  -valores altos para la variable kmpkg.
-  -valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
+
+  - valores altos para la variable kmpkg.
+  - valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
 
 El grupo 2 (caracterizado por una coordenada positiva en el eje) comparte:
-  -valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
-  -valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
+
+  - valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
+  - valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
 
 El grupo 3 (caracterizado por una coordenada negativa en el eje) comparte:
-  -valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
-  -valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
+
+  - valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
+  - valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
 
 La dimensión 2 opone individuos caracterizados por una coordenada fuertemente positiva en el eje (en la parte superior del gráfico) a individuos caracterizados por una coordenada fuertemente negativa en el eje (en la parte inferior del gráfico).
 
 El grupo 1 (caracterizado por una coordenada positiva en el eje) comparte:
-  -valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
-  -valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
+
+  - valores altos para las variables kmpl y Año (las variables se ordenan de la más fuerte).
+  - valores bajos para las variables Motor, Potencia, Kilómetros_Conducidos y kmpkg (las variables se ordenan de menor a mayor).
 
 El grupo 2 (caracterizado por una coordenada positiva en el eje) comparte:
-  -valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
-  -valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
+
+  - valores altos para las variables Motor, Potencia y Kilómetros_Recorridos (las variables se ordenan de la más fuerte).
+  - valores bajos para las variables kmpl, Year y kmpkg (las variables se ordenan de la más débil).
 
 El grupo 3 (caracterizado por una coordenada negativa en el eje) comparte:
-  -valores altos para la variable kmpkg.
-  -valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
+
+  - valores altos para la variable kmpkg.
+  - valores bajos para las variables kmpl, Potencia y Motor (las variables se ordenan de la más débil).
 
 
 
@@ -268,7 +277,7 @@ fa.parallel(data[, c(3,4, 8, 9, 14, 15)],fa="pc")
 
 Según los resultados del Análisis paralelo, el número de componentes deberá ser 3. 
 
-Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirven para realizar una correcta redimensión de los datos. Nos damos cuenta de que nuestro problema es bastante difícil de resolver, dado que es complicado ver algún tipo de separación o tendencia de los coches en función de las variables categóricas o incluso en cuanto al precio. Aún así, si nos fijamos, en los gráficos que enfrentan PC1 con PC2, PC1 con PC3 y PC2 con PC3, parece que los coches de gama media y gama alta están más dispersos que los de gama baja.
+Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirven para realizar una correcta redimensión de los datos. Nos damos cuenta de que nuestro problema es bastante difícil de resolver, dado que es complicado ver algún tipo de separación o tendencia de los coches en función de las variables explicativas o incluso en cuanto al precio. Aún así, si nos fijamos, en los gráficos que enfrentan PC1 con PC2, PC1 con PC3 y PC2 con PC3, parece que los coches de gama media y gama alta están más dispersos que los de gama baja.
 
 ```{r}
 #library(FactoMineR)
@@ -279,7 +288,7 @@ Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirve
 
 
 
-# k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
+## k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
 
 El análisis *cluster* busca agrupar individuos u observaciones tratando de lograr la máxima homogeneidad en cada grupo o *cluster* y la mayor diferencia entre los grupos. Es decir, el *clustering* asigna individuos similares al mismo grupo, y observaciones muy distintas estarán en grupos diferentes. Nosotros usaremos el algoritmo de las k-medias que tiene como objetivo encontrar y agrupar en clases a las observaciones que tienen una alta similitud entre ellos. Esta similitud se define como la menor distancia entre características de cada observación. Cuanto más cerca estén los puntos de datos, más similares serán y más probabilidad habrá de que pertenezcan al mismo *cluster*. Para ello primero debemos escoger una distancia y dado que nuestra variable respuesta está bastante bien balanceada, usaremos la distancia euclídea. Esta es la distancia que muchos métodos de *R* utilizan por defecto, pero debemos asegurarnos de que los datos que introducimos en el algoritmo están escalados (para que no tengan mayor importancia las variables con números más grandes en valor absoluto, por el mero de hecho de que puedan estar medidas en diferentes unidades, por ejemplo).
 
@@ -288,7 +297,23 @@ TrainEscalado <- data %>% select(Year, Kilometers_Driven, Engine, Power, Price, 
 #data[, c(3,4, 8, 9, 11,13)]
 ```
 
+
+```{r}
+data <- data[,-13]
+data %>% 
+  mutate(
+    Gama = case_when( 
+      data$Make=="Datsun" |data$Make=="Smart" |data$Make=="Tata" |data$Make=="Fiat" |data$Make=="Chevrolet" |data$Make=="Ambassador" |
+      data$Make=="Skoda"|data$Make=="Renault" |data$Make=="Ford" |data$Make=="Honda"|data$Make=="Volkswagen" |data$Make=="Hyundai" |data$Make=="Nissan" |data$Make=="Maruti" ~ "Baja-media",
+      data$Make=="Bentley"|data$Make=="Porsche" |data$Make=="Land Rover" |data$Make=="Jaguar" |data$Make=="Mini" |data$Make=="Mercedes-Benz" |data$Make=="Audi" |data$Make=="Bmw" |data$Make=="Jeep" |data$Make=="Volvo" |data$Make=="Isuzu" |data$Make=="Mitsubishi" |data$Make=="Toyota" |data$Make=="Force" |data$Make=="Mahindra"~ "Alta"
+    )
+  ) -> data
+
+data$Gama <- as.factor(data$Gama)
+```
+
 Como mínimo haremos dos grupos, es decir, buscaremos hacer 2 o más grupos, porque hacer un único *cluster* no tiene ningún sentido, ya que buscamos separar los coches en una característica que toma dos valores: gama baja-media y gama alta. 
+
 
 Para decidir el número óptimo de grupos que debemos crear, podemos usar la función `NbClust` de *R*, que nos devuelve cuál es (según unos criterios) el mejor número de *clusters* para el algoritmo de k-medias o bien, podemos ir probando con diferentes valores y decidir nosotros en función de la información que recabemos.
 
@@ -336,10 +361,7 @@ km3 = kmeans(x=TrainEscalado, nstart = 5, centers = 9)
 km3$centers #km2$[2]
 table(km3$cluster,data$Gama)
 ```
-```{r}
-max(data$Year)
-min(data$Year)
-```
+
 
 Para no complicar demasiado el entendimiento del algoritmo, decidimos quedarnos con 3 *clusters*:
 
@@ -365,7 +387,7 @@ Observamos como los coches de los *cluster* 1 y 3 están perfectamente separados
 Podríamos seguir haciendo gráficos y comprobaciones, pero con eso ya vemos que tenemos una buena forma de clasificar a algunos de los coches. En el grupo 1 teníamos mayoritariamente coches de gama alta; en el grupo 2, mezcla; y en el grupo 3, coches de gama baja o media. Hemos comprobado que los grupos 1 y 3 se separan muy bien gráficamente, pero de hecho, los grupos 1 y 2 también, dado que donde más "mezcla apreciamos es entre los *cluster* 2 y 3. Esto nos es de gran ayuda.
 
 
-# Clustering jerárquico 
+## Clustering jerárquico 
 
 Para realizar el *clustering* jerárquico, también utilizaremos la distancia euclídea. Pero debemos definir cuál será la distancia entre dos grupos, que será la que nos sirva como criterio para decidir cuando se deben unir dos *cluster*. En *R* podemos definir diferentes distancias entre ellos (distancias entre los centroides de cada grupo, distancias entre los elementos más próximos de cada grupo, distancias entre los elementos más alejados de cada grupo...). Veremos cuál es el resultado de utilizar alguna de ellas mostrando los dendrogramas asociados a cada una.
 
@@ -422,27 +444,13 @@ rect.hclust(hc2, k=10, border = "blue")
 ```
 
 
-## Análisis supervisado
+# Análisis supervisado
 
-# Regresión logística
+## Regresión logística
 
-Hacemos una división de los coches en gama baja-media y gama alta para poder realizar la regresión logística sobre la nueva variable. 
+La división de los coches en gama baja-media y gama alta ha sido necesaria también para poder realizar la regresión logística sobre la nueva variable. 
 
 ```{r}
-
-data <- data[,-13]
-data %>% 
-  mutate(
-    Gama = case_when( 
-      data$Make=="Datsun" |data$Make=="Smart" |data$Make=="Tata" |data$Make=="Fiat" |data$Make=="Chevrolet" |data$Make=="Ambassador" |
-      data$Make=="Skoda"|data$Make=="Renault" |data$Make=="Ford" |data$Make=="Honda"|data$Make=="Volkswagen" |data$Make=="Hyundai" |data$Make=="Nissan" |data$Make=="Maruti" ~ "Baja-media",
-      data$Make=="Bentley"|data$Make=="Porsche" |data$Make=="Land Rover" |data$Make=="Jaguar" |data$Make=="Mini" |data$Make=="Mercedes-Benz" |data$Make=="Audi" |data$Make=="Bmw" |data$Make=="Jeep" |data$Make=="Volvo" |data$Make=="Isuzu" |data$Make=="Mitsubishi" |data$Make=="Toyota" |data$Make=="Force" |data$Make=="Mahindra"~ "Alta"
-    )
-  ) -> data
-
-data$Gama <- as.factor(data$Gama)
-
-
 library(dplyr)
 #dataTest %>% select(-Mileage) -> dataTest
 dataTest %>% select(-X) -> dataTest
@@ -464,6 +472,7 @@ dataTest %>%
 
 ```
 
+Se realizan las siguientes gráficas para visualizar los datos con la nueva variable:
 
 ```{r}
 table(data$Gama)
@@ -474,6 +483,7 @@ ggplot(data, aes(x = Seats, y = Price, color = Gama)) + geom_point()
 ggplot(data, aes(x = Owner_Type, y = Price, color = Gama)) + geom_point()
 ```
 
+Ahora, se van a aplicar los modelos con distintas covariables para buscar el mejor de ellos:
 
 ```{r}
 # modelos lineales generalizados estimados por MLE
@@ -501,8 +511,9 @@ summary(logit3)
 
 La interpretación de los p-valores es similar a la del modelo lineal. Podemos ver que las variables Engine,Power y Transmission son significativas en el modelo (p-valor mucho menor de 0.05), mientras que la variable Seats y Owner_Type influyen más en un modelo que en otro.
 
+El mejor modelo es el explicado por las variables Power, Engine y Transmission. 
 En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: $η=log(p1−p)$,
-siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/1−p$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama disminuye aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.
+siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/(1−p)$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.
 
 Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida de precisión para contrastar los datos una vez que tengamos cada matriz de confusión y comparar los resultados que nos ofrecen cada uno de los métodos que empleemos. En nuestro caso, la variable respuesta no está muy bien balanceada:
 
@@ -510,7 +521,7 @@ Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida
 summary(data$Gama)
 ```
 
-Como vemos, los coches de gama alta se corresponden con el 30% aproximadamente y los de gama baja-media, el 70%. dos categorías están equilibradas. Además, no queremos dar más valor a identificar un tipo de coche frente al otro. Por tanto, elegiremos la siguiente **medida de precisión**.
+Como vemos, los coches de gama alta se corresponden con el 30% aproximadamente y los de gama baja-media, el 70%. Supondremos que están más o menos equilibradas. No queremos dar más valor a identificar un tipo de coche frente al otro. Por tanto, elegiremos la siguiente **medida de precisión**.
 Esta es una medida de precisión que hemos creado para tener en cuenta todos los casos, tanto los falsos negativos como los falsos positivos. En realidad, se trata de la **media geométrica de la sensitividad** (*recall*) **y la especificidad**, y se define según la siguiente expresión:
 
 $$\text{Medida de precisión}=\sqrt{\frac{TP}{FN+TP}·\frac{TN}{FP+TN}}=\sqrt{TPR·TNR} $$
@@ -536,7 +547,7 @@ medidaPrecision <- function(matrizDeConfusion){
 ```
 
 
-# Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)
+## Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)
 
 
 El método de los k-vecinos más cercanos consiste en clasificar a un nuevo individuo en función de la categoría de sus $k$ vecinos más cercanos, es decir, clasificaremos un coche en gama alta o gama media-baja en función de la gama de los teoremas más cercanos a él (con cercanía nos referimos a similitud entre sus características).
@@ -581,7 +592,7 @@ plot(knnFit)
 
 ```{r}
 knnPredict <- predict(knnFit,newdata =dataTest[,c(2:10,13,14,15)])
-knnPredict
+#knnPredict
 data$Gama <- factor(data$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
 dataTest$Gama <- factor(dataTest$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
 
@@ -607,7 +618,7 @@ table(knnPredict,dataTest$Gama)
 
 Por tanto, tomando el número óptimo de vecinos para realizar las predicciones, tenemos una precisión del 91'5%.
 
-# Árboles de decisión
+## Árboles de decisión
 
 Los árboles de decisión se construyen en base al cumplimiento o no de ciertos criterios en torno a las variables explicativas de los datos. Digamos que comenzamos comprobando un cierto criterio sobre la variable más explicativa. Si el criterio se cumple, nos vamos por una rama; si no, nos vamos por la otra. Por cada una de ellas, volveremos a comprobar otro cierto criterio, y así hasta llegar a las hojas. Las hojas clasifican a los datos en un grupo u otro. Todo esto lo explicaremos mucho mejor cuando construyamos nuestros árboles de decisión.
 
@@ -652,8 +663,8 @@ printcp(arbolDecision)
 # Mejor mirar el esquema anterior
 rpart.plot(arbolDecision, uniform=T);
 # Otra forma para pintarlo:
-library(rattle)
-fancyRpartPlot(arbolDecision)
+#library(rattle)
+#fancyRpartPlot(arbolDecision)
 ```
 
 
@@ -665,7 +676,7 @@ predArbolInfo1 = predict(arbolDecision, data[,c(2:10,13,14)])
 predArbolInfo1 = round(predArbolInfo1)
 tArb1 = table(predArbolInfo1[,1], data[,15])
 tArb2 = table(predArbolInfo1[,2], data[,15])
-medidaPrecision(tArb1)
+#medidaPrecision(tArb1)
 medidaPrecision(tArb2)
 ```
 
@@ -677,7 +688,7 @@ predArbolInfo2 = predict(arbolDecision,dataTest[,c(2:10,14,15)])
 predArbolInfo2 = round(predArbolInfo2)
 tArb3 = table(predArbolInfo2[,1], dataTest[,13])
 tArb4 = table(predArbolInfo2[,2], dataTest[,13])
-medidaPrecision(tArb3)
+#medidaPrecision(tArb3)
 medidaPrecision(tArb4)
 ```
 
@@ -713,7 +724,7 @@ predArbolGini1 = predict(arbolDecisionGini,data[,c(2:10,13,14)])
 predArbolGini1 = round(predArbolGini1)
 tArb5 = table(predArbolGini1[,1], data[,15])
 tArb6 = table(predArbolGini1[,2], data[,15])
-medidaPrecision(tArb5)
+#medidaPrecision(tArb5)
 medidaPrecision(tArb6)
 ```
 
@@ -726,91 +737,37 @@ tArb7 = table(predArbolGini2[,1],dataTest[,13])
 tArb8 = table(predArbolGini2[,2],dataTest[,13])
 pArb1 = medidaPrecision(tArb7)
 pArb2 = medidaPrecision(tArb8)
-pArb1
+#pArb1
 pArb2
 ```
 
 Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son muy buenas también con Gini, en este caso se obtiene un 95% en entrenamiento y un 93% en test por lo que consideramos buenos árboles de decisión.
 
-# Bosques aleatorios
+## Bosques aleatorios
 
 Un bosque de árboles o bosque aleatorio es un conjunto de árboles de decisión tales que los nodos de cada árbol dependen de los valores de un subconjunto de variables muestreado aleatoriamente. Es decir, para construir cada árbol se escogen un subconjunto del total de las variables explicativas. Cuando tenemos el bosque construido lo que hacemos es "pasar" los nuevos datos por todos los árboles del bosque. Cada árbol clasificará al dato en una clase, y el bosque, finalmente, clasificará al dato en la clase en la que más árboles hayan coincidido.
 
 Una vez que sabemos qué es un bosque aleatorio cabe preguntarse cuál es el número óptimo de árboles que debemos construir y cuántas variables queremos que se seleccionen para cada
 uno de los árboles. Para descubrir esto, probaremos con distintos valores de cada uno y nos quedaremos con el que mejor medida de precisión nos proporcione.
 
-```{r bosques aleatorios 1}
-# Ponemos una semilla para obtener siempre el mismo bosque (es un método aleatorio)
-set.seed(16122020)
-
-# PARÁMETROS DE LA FUNCIÓN
-# ntrees = número de árboles del bosque
-# mtry = número de variables de cada árbol
-# replace = FALSE si queremos que las variables sean distintas o TRUE si se puediese tomar dos veces la misma variable
-# importance = si queremos dar diferentes pesos a los árboles
-
-# Probaremos con 10, 50, 100, 200, y 1000 árboles en el bosque
-numArbolesRF <- c(10,50,100,200,500,1000)
-
-# Aquí guardaremos el mejor modelo junto con el número de variables que tiene cada árbol, el número de árboles del bosque, la matriz de confusión asociada y la medida de precisión.
-datosBosqueAleatorio <- vector("list",5)
-library(randomForest)
-for (v in data[,c(2:10,13,14)]) {                 # v será el número de variables de cada árbol
-  for (a in numArbolesRF) {       # a será el número de árboles del bosque
-    
-    bosqueAleatorio <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=a, importance=FALSE, proximity=TRUE, mtry=v, replace=FALSE)
-    predRF <- predict(bosqueAleatorio, dataTest[,c(2:10,14,15)])
-    tRF <- table(predRF, as.factor(dataTest[,13]))
-    prRF <- medidaPrecision(tRF)
-    
-    if ((v==1 && a==numArbolesRF[1])){
-      datosBosqueAleatorio[[1]] <- bosqueAleatorio
-      datosBosqueAleatorio[[2]] <- v
-      datosBosqueAleatorio[[3]] <- a
-      datosBosqueAleatorio[[4]] <- tRF
-      datosBosqueAleatorio[[5]] <- prRF
-    }
-    else if (as.numeric(prRF) > as.numeric(datosBosqueAleatorio[[5]])){
-      datosBosqueAleatorio[[1]] <- bosqueAleatorio
-      datosBosqueAleatorio[[2]] <- v
-      datosBosqueAleatorio[[3]] <- a
-      datosBosqueAleatorio[[4]] <- tRF
-      datosBosqueAleatorio[[5]] <- prRF
-    }
-  }              
-}
-```
-
-```{r bosques aleatorios 2}
-predRF <- predict(datosBosqueAleatorio[[1]],dataTest[,c(2:10,14,15)])
-tRF <- table(predRF,dataTest[,13])
-pRF <- medidaPrecision(tRF)
-```
-
-Además, resultaría interesante comprobar cuáles son las variables más informativas de todas las variables explicativas disponibles, es decir, sobre qué características de los teoremas se hacen más preguntas en los árboles del bosque aleatorio conseguido.
-
-```{r bosques aleatorios 3}
-varImpPlot(datosBosqueAleatorio[[1]])
-```
-
-
 Así haciendolo facil... : 
 
 ```{r}
-modelo <- randomForest(data$Gama~., data=data[,c(2:10,13,14)])
-modelo
+#modelo <- randomForest(data$Gama~., data=data[,c(2:10,13,14)])
+#modelo
+```
+
+```{r}
+#modelo$importance
 ```
 ```{r}
-modelo$importance
-```
-```{r}
-predicciones <- predict(modelo, dataTest[,c(2:10,14,15)])
-mc <- with(dataTest[,c(2:10,14,15)],table(predicciones, dataTest$Gama))
+#predicciones <- predict(modelo, dataTest[,c(2:10,14,15)])
+#mc <- with(dataTest[,c(2:10,14,15)],table(predicciones, dataTest$Gama))
 ```
 
 ```{r}
 # % correcto
-100 * sum(diag(mc)) / sum(mc)
+#100 * sum(diag(mc)) / sum(mc)
 ```
 
 
@@ -822,24 +779,24 @@ nuevooooooooooooooooooooooooooooooo
 #RANDOM Forest Cleveland
 library(randomForest)
 set.seed(1234567)
-forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
-forest1
+#forest1 <- randomForest(data[,c(2:10,13,14)], as.factor(data[,15]), ntree=100, importance=FALSE, proximity=TRUE, mtry=4, replace=FALSE)
+#forest1
 ```
 
 ```{r}
-dataTest[,c(2:10,14,15)]
-forest1
-predict(forest1, newdata=nuevo_df, type='response')
+#dataTest[,c(2:10,14,15)]
+#forest1
+#predict(forest1, newdata=nuevo_df, type='response')
 
-y.pred.test.rf=predict(forest1, dataTest[,c(2:10,14,15)], type='response')
-table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
-y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
-table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
-print(table.libreria.test)
-print(table.libreria.train)
+#y.pred.test.rf=predict(forest1, dataTest[,c(2:10,14,15)], type='response')
+#table.libreria.test=table(y.pred.test.rf, as.factor(dataTest[,13]))
+#y.pred.train.rf= predict(forest1, data[,c(2:10,13,14)])
+#table.libreria.train=table(y.pred.train.rf, as.factor(data[,15]))
+#print(table.libreria.test)
+#print(table.libreria.train)
 ```
 
-# Máquinas de vectores de soporte (SVM: Support Vector Machines)
+## Máquinas de vectores de soporte (SVM: Support Vector Machines)
 
 ```{r svm 1}
 library(e1071)
@@ -901,3 +858,15 @@ MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+
+## Ajuste de hiperparámetros
+
+k-NN
+
+Ahora aplicamos la busqueda bayesiana para encontrar el mejor número de vecinos para el kNN.
+
+```{r}
+
+```
+
