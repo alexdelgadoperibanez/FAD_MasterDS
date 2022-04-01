@@ -111,7 +111,7 @@ dataTest %>% mutate(Owner_Type = factor(Owner_Type, levels=c("First", "Second", 
 
 # Análisis no supervisado
 
-Comenzaremos viendo los algoritmos de aprendizaje no supervisado en primer lugar.
+En primer lugar, comenzaremos viendo los algoritmos de aprendizaje no supervisado.
 
 ## Análisis de componentes principales
 
@@ -760,7 +760,6 @@ modelo <- ranger(
   num.trees = 10,
   seed = 123
 )
-
 ```
 
 ```{r}
@@ -790,7 +789,7 @@ testSet <- svmdata[ind==1,]
 
 Realizamos el entrenamiento del modelo. Vamosa probar los distintos kernels.
 
-### Kernel -> Radial
+### SVM con kernel radial
 
 ```{r svm 3}
 # Entrenamos el modelo
@@ -807,7 +806,7 @@ accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
 
-### Kernel -> Lineal
+### SVM con kernel lineal
 
 ```{r svm 5}
 # Resultado y porcentaje de acierto
@@ -821,7 +820,7 @@ accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
 
-### Kernel -> Sigmoide
+### SVM con kernel sigmoidal 
 
 ```{r svm 6}
 # Resultado y porcentaje de acierto
@@ -835,7 +834,7 @@ accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
 
-### Kernel -> Polinomial
+### SVM con kernel polinomial
 
 ```{r svm 7}
 # Resultado y porcentaje de acierto
