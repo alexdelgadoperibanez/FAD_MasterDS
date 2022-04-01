@@ -1262,4 +1262,42 @@ points(x,y, pch=20, col="red")
 ```
 
 
+nuevo
+
+Las curvas ROC (Receiver Operating Characteritic curve) permiten evaluar, en problemas de clasificación binaria, cómo varia la proporción de verdaderos positivos (sensibilidad o recall) y la de falsos positivos (1-especificidad) dependiendo del cutoff de probabilidad empleado en las asignaciones. El gráfico resultante es muy útil para identificar el cutoff que consigue un mejor equilibrio sensibilidad-especificidad. Además de esto, la curva ROC, en concreto el área bajo la curva (AUC), puede emplearse como métrica para evaluar modelos. Un modelo que clasifica perfectamente las dos clases tiene un 100% de sensibilidad y especificidad, por lo que el área bajo la curva es de 1. Un modelo que predice por debajo de lo esperado por azar, tiene un AUC menor de 0.5. Una condición necesaria para crear una curva ROC es disponer de la probabilidad de clases en las predicciones.
+
+En caret, se puede sustituir la métrica accuracy empleada por defecto en problemas de clasificación y calcular en su lugar el AUC. Para ello, se tienen que indicar los argumentos summaryFunction = twoClassSummary y classProbs = TRUE en el control de entrenamiento. El segundo argumento es necesario porque el cálculo de la curva ROC requiere las probabilidades predichas para cada clase. Además del área bajo la curva, se calcula la sensibilidad y la especificidad para un cutoff de 0.5.
+
+El paquete pROC contiene múltiples funciones para crear, representar y obtener métricas a partir de curvas ROC. Como argumentos se necesitan únicamente las probabilidades predichas para cada clase y la clase verdadera a la que pertenece cada observación.
+
+
+```{r}
+library(pROC)
+# Se obtienen las probabilidades predichas para cada clase
+predicciones <- predict(object = modelo_logistic,
+                        newdata = dataTest[,c(2:10,13,14,15)],
+                        type = "prob")
+# Cálculo de la curva
+curva_roc <- roc(response = dataTest$Gama, 
+                 predictor = predicciones$Alta) 
+
+# Gráfico de la curva
+plot(curva_roc)
+```
+
+```{r}
+# Área bajo la curva AUC
+auc(curva_roc)
+```
+```{r}
+# Intervalo de confianza de la curva
+ci.auc(curva_roc, conf.level = 0.95)
+```
+
+
+
+
+
+
+
 # Redes bayesianas y/o GAM
