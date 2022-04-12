@@ -23,18 +23,50 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r}
 library(dplyr)
+library(caret)
+library(ggplot2)
+library(lattice)
+library(class)
+library(corrplot)
+library(pROC)
+library(caret)
+library(lattice)
+library(foreach)
+library(iterators)
+library(parallel)
+library(doMC)
+library(e1071)
+library(ranger)
+library(rpart)
+library(rpart.plot)
+library(NbClust)
+library(psych)
+library(factoextra)
+library(ade4)
+library(cluster)
+library(lift)
+library(dplyr)
 library(readr)
 library(mice)
 library(stringr)
 library(ggplot2)
 library(tidyverse)
+library(gamlss)
+library(MASS)
+library(doMC)
+library(iterators)
+library(gam)
+library(stats)
+library(splines)
+library(foreach)
+library(gamlss.data)
+library(gamlss.dist)
+library(NB)
 library(gridExtra)
 library(gmodels)
 library(Hmisc)
 library(ggthemes)
-
 library(ellipse)
-library(corrplot)
 library(ggcorrplot)
 library(corrplot)
 library(leaps)
@@ -46,24 +78,24 @@ library(car)
 library(lmtest)
 library(olsrr)
 library(performance)
+library(mice)
 library(see)
 library(lme4)
 library(patchwork)
 ```
+
 # Introducción
 
 En esta sección se comenzarán a aplicar los algoritmos de aprendizaje automático (o *machine learning*) vistos en clase. Utilizaremos los siguientes algoritmos que podemos clasificar en:
 
 * **Algoritmos no supervisados**: Parten de un conjunto de datos sin etiquetar y aplican inducción partiendo de ejemplos para predecir en nuevos datos. 
-En nuestro caso no utilizarán la etiqueta de si los teoremas son resolubles o no.
 
   + Análisis de componentes principales (reducción de la dimensionalidad)
   + k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
   + Análisis *cluster* jerárquico o de conglomerados (*clustering*)
 
 * **Algoritmos supervisados**: Utilizan un conjunto de datos etiquetados y con ellas intentan encontrar relaciones entre las características y las etiquetas para predecir en nuevos datos.
-En nuestro caso utilizarán la etiqueta de si los teoremas son resolubles o no.
-  
+
   + Regresión logística 
   + Los k-vecinos más cercanos (k-NN: The k-nearest neighbours) (Basado en la información)
   + Árboles de decisión (Basado en la información)
@@ -118,7 +150,6 @@ En primer lugar, comenzaremos viendo los algoritmos de aprendizaje no supervisad
 El análisis de componentes principales (en inglés, PCA) es una técnica utilizada para describir un conjunto de datos en términos de nuevas variables denominadas componentes no correlacionadas. Estas nuevas componentes se construyen a partir de las variables existentes, eso sí, debemos asegurarnos de que las variables utilizadas en PCA sean variables cuantitativas (no podemos usar variables cualitativas ni categóricas). Con esta técnica se pretende reducir la dimensionalidad del problema en cuestión.
 
 ```{r}
-library(corrplot)
 str(data)
 data
 corrplot(cor(data[, c(3,4, 8, 9, 14, 15)]), method = "ellipse") 
@@ -126,16 +157,18 @@ corPlot(data[, c(3,4, 8, 9, 14, 15)], cex = 1.2, main = "Matriz de correlación"
 corrplot(cor(data[, c(3,4, 8, 9, 14, 15)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
          addrect =2,rect.col = 3,rect.lwd = 3)  
 ```
+
 ```{r}
 cortest(cor(data[, c(3,4, 8, 9, 14, 15)]))
 ```
 
-Tenemos evidencias para decir que las correlaciones son distintas de 0
+Tenemos evidencias para decir que las correlaciones son distintas de 0.
 
 
 ```{r}
 pca1 <- prcomp(data[, c(3,4, 8, 9, 14, 15)])
 ```
+
 
 ```{r}
 plot(pca1)
@@ -166,9 +199,7 @@ Las dos primeras dimensiones de análisis expresan el 59,83% de la inercia total
 
 A partir de estas observaciones, conviene interpretar también las dimensiones mayores o iguales a la tercera.
 
-Sin embargo, aquí resulta difícil ver algo claro e intuitivo, así que haremos un pequeño resumen y un gráfico multivariante para mostrar la información más relevante del PCA.
-
-Estudio del Plano 1:2
+Sin embargo, aquí resulta difícil ver algo claro e intuitivo, así que haremos un pequeño resumen y un gráfico multivariante para mostrar la información más relevante del PCA. Se estudia el plano 1:2.
 
 ```{r}
 PC1= pca2[[2]][,1]
@@ -178,14 +209,13 @@ PC4= pca2[[2]][,4]
 
 componentes_princ <- cbind(PC1,PC2,PC3,PC4)
 componentes_princ
-library(ade4)
 ```
+
 
 ```{r}
 plot(pca2)
 biplot(pca2)
 s.corcircle(componentes_princ[,-3], sub="PC1 Y PC2")
-
 ```
 
 En el gráfico enfrentamos la primera y la segunda componente principal, y vemos como influyen cada una de las variables en los coches. Por ejemplo, el coche 1712, debe tener unos valores muy altos de Power y Engine que son las variables que "más tiran hacia la derecha", y el coche 745, según el `biplot` debe tener un valor muy alto de kilometers_driven, que es la variable que "más tira en esa dirección". Si recordamos lo analizado previamente, en la sección del análisis exploratorio de datos, este coche ya destacó por tener valores un tanto diferentes a los del resto por su desmesurado valor de kilómetros recorridos. Comprobamos que la información que nos proporciona el gráfico es totalmente coherente con lo que obtuvimos en el *EDA*.
@@ -227,7 +257,7 @@ El grupo 3 (caracterizado por una coordenada negativa en el eje) comparte:
 
 
 ```{r}
-library(factoextra)
+
 
 fviz_pca_var(pca2,axes = c(1,2), col.var = "cos2", alpha.var = "contrib" ) + theme_grey()
 fviz_pca_var(pca2,axes = c(1,3), col.var = "cos2", alpha.var = "contrib" ) + theme_grey()
@@ -239,18 +269,6 @@ La suma de cos2 de una variable determinada sobre cada factor es 1. Esto signifi
 Podemos colorear las observaciones según alguna variable. Además podemos hacer que las variables que más contribuyen en este plano factorial, se resalten más que las que menos influencia tienen. También tenemos la posibilidad de dibujar elipses alrededor de cada grupo con un cierto nivel de confianza.
 
 Como se aprecia en los gráficos anteriores, no tiene mucho sentido representar la segunda componente principal ya que no realiza un correcto enfrentamiento de variables y no nos aporta nada.
-
-```{r}
-#fviz_pca_ind(pca2,axes=c(1,2), col.ind = train$Gama, alpha.ind = "contrib" ) + theme_grey()
-#fviz_pca_ind( pca2,axes=c(1,2),  habillage = as.factor( train$Gama ), addEllipses = TRUE, ellipse.level = 0.99 )
-#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Make, alpha.ind = "contrib" ) + theme_grey()
-#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Fuel_Type, alpha.ind = "contrib" ) + theme_grey()
-#fviz_pca_ind( pca2, axes=c(1,2),habillage = as.factor( train$Fuel_Type ), addEllipses = TRUE, ellipse.level = 0.99 )
-#fviz_pca_ind( pca2, axes=c(1,2),col.ind = train$Transmission, alpha.ind = "contrib" ) + theme_grey()
-#fviz_pca_ind( pca2, axes=c(1,2),habillage = as.factor( train$Transmission ), addEllipses = TRUE, ellipse.level = 0.99 )
-#fviz_pca_ind( pca2,axes=c(1,2), col.ind = train$Location, alpha.ind = "contrib" ) + theme_grey()
-#fviz_pca_biplot( pca2, axes=c(1,2),col.ind = train$Gama )
-```
 
 ```{r}
 summary(pca2)
@@ -265,7 +283,7 @@ screeplot(pca2, xlab="PCs")
 Una estimación del número correcto de ejes a interpretar sugiere restringir el análisis a la descripción de los 3 primeros ejes. Estos ejes presentan una inercia superior a las obtenidas por el cuantil 0,95 de las distribuciones aleatorias (78,56% frente a 51,79%). Esta observación sugiere que solo estos ejes llevan una información real. En consecuencia, la descripción se situará en estos ejes.
 
 ```{r}
-library(psych)
+
 scree(data[, c(3,4, 8, 9, 14, 15)],main ="Grafico_de_Sedimentacion")
 ```
 
@@ -275,28 +293,14 @@ El grafico de sedimentación nos muestra la cantidad óptima de componentes a to
 fa.parallel(data[, c(3,4, 8, 9, 14, 15)],fa="pc")
 ```
 
-Según los resultados del Análisis paralelo, el número de componentes deberá ser 3. 
+Según los resultados del análisis paralelo, el número de componentes deberá ser 3. 
 
 Se comprueba que con PCA no se consigue lo que se busca, ni PC2 ni PC3 nos sirven para realizar una correcta redimensión de los datos. Nos damos cuenta de que nuestro problema es bastante difícil de resolver, dado que es complicado ver algún tipo de separación o tendencia de los coches en función de las variables explicativas o incluso en cuanto al precio. Aún así, si nos fijamos, en los gráficos que enfrentan PC1 con PC2, PC1 con PC3 y PC2 con PC3, parece que los coches de gama media y gama alta están más dispersos que los de gama baja.
-
-```{r}
-#library(FactoMineR)
-#library(FactoInvestigate)
-#res = PCA(train[, c(3,4, 8, 9, 14, 15)], graph=FALSE)
-#Investigate(res) 
-```
-
 
 
 ## k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
 
-El análisis *cluster* busca agrupar individuos u observaciones tratando de lograr la máxima homogeneidad en cada grupo o *cluster* y la mayor diferencia entre los grupos. Es decir, el *clustering* asigna individuos similares al mismo grupo, y observaciones muy distintas estarán en grupos diferentes. Nosotros usaremos el algoritmo de las k-medias que tiene como objetivo encontrar y agrupar en clases a las observaciones que tienen una alta similitud entre ellos. Esta similitud se define como la menor distancia entre características de cada observación. Cuanto más cerca estén los puntos de datos, más similares serán y más probabilidad habrá de que pertenezcan al mismo *cluster*. Para ello primero debemos escoger una distancia y dado que nuestra variable respuesta está bastante bien balanceada, usaremos la distancia euclídea. Esta es la distancia que muchos métodos de *R* utilizan por defecto, pero debemos asegurarnos de que los datos que introducimos en el algoritmo están escalados (para que no tengan mayor importancia las variables con números más grandes en valor absoluto, por el mero de hecho de que puedan estar medidas en diferentes unidades, por ejemplo).
-
-```{r escalado de datos}
-TrainEscalado <- data %>% select(Year, Kilometers_Driven, Engine, Power, Price, kmpl) %>% scale() %>% as.data.frame()
-#data[, c(3,4, 8, 9, 11,13)]
-```
-
+El análisis *cluster* busca agrupar individuos u observaciones tratando de lograr la máxima homogeneidad en cada grupo o *cluster* y la mayor diferencia entre los grupos. Es decir, el *clustering* asigna individuos similares al mismo grupo, y observaciones muy distintas estarán en grupos diferentes. Nosotros usaremos el algoritmo de las k-medias que tiene como objetivo encontrar y agrupar en clases a las observaciones que tienen una alta similitud entre ellos. Esta similitud se define como la menor distancia entre características de cada observación. Cuanto más cerca estén los puntos de datos, más similares serán y más probabilidad habrá de que pertenezcan al mismo *cluster*. Para ello, primero debemos escoger una distancia y dado que nuestra variable respuesta está bastante bien balanceada, usaremos la distancia euclídea. Esta es la distancia que muchos métodos de *R* utilizan por defecto, pero debemos asegurarnos de que los datos que introducimos en el algoritmo están escalados (para que no tengan mayor importancia las variables con números más grandes en valor absoluto, por el mero de hecho de que puedan estar medidas en diferentes unidades, por ejemplo). Así y para trabajar sobre una variable respuesta binaria, transformamos la variable Gama. 
 
 ```{r}
 data <- data[,-13]
@@ -310,7 +314,32 @@ data %>%
   ) -> data
 
 data$Gama <- as.factor(data$Gama)
+
+#dataTest %>% select(-Mileage) -> dataTest
+dataTest %>% select(-X) -> dataTest
+head(dataTest)
+dataTest%>%drop_na() -> dataTest
+dataTest %>% 
+    mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
+    mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
+    select(-Mileage) -> dataTest
+
+dataTest %>% 
+  mutate(
+    Gama = case_when( 
+      dataTest$Make=="Datsun" |dataTest$Make=="Smart" |dataTest$Make=="Tata" |dataTest$Make=="Fiat" |dataTest$Make=="Chevrolet" |dataTest$Make=="Ambassador" |
+      dataTest$Make=="Skoda"|dataTest$Make=="Renault" |dataTest$Make=="Ford" |dataTest$Make=="Honda"|dataTest$Make=="Volkswagen" |dataTest$Make=="Hyundai" |dataTest$Make=="Nissan" |dataTest$Make=="Maruti" ~ "Baja-media",
+      dataTest$Make=="Bentley"|dataTest$Make=="Porsche" |dataTest$Make=="Land Rover" |dataTest$Make=="Jaguar" |dataTest$Make=="Mini" |dataTest$Make=="Mercedes-Benz" |dataTest$Make=="Audi" |dataTest$Make=="Bmw" |dataTest$Make=="Jeep" |dataTest$Make=="Volvo" |dataTest$Make=="Isuzu" |dataTest$Make=="Mitsubishi" |dataTest$Make=="Toyota" |dataTest$Make=="Force" |dataTest$Make=="Mahindra"~ "Alta"
+    )
+  ) -> dataTest
+
 ```
+
+
+```{r escalado de datos}
+TrainEscalado <- data %>% select(Year, Kilometers_Driven, Engine, Power, Price, kmpl) %>% scale() %>% as.data.frame()
+```
+
 
 Como mínimo haremos dos grupos, es decir, buscaremos hacer 2 o más grupos, porque hacer un único *cluster* no tiene ningún sentido, ya que buscamos separar los coches en una característica que toma dos valores: gama baja-media y gama alta. 
 
@@ -320,12 +349,10 @@ Para decidir el número óptimo de grupos que debemos crear, podemos usar la fun
 Primero usaremos la función, teniendo en cuenta que como máximo aceptaremos tener 10 grupos y como mínimo 2:
 
 ```{r cluster k-medias 1}
-library(NbClust)
-set.seed(220322)
-#lo comento para que no se eejcute SIEMPRE pero es imprescincible , tarda mucho
 
-#nc = NbClust(TrainEscalado,min.nc=2,max.nc=10,method = "kmeans")
-#nc
+set.seed(220322)
+nc = NbClust(TrainEscalado,min.nc=2,max.nc=10,method = "kmeans")
+nc
 ```
 
 La función `NbClust` prueba con diferente número de grupos y evalúa cuál es número óptimo de *clusters* según algunos criterios (muestra los resultados gráficos de la aplicación de algunos de ellos). Vemos que finalmente, nos dice que el número óptimo de grupos es 3, dado que es en el que más criterios de optimalidad coinciden.
@@ -394,6 +421,7 @@ Para realizar el *clustering* jerárquico, también utilizaremos la distancia eu
 En el primer caso utilizaremos el método *single* (distancia entre los elementos más cercanos de cada *cluster*): 
 
 ```{r cluster jerárquico 1}
+#TrainEscalado[-745,] <- TrainEscalado
 hc1 = hclust(d=dist(TrainEscalado), method = "single" )
 plot(hc1)
 ```
@@ -416,7 +444,7 @@ hc3 = hclust(d=dist(TrainEscalado), method = "average" )
 plot(hc3)
 ```
 
-En este tercer caso, de nuevo, volvemos a observar que el teorema 745 está más separado del resto que los demás entre sí, y que es este teorema el que provoca el "retraso" de la unión de las diferentes agrupaciones iniciales.
+En este tercer caso, de nuevo, volvemos a observar que el coche 745 está más separado del resto que los demás entre sí, y que es este coche el que provoca el "retraso" de la unión de las diferentes agrupaciones iniciales.
 
 En el cuarto y último caso utilizaremos el método *centroid* (distancia entre los centroides de cada *cluster*): 
 
@@ -425,7 +453,7 @@ hc4 = hclust(d=dist(TrainEscalado), method = "centroid" )
 plot(hc4)
 ```
 
-De nuevo, volvemos a identificar al teorema 745 a la izquierda, y volvemos a comprobar cómo es este teorema el que produce un mayor retraso en la última unión de todos los grupos.
+De nuevo, volvemos a identificar al coche 745 a la izquierda, y volvemos a comprobar cómo es este coche el que produce un mayor retraso en la última unión de todos los grupos.
 
 Como ya se vio en el análisis exploratorio de datos, podríamos pensar en eliminarlo, pero como tampoco tenemos más información y no sabemos si en realidad son *outliers* o simplemente tienen características un poco diferentes a las de los demás, decidimos quedarnos con ellos, ya que puede que nos aparezca más adelante otro coche similar a alguno de ellos, y nos ayuden a clasificarlo adecuadamente.
 
@@ -449,28 +477,6 @@ rect.hclust(hc2, k=10, border = "blue")
 ## Regresión logística
 
 La división de los coches en gama baja-media y gama alta ha sido necesaria también para poder realizar la regresión logística sobre la nueva variable. 
-
-```{r}
-library(dplyr)
-#dataTest %>% select(-Mileage) -> dataTest
-dataTest %>% select(-X) -> dataTest
-head(dataTest)
-dataTest%>%drop_na() -> dataTest
-dataTest %>% 
-    mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
-    mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
-    select(-Mileage) -> dataTest
-
-dataTest %>% 
-  mutate(
-    Gama = case_when( 
-      dataTest$Make=="Datsun" |dataTest$Make=="Smart" |dataTest$Make=="Tata" |dataTest$Make=="Fiat" |dataTest$Make=="Chevrolet" |dataTest$Make=="Ambassador" |
-      dataTest$Make=="Skoda"|dataTest$Make=="Renault" |dataTest$Make=="Ford" |dataTest$Make=="Honda"|dataTest$Make=="Volkswagen" |dataTest$Make=="Hyundai" |dataTest$Make=="Nissan" |dataTest$Make=="Maruti" ~ "Baja-media",
-      dataTest$Make=="Bentley"|dataTest$Make=="Porsche" |dataTest$Make=="Land Rover" |dataTest$Make=="Jaguar" |dataTest$Make=="Mini" |dataTest$Make=="Mercedes-Benz" |dataTest$Make=="Audi" |dataTest$Make=="Bmw" |dataTest$Make=="Jeep" |dataTest$Make=="Volvo" |dataTest$Make=="Isuzu" |dataTest$Make=="Mitsubishi" |dataTest$Make=="Toyota" |dataTest$Make=="Force" |dataTest$Make=="Mahindra"~ "Alta"
-    )
-  ) -> dataTest
-
-```
 
 Se realizan las siguientes gráficas para visualizar los datos con la nueva variable:
 
@@ -513,7 +519,7 @@ La interpretación de los p-valores es similar a la del modelo lineal. Podemos v
 
 El mejor modelo es el explicado por las variables Power, Engine y Transmission. 
 En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: $η=log(p1−p)$,
-siendo p la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/(1−p)$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.
+siendo $p$ la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente $p/(1−p)$ se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.
 
 Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida de precisión para contrastar los datos una vez que tengamos cada matriz de confusión y comparar los resultados que nos ofrecen cada uno de los métodos que empleemos. En nuestro caso, la variable respuesta no está muy bien balanceada:
 
@@ -521,7 +527,7 @@ Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida
 summary(data$Gama)
 ```
 
-Como vemos, los coches de gama alta se corresponden con el 30% aproximadamente y los de gama baja-media, el 70%. Supondremos que están más o menos equilibradas. No queremos dar más valor a identificar un tipo de coche frente al otro. Por tanto, elegiremos la siguiente **medida de precisión**.
+Como vemos, los coches de gama alta se corresponden con el 30% aproximadamente y los de gama baja-media, el 70%. Supondremos que están más o menos equilibradas. No queremos dar más valor a identificar un tipo de coche frente al otro. Por tanto, se establecerá la siguiente **medida de precisión**.
 Esta es una medida de precisión que hemos creado para tener en cuenta todos los casos, tanto los falsos negativos como los falsos positivos. En realidad, se trata de la **media geométrica de la sensitividad** (*recall*) **y la especificidad**, y se define según la siguiente expresión:
 
 $$\text{Medida de precisión}=\sqrt{\frac{TP}{FN+TP}·\frac{TN}{FP+TN}}=\sqrt{TPR·TNR} $$
@@ -539,6 +545,7 @@ donde:
 
 - $TNR$ (*specificity, selectivity or true negative rate*) es la especificidad.
 
+Cabe señalar que esta medida sólo será utilizada en futuros análisis cuando el problema requiera de una precisión de este tipo, mientras, se utilizará como métrica el accuracy.
 
 ```{r medida de precisión}
 medidaPrecision <- function(matrizDeConfusion){
@@ -549,7 +556,7 @@ medidaPrecision <- function(matrizDeConfusion){
 
 ## Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)
 
-El método de los k-vecinos más cercanos consiste en clasificar a un nuevo individuo en función de la categoría de sus $k$ vecinos más cercanos, es decir, clasificaremos un coche en gama alta o gama media-baja en función de la gama de los teoremas más cercanos a él (con cercanía nos referimos a similitud entre sus características).
+El método de los k-vecinos más cercanos consiste en clasificar a un nuevo individuo en función de la categoría de sus $k$ vecinos más cercanos, es decir, clasificaremos un coche en gama alta o gama media-baja en función de la gama de los coches más cercanos a él (con cercanía nos referimos a similitud entre sus características).
 
 
 ```{r}
@@ -559,50 +566,34 @@ set.seed(07122020)
 
 
 ```{r}
-library(caret)
-library(ggplot2)
-library(lattice)
-library(class)
-library(cluster)
-library(lift)
-```
-
-
-```{r}
 trainX <- data[,c(2:10,13,14)]
 preProcValues <- preProcess(x = trainX,method = c("center", "scale"))
 preProcValues
 ```
 
+Para poder realizar las predicciones, se entrena mediante cross-validation y así se estima el número óptimo de vecinos.
 
 ```{r}
 set.seed(400)
-ctrl <- trainControl(method="repeatedcv",repeats = 3) #,classProbs=TRUE,summaryFunction = twoClassSummary)
+ctrl <- trainControl(method="repeatedcv",repeats = 3)
 knnFit <- train(Gama ~ ., data = data[,c(2:10,13,14,15)], method = "knn", trControl = ctrl, preProcess = c("center","scale"), tuneLength = 20)
-
-#Output of kNN fit
 knnFit
 ```
 
 ```{r}
-#Plotting yields Number of Neighbours Vs accuracy (based on repeated cross validation)
 plot(knnFit)
 ```
 
 ```{r}
 knnPredict <- predict(knnFit,newdata =dataTest[,c(2:10,13,14,15)])
-#knnPredict
 data$Gama <- factor(data$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
 dataTest$Gama <- factor(dataTest$Gama,levels=c("Alta","Baja-media"),labels=c("Alta","Baja-media"))
-
-#Get the confusion matrix to see accuracy value and other parameter values
 confusionMatrix(knnPredict, dataTest$Gama )
 ```
 
 ```{r}
 accuracy <- mean(knnPredict == dataTest$Gama)
 accuracy
-
 ```
 
 
@@ -624,16 +615,9 @@ Los árboles de decisión se construyen en base al cumplimiento o no de ciertos 
 Primero veremos cuál es el valor óptimo de `cp` (parámetro de complejidad que combina la tasa de error con la profundidad del árbol). Para ello, construiremos un árbol muy complejo, y en función de los resultados que obtengamos lo "podaremos".
 
 ```{r árboles de decisión 1}
-# aquí no hace falta poner la semilla porque no es un algoritmo aleatorio
-# set.seed(09122020)
-#install.packages("rpart")
-library(rpart)
-#install.packages("rpart.plot")
-library(rpart.plot)
-#no metemos ni price ni make pq ambas son usadas para dividir la variable respuesta en dos gamas distintas
+
 arbolDecisionInfoComplejo <- rpart(data[,15] ~., data[,c(2:10,13,14)], cp=0.001,  method="class",parms=list(split="information"))
 plotcp(arbolDecisionInfoComplejo)
-
 ```
 
 En el gráfico vemos que el mínimo se encuentra en torno al 0,0036, así que para obtener el mejor compromiso entre error y profundidad nos quedaremos con un valor de `cp`=0,004, porque tenemos que tener en cuenta que cuanto más pequeño sea este valor, más complejo y profundo será el árbol y menos error tendremos, sin embargo, corremos el riesgo de sobreajustar el modelo (problema de *overfitting*). Por otro lado, podemos usar dos criterios diferentes: el de información y el de Gini. Usaremos los dos y comprobaremos con cuál obtenemos una mayor precisión.
@@ -658,12 +642,7 @@ Los errores que se cometen en cada hoja y el error total del árbol:
 
 ```{r}
 printcp(arbolDecision)
-# Para pintar un árbol
-# Mejor mirar el esquema anterior
 rpart.plot(arbolDecision, uniform=T);
-# Otra forma para pintarlo:
-#library(rattle)
-#fancyRpartPlot(arbolDecision)
 ```
 
 
@@ -675,11 +654,10 @@ predArbolInfo1 = predict(arbolDecision, data[,c(2:10,13,14)])
 predArbolInfo1 = round(predArbolInfo1)
 tArb1 = table(predArbolInfo1[,1], data[,15])
 tArb2 = table(predArbolInfo1[,2], data[,15])
-#medidaPrecision(tArb1)
 medidaPrecision(tArb2)
 ```
 
-Obtenemos una precisión del 97%, lo que esperamos que disminuya al utilizar nuevos datos. Vamos a ver como clasifica nuestro árbol a nuevos teoremas. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
+Obtenemos una precisión del 97% con los datos de entrenamiento. Ahora, vamos a ver como clasifica nuestro árbol a nuevos coches. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.
 
 ```{r árboles de decisión 6}
 predArbolInfo2 = predict(arbolDecision,dataTest[,c(2:10,14,15)])
@@ -691,31 +669,24 @@ tArb4 = table(predArbolInfo2[,2], dataTest[,13])
 medidaPrecision(tArb4)
 ```
 
-Efectivamente vemos como la precisión del 95% es menor, aunque tampoco ha disminuido mucho, lo que nos indica que es un buen árbol y que no hemos sobreajustado el modelo.
+Con el conjunto de datos de testing se obtiene una precisión del 95%, lo que nos indica que nuestro árbol de decisión realiza buenas predicciones y no sobreajusta el modelo.
 
-Por último, vamos a ver cuál es la precisión que obtenemos utilizando el criterio de Ginni.
-
-Construimos un nuevo árbol:
+Por otro lado, vamos a ver cuál es la precisión que obtenemos utilizando el criterio de Ginni. Construimos un nuevo árbol:
 
 ```{r árboles de decisión 7}
 arbolDecisionGini <- rpart(data[,15] ~., data=data[,c(2:10,13,14)], cp=0.004, parms=list(split="gini"))
 arbolDecisionGini
 ```
 
-Que utiliza las siguientes condiciones acerca de las características de los coches con los errores siguientes:
+Vamos a comprobar el error que comete el árbol de decisión y qué aspecto tiene:
 
 ```{r árboles de decisión 8}
 labels(arbolDecisionGini, pretty=T)
 printcp(arbolDecisionGini)
-
-# Para pintar el árbol
-rpart.plot(arbolDecisionGini, uniform=T);
-#text(arbolDecisionGini, all=T, pretty=0, fancy=T, use.n=T, fwidth=0.3, fheight=0.3)
-# Otra forma para pintarlo
-#fancyRpartPlot(arbolDecisionGini)
+rpart.plot(arbolDecisionGini, uniform=T)
 ```
 
-Así que en en nuestro conjunto de entrenamiento obtenemos la siguiente precisión:
+La precisión que se obtiene con los datos de entrenamiento es la siguiente:
 
 ```{r árboles de decisión 9}
 predArbolGini1 = predict(arbolDecisionGini,data[,c(2:10,13,14)])
@@ -723,11 +694,10 @@ predArbolGini1 = predict(arbolDecisionGini,data[,c(2:10,13,14)])
 predArbolGini1 = round(predArbolGini1)
 tArb5 = table(predArbolGini1[,1], data[,15])
 tArb6 = table(predArbolGini1[,2], data[,15])
-#medidaPrecision(tArb5)
 medidaPrecision(tArb6)
 ```
 
-Y en con el conjunto de prueba obtenemos una precisión:
+Se obtiene un accuracy del 95%. Además, con el conjunto de datos de testing se obtiene la siguiente métrica:
 
 ```{r árboles de decisión 10}
 predArbolGini2 = predict(arbolDecisionGini, dataTest[,c(2:10,14,15)])
@@ -736,11 +706,10 @@ tArb7 = table(predArbolGini2[,1],dataTest[,13])
 tArb8 = table(predArbolGini2[,2],dataTest[,13])
 pArb1 = medidaPrecision(tArb7)
 pArb2 = medidaPrecision(tArb8)
-#pArb1
 pArb2
 ```
 
-Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son muy buenas también con Gini, en este caso se obtiene un 95% en entrenamiento y un 93% en test por lo que consideramos buenos árboles de decisión.
+Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son muy buenas también con Gini, en este caso se obtiene un 93% en test por lo que consideramos buenos árboles de decisión. Distinguiendo entre el árbol de información y el del criterio de Gini, seleccionamos el de información por cometer menos error y ajustarse más a las nuevas entradas que se le proporcionan.
 
 ## Bosques aleatorios
 
@@ -749,8 +718,10 @@ Un bosque de árboles o bosque aleatorio es un conjunto de árboles de decisión
 Una vez que sabemos qué es un bosque aleatorio cabe preguntarse cuál es el número óptimo de árboles que debemos construir y cuántas variables queremos que se seleccionen para cada
 uno de los árboles. Para descubrir esto, probaremos con distintos valores de cada uno y nos quedaremos con el que mejor medida de precisión nos proporcione.
 
+Durante todo el proceso de análisis se han evaluado cada una de las métricas. Al obtener una precisión del 97% en entrenamiento y 95% en testing en árboles de decisión, se ha hecho constatar que no seleccionaremos como mejor método para predecir el de bosques aleatorios o random forest ya que al obtener esa precisión tan alta, siempre será mejor tener un árbol que un bosque de árboles en cuanto a complejidad y coste. No obstante, se realizan algunos cálculos para estimar cual sería la precisión y las predicciones de este bosque. 
+
 ```{r prueba Ranger}
-library(ranger)
+
 set.seed(123)
 
 modelo <- ranger(
@@ -761,11 +732,12 @@ modelo <- ranger(
 )
 ```
 
+
 ```{r}
 predicciones <- predict(modelo, data = dataTest[,c(2:10,14,15)])
 predicciones
-test_rmse <- sqrt(mean((predicciones - as.factor(data[,13]))^2))
-paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
+#test_rmse <- sqrt(mean((predicciones - as.factor(data[,13]))^2))
+#paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
 ```
 
 ## Máquinas de vectores de soporte (SVM: Support Vector Machines)
@@ -773,113 +745,130 @@ paste("Error de test (rmse) del modelo (log): ", round(test_rmse,2))
 Vamos a aplicar SVM a nuestros datos. Las SVM constituyen un método basado en aprendizaje para la resolución de problemas de clasificación y regresión. En ambos casos, esta resolución se basa en una primera fase de entrenamiento (donde se les informa con múltiples ejemplos ya resueltos, en forma de pares {problema, solución}) y una segunda fase de uso para la resolución de problemas. En ella, las SVM se convierten en una “caja negra” que proporciona una respuesta (salida) a un problema dado (entrada).
 
 ```{r svm 1}
-library(e1071)
+
 svmdata = data[,c(2:10,13,14,15)]
 ```
 
-Lo primero que hacemos es obtener los conjuntos de train y test de los datos que vamos a usar.
-```{r svm 2}
-# Creamos el conjunto de Train y Test
+Lo primero que hacemos es separar el conjunto de datos en los conjuntos de train y test, estableciendo el 70% de ellos para train y el 30% para test.
 
+```{r svm 2}
 ind <- sample(2,nrow(svmdata), replace= TRUE, prob = c(0.7,0.3))
 trainSet <- svmdata[ind==2,]
 testSet <- svmdata[ind==1,]
 ```
 
-Realizamos el entrenamiento del modelo. Vamosa probar los distintos kernels.
+Realizamos el entrenamiento del modelo. Vamos a probar los distintos kernels para comprobar cual de ellos aprende mejor. 
 
 ### SVM con kernel radial
 
+Suponiendo que una observación del conjunto de datos de test se encuentra alejada de una observación de entrenamiento en términos de distancia euclídea, el kernel radial tiene un comportamiento muy local, en el sentido de que sólo las observaciones de entrenamiento cercanas a una observación de test tendrán efecto sobre su clasificación. Es importante tener en cuenta que una mayor flexibilidad no tiene porque mejorar las predicciones debido a que un modelo muy flexible puede ajustarse demasiado a los datos de entrenamiento.
+
+Primero, entrenamos el modelo:
+
 ```{r svm 3}
-# Entrenamos el modelo
 model <- svm(Gama~., data = trainSet, kernel="radial")
 prediccion <- predict(model, newdata= testSet[-12])
 ```
 
+Ahora, se muestra el resultado mediante la matriz de confusión:
+
 ```{r svm 4}
-# Resultado y porcentaje de acierto
-#plot(model, data = svmdata, Bwt~Hwt)
-MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC <- table(testSet[,12], prediccion)
 MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+Como se puede observar, el modelo clasifica bien en un 92% de los casos, por lo que las predicciones son realmente buenas.
 
 ### SVM con kernel lineal
 
+El kernel lineal cuantifica la similitud de un par de observaciones usando la correlación de Pearson. Con un kernel lineal, el clasificador obtenido es equivalente a un support vector classifier. Se entrena y se muestran los resultados a continuación:
+
 ```{r svm 5}
-# Resultado y porcentaje de acierto
-#plot(model, data = svmdata, Bwt~Hwt)
 model2 <- svm(Gama~., data = trainSet, kernel="linear")
 prediccion <- predict(model2, newdata= testSet[-12])
 
-MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC <- table(testSet[,12], prediccion) 
 MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+Se obtiene un accuracy del 92%, por lo que predice con bastante exactitud al igual que el kernel radial. 
 
 ### SVM con kernel sigmoidal 
 
+Ahora, con el kernel sigmoidal:
+
 ```{r svm 6}
-# Resultado y porcentaje de acierto
-#plot(model, data = svmdata, Bwt~Hwt)
 model3 <- svm(Gama~., data = trainSet, kernel="sigmoid")
 prediccion <- predict(model3, newdata= testSet[-12])
 
-MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC <- table(testSet[,12], prediccion)
 MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
+
+Se obtiene un accuracy del 92%, por lo que predice con bastante exactitud al igual que el kernel radial y lineal. 
 
 ### SVM con kernel polinomial
 
+El kernel polinómico de grado d (siendo d>1) permite un límite de decisión mucho más flexible. Cuando un support vector classifier se combina con un kernel no lineal, se obtiene un support vector machine. Se entrena el modelo y se muestran los resultados: 
+
 ```{r svm 7}
-# Resultado y porcentaje de acierto
-#plot(model, data = svmdata, Bwt~Hwt)
 model4 <- svm(Gama~., data = trainSet, kernel="polynomial")
 prediccion <- predict(model4, newdata= testSet[-12])
 
-MC <- table(testSet[,12], prediccion) #matriz de confusión
+MC <- table(testSet[,12], prediccion)
 MC
 accuracy <- (sum(diag(MC)))/(sum(MC))
 accuracy
 ```
 
-Aún que los resultados son parecidos en 3 de los 4 kernels, hay uno que sobresale y es el kernel "Radial". Por lo tanto es el mejor hiperplano que se adapta a nuestros datos.
+Tanto el kernel radial como el lineal y el sigmoidal obtienen la misma métrica, por lo tanto esos hiperplanos se adaptan correctamente a nuestros datos.
 
 # Ajuste de los hiperparámetros del modelo 
+
+Muchos modelos, entre ellos los árboles de regresión, contienen parámetros que no pueden aprenderse a partir de los datos de entrenamiento y, por lo tanto, deben de ser establecidos por el analista. A estos se les conoce como hiperparámetros. Los resultados de un modelo pueden depender en gran medida del valor que tomen sus hiperparámetros, sin embargo, no se puede conocer de antemano cuál es el adecuado. Aunque con la práctica, los especialistas en machine learning ganan intuición sobre qué valores pueden funcionar mejor en cada problema, no hay reglas fijas. La forma más común de encontrar los valores óptimos es probando diferentes posibilidades.
+
+   - Escoger un conjunto de valores para el o los hiperparámetros.
+
+   - Para cada valor (combinación de valores si hay más de un hiperparámetro), entrenar el modelo y estimar su error mediante un método de validación
+
+   - Finalmente, ajustar de nuevo el modelo, esta vez con todos los datos de entrenamiento y con los mejores hiperparámetros encontrados.
 
 ## Regresión logística
 
 El método glm de caret emplea la función glm() del paquete básico de R. Este algoritmo no tiene ningún hiperparámetro pero, para que efectúe una regresión logística, hay que indicar family = "binomial".
 
 ```{r}
-library(doMC)
+
 registerDoMC(cores = 4)
 ```
 
+Se configuran el número de repeticiones y las particiones para cada repetición:
+
 ```{r}
-# HIPERPARÁMETROS, NÚMERO DE REPETICIONES Y SEMILLAS PARA CADA REPETICIÓN
 particiones  <- 10
 repeticiones <- 5
 ```
 
+Ahora, se ajustan los hiperparámetros:
 
 ```{r}
-# Hiperparámetros
 hiperparametros <- data.frame(parameter = "none")
 
 set.seed(123)
 seeds <- vector(mode = "list", length = (particiones * repeticiones) + 1)
 for (i in 1:(particiones * repeticiones)) {
-  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))
-}
+  seeds[[i]] <- sample.int(1000, nrow(hiperparametros))}
 seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
 
 ```
 
+Y por último, se define el entrenamiento y se ajusta el modelo:
 
 ```{r}
 # DEFINICIÓN DEL ENTRENAMIENTO
@@ -901,17 +890,12 @@ modelo_logistic <- train(Gama ~ ., data = data[,c(2:10,13,14,15)],
                          family = "binomial")
 modelo_logistic
 ```
+
 Empleando un modelo de regresión logística se consigue un accuracy promedio de validación del 93%.
 
 ## k-NN
 
-Ahora aplicamos la busqueda bayesiana para encontrar el mejor número de vecinos para el kNN.
-
-```{r}
-library(foreach)
-library(iterators)
-library(parallel)
-```
+Ahora aplicamos la busqueda bayesiana para encontrar el mejor número de vecinos para el k-NN.
 
 
 ```{r}
@@ -928,9 +912,7 @@ seeds[[(particiones * repeticiones) + 1]] <- sample.int(1000, 1)
 
 ```{r}
 # DEFINICIÓN DEL ENTRENAMIENTO
-library(caret)
-library(ggplot2)
-library(lattice)
+
 control_train <- trainControl(method = "repeatedcv", number = particiones,
                               repeats = repeticiones, seeds = seeds,
                               returnResamp = "final", verboseIter = FALSE,
@@ -958,9 +940,11 @@ ggplot(modelo_knn, highlight = TRUE) +
   theme_bw()
 ```
 
-Con un modelo kNN con k=5 se consigue un accuracy de validación promedio del 89'7%. 
+Con un modelo k-NN con 5 vecinos se consigue un accuracy de validación promedio del 89'7%. 
 
 ## Árboles de decisión
+
+Ahora, vamos a realizar el ajuste de hiperparámetros del árbol de decisión, que ya obtenía muy buenas predicciones.
 
 ```{r}
 # Hiperparámetros
@@ -1065,6 +1049,7 @@ ggplot(modelo_rf, highlight = TRUE) +
          shape = guide_legend(title = "mtry")) +
   theme_bw()
 ```
+
 Empleando un modelo random forest con mtry = 7, min.node.size = 2 y splitrule = "gini", se consigue un accuracy promedio de validación del 98'4%. 
 
 ## SVM
@@ -1075,6 +1060,7 @@ El método svmRadial de caret emplea la función ksvm() del paquete kernlab. Est
   
   - C: penalización por violaciones del margen del hiperplano.
 
+Se ajustan los hiperparámetros y se entrena el modelo con kernel radial:
 
 ```{r}
 # Hiperparámetros
@@ -1138,10 +1124,9 @@ modelos <- list(KNN = modelo_knn, logistic = modelo_logistic,
 resultados_resamples <- resamples(modelos)
 ```
 
+Se modifica el conjunto de datos para separar el nombre de cada modelo y las distintas métricas en la tabla:
 
 ```{r}
-# Se trasforma el dataframe devuelto por resamples() para separar el nombre del
-# modelo y las métricas en columnas distintas.
 metricas_resamples <- resultados_resamples$values %>%
                          gather(key = "modelo", value = "valor", -Resample) %>%
                          separate(col = "modelo", into = c("modelo", "metrica"),
@@ -1156,6 +1141,7 @@ metricas_resamples %>%
   spread(key = metrica, value = media) %>%
   arrange(desc(Accuracy))
 ```
+
 
 ```{r}
 metricas_resamples %>%
@@ -1195,7 +1181,8 @@ metricas_resamples %>% filter(metrica == "Accuracy") %>%
     coord_flip() +
     theme(legend.position = "none")
 ```
-El modelo random forest consigue el accuracy promedio más alto, seguido muy de cerca por el árbol de decisión y SVM. Para determinar si las diferencias entre ellos son significativas, se recurre a test estadísticos.
+
+El modelo random forest consigue el accuracy promedio más alto, seguido muy de cerca por el árbol de decisión y SVM. Para determinar si las diferencias entre ellos son significativas, se recurre a test estadísticos. Como se comentó al principio, teniendo en cuenta las métricas obtenidas por cada uno de ellos, siempre es menos complejo y costoso seleccionar el árbol de decisión por delante de un bosque de árboles.
 
 
 ### Test de Friedman para comparar el accuracy de los modelos 
@@ -1206,6 +1193,7 @@ matriz_metricas <- metricas_resamples %>% filter(metrica == "Accuracy") %>%
                    select(-Resample, -metrica) %>% as.matrix()
 friedman.test(y = matriz_metricas)
 ```
+
 Para un nivel de significancia (α = 0.05), el test de Friedman sí encuentra evidencias para rechazar la hipótesis nula de que los  clasificadores consiguen la misma precisión, sin embargo, no determina que par o pares son diferentes. Para identificarlos, se recurre a contrastes post HOC.
 
 La función diff() del paquete caret recibe como argumento los resultados de validación de dos o más modelos extraídos con resample() y hace comparaciones por pares aplicando un t-test pareado con correcciones por comparaciones múltiples. Esta función no permite mucha flexibilidad en cuanto a las comparaciones, por lo que, una vez extraídos los datos con resample(), suele ser preferible emplear otras funciones disponibles en R.
@@ -1234,8 +1222,6 @@ comparaciones
 Acorde a las comparaciones por pares, no existen evidencias suficientes para considerar que la capacidad predictiva de los modelos es distinta.
 
 
-
-
 # Curva de ROC
 
 Las curvas ROC (Receiver Operating Characteritic curve) permiten evaluar, en problemas de clasificación binaria, cómo varia la proporción de verdaderos positivos (sensibilidad o recall) y la de falsos positivos (1-especificidad) dependiendo del cutoff de probabilidad empleado en las asignaciones. El gráfico resultante es muy útil para identificar el cutoff que consigue un mejor equilibrio sensibilidad-especificidad. Además de esto, la curva ROC, en concreto el área bajo la curva (AUC), puede emplearse como métrica para evaluar modelos. Un modelo que clasifica perfectamente las dos clases tiene un 100% de sensibilidad y especificidad, por lo que el área bajo la curva es de 1. Un modelo que predice por debajo de lo esperado por azar, tiene un AUC menor de 0.5. Una condición necesaria para crear una curva ROC es disponer de la probabilidad de clases en las predicciones.
@@ -1246,7 +1232,7 @@ El paquete pROC contiene múltiples funciones para crear, representar y obtener 
 
 
 ```{r}
-library(pROC)
+
 # Se obtienen las probabilidades predichas para cada clase
 predicciones <- predict(object = modelo_logistic,
                         newdata = dataTest[,c(2:10,13,14,15)],
@@ -1263,13 +1249,18 @@ plot(curva_roc)
 # Área bajo la curva AUC
 auc(curva_roc)
 ```
+
 ```{r}
 # Intervalo de confianza de la curva
 ci.auc(curva_roc, conf.level = 0.95)
 ```
 
+Con la regresión logística se consigue un área bajo la curva del 94%.
+
+Ahora, veamos la curva ROC para el modelo k-nn.
+
 ```{r}
-library(pROC)
+
 # Se obtienen las probabilidades predichas para cada clase
 predicciones <- predict(object = modelo_knn,
                         newdata = dataTest[,c(2:10,13,14,15)],
@@ -1293,34 +1284,9 @@ auc(curva_roc)
 ci.auc(curva_roc, conf.level = 0.95)
 ```
 
-```{r}
-# library(pROC)
-# # Se obtienen las probabilidades predichas para cada clase
-# predicciones <- predict(object = modelo_rf,
-#                         newdata = dataTest[,c(2:10,13,14,15)],
-#                         type = "prob")
-# # Cálculo de la curva
-# curva_roc <- roc(response = dataTest$Gama, 
-#                  predictor = predicciones$Alta) 
-# 
-# # Gráfico de la curva
-# plot(curva_roc)
-```
-
+Ahora, para el modelo de árbol de decisión: 
 
 ```{r}
-# Área bajo la curva AUC
-auc(curva_roc)
-```
-
-```{r}
-# Intervalo de confianza de la curva
-ci.auc(curva_roc, conf.level = 0.95)
-```
-
-
-```{r}
-library(pROC)
 # Se obtienen las probabilidades predichas para cada clase
 predicciones <- predict(object = modelo_C50Tree,
                         newdata = dataTest[,c(2:10,13,14,15)],
@@ -1343,4 +1309,30 @@ auc(curva_roc)
 # Intervalo de confianza de la curva
 ci.auc(curva_roc, conf.level = 0.95)
 ```
-# Redes bayesianas y/o GAM
+El área bajo la curva del árbol de decisión es de 99%, por lo que se realiza un buen diagnóstico con este modelo. 
+
+# GAM
+
+En los modelos GAM se pueden aplicar funciones (lineales o no lineales) a cada uno de los predictores. El paquete gamlss implementa varias funciones smooth que suelen dar buenos resultados. 
+
+```{r}
+
+modelo_gam <- gam(Gama ~ s(Engine) + s(Power) + Transmission,
+                family=binomial,
+                data    = data)
+
+summary(modelo_gam)
+```
+
+Debido a la incorporación de las funciones no lineales (smoothers), hay que ser cauto a la hora de interpretar los coeficientes y los errores mostrados en el summary. Los coeficientes y errores de los predictores con funciones smooth (Engine y Power) contemplan únicamente la parte lineal, ignorando la no lineal. En el caso de los predictores lineales (Transmission) sus errores se estiman asumiendo que los términos con smoother son fijos, y no contemplan la incertidumbre introducida al ajustar cada una de las funciones smooth.
+
+Para conocer la contribución total (lineal y no lineal) de los predictores transformados por funciones smooth se puede emplear la función anova. Esta función calcula el impacto que tiene en el modelo (en términos de grados de libertad totales, AIC y significancia estadística) el eliminar cada uno de los predictores de forma secuencial.
+
+```{r}
+modelo_gam
+anova(modelo_gam, test= "F")
+plot(modelo_gam)
+AIC(logit3, modelo_gam)
+```
+
+El modelo GAM ha conseguido reducir todavía más el valor AIC y la distribución de sus residuos ha mejorado ligeramente.
