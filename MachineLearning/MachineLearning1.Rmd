@@ -1,19 +1,21 @@
 ---
 title: "PRÁCTICA MACHINE LEARNING I"
 author: "Amanda Del Álamo Caballero y Alejandro Delgado Peribáñez"
-date: "23/3/2022"
-output:
-  html_document:
-    theme: paper
-    highlight: zenburn
-    code_folding: hide
-    toc: yes
-    toc_float: yes
-    toc_depth: 2
-    df_print: paged
-  pdf_document:
-    toc: yes
-    toc_depth: '1'
+date: "18/04/2022"
+output: bookdown::gitbook
+
+#output:
+ # html_document:
+  #  theme: paper
+   # highlight: zenburn
+    #code_folding: hide
+    #toc: yes
+    #toc_float: yes
+    #toc_depth: 2
+    #df_print: paged
+  #pdf_document:
+   # toc: yes
+    #toc_depth: '1'
 
 ---
 
@@ -93,6 +95,7 @@ En esta sección se comenzarán a aplicar los algoritmos de aprendizaje automát
   + Análisis de componentes principales (reducción de la dimensionalidad)
   + k-medias. Análisis *cluster* no jerárquico o de conglomerados (*clustering*)
   + Análisis *cluster* jerárquico o de conglomerados (*clustering*)
+  
 
 * **Algoritmos supervisados**: Utilizan un conjunto de datos etiquetados y con ellas intentan encontrar relaciones entre las características y las etiquetas para predecir en nuevos datos.
 
@@ -151,7 +154,7 @@ El análisis de componentes principales (en inglés, PCA) es una técnica utiliz
 
 ```{r}
 str(data)
-data
+#data
 corrplot(cor(data[, c(3,4, 8, 9, 14, 15)]), method = "ellipse") 
 corPlot(data[, c(3,4, 8, 9, 14, 15)], cex = 1.2, main = "Matriz de correlación")
 corrplot(cor(data[, c(3,4, 8, 9, 14, 15)]),method = "circle",       order = "hclust",         hclust.method = "ward.D",
@@ -844,7 +847,6 @@ Muchos modelos, entre ellos los árboles de regresión, contienen parámetros qu
 El método glm de caret emplea la función glm() del paquete básico de R. Este algoritmo no tiene ningún hiperparámetro pero, para que efectúe una regresión logística, hay que indicar family = "binomial".
 
 ```{r}
-
 registerDoMC(cores = 4)
 ```
 

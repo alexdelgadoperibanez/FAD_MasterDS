@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 Análisis supervisado | PRÁCTICA MACHINE LEARNING I</title>
+  <meta name="description" content="3 Análisis supervisado | PRÁCTICA MACHINE LEARNING I" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 Análisis supervisado | PRÁCTICA MACHINE LEARNING I" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 Análisis supervisado | PRÁCTICA MACHINE LEARNING I" />
+  
+  
+  
+
+<meta name="author" content="Amanda Del Álamo Caballero y Alejandro Delgado Peribáñez" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="análisis-no-supervisado.html"/>
+<link rel="next" href="ajuste-de-los-hiperparámetros-del-modelo.html"/>
+<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="introducción.html"><a href="introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a></li>
+<li class="chapter" data-level="2" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html"><i class="fa fa-check"></i><b>2</b> Análisis no supervisado</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#análisis-de-componentes-principales"><i class="fa fa-check"></i><b>2.1</b> Análisis de componentes principales</a></li>
+<li class="chapter" data-level="2.2" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#k-medias.-análisis-cluster-no-jerárquico-o-de-conglomerados-clustering"><i class="fa fa-check"></i><b>2.2</b> k-medias. Análisis <em>cluster</em> no jerárquico o de conglomerados (<em>clustering</em>)</a></li>
+<li class="chapter" data-level="2.3" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#clustering-jerárquico"><i class="fa fa-check"></i><b>2.3</b> Clustering jerárquico</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html"><i class="fa fa-check"></i><b>3</b> Análisis supervisado</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#regresión-logística"><i class="fa fa-check"></i><b>3.1</b> Regresión logística</a></li>
+<li class="chapter" data-level="3.2" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#los-k-vecinos-más-cercanos-k-nn-the-k-nearest-neighbours"><i class="fa fa-check"></i><b>3.2</b> Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)</a></li>
+<li class="chapter" data-level="3.3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#árboles-de-decisión"><i class="fa fa-check"></i><b>3.3</b> Árboles de decisión</a></li>
+<li class="chapter" data-level="3.4" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#bosques-aleatorios"><i class="fa fa-check"></i><b>3.4</b> Bosques aleatorios</a></li>
+<li class="chapter" data-level="3.5" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#máquinas-de-vectores-de-soporte-svm-support-vector-machines"><i class="fa fa-check"></i><b>3.5</b> Máquinas de vectores de soporte (SVM: Support Vector Machines)</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-radial"><i class="fa fa-check"></i><b>3.5.1</b> SVM con kernel radial</a></li>
+<li class="chapter" data-level="3.5.2" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-lineal"><i class="fa fa-check"></i><b>3.5.2</b> SVM con kernel lineal</a></li>
+<li class="chapter" data-level="3.5.3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-sigmoidal"><i class="fa fa-check"></i><b>3.5.3</b> SVM con kernel sigmoidal</a></li>
+<li class="chapter" data-level="3.5.4" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-polinomial"><i class="fa fa-check"></i><b>3.5.4</b> SVM con kernel polinomial</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html"><i class="fa fa-check"></i><b>4</b> Ajuste de los hiperparámetros del modelo</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#regresión-logística-1"><i class="fa fa-check"></i><b>4.1</b> Regresión logística</a></li>
+<li class="chapter" data-level="4.2" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#k-nn"><i class="fa fa-check"></i><b>4.2</b> k-NN</a></li>
+<li class="chapter" data-level="4.3" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#árboles-de-decisión-1"><i class="fa fa-check"></i><b>4.3</b> Árboles de decisión</a></li>
+<li class="chapter" data-level="4.4" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#random-forest"><i class="fa fa-check"></i><b>4.4</b> Random Forest</a></li>
+<li class="chapter" data-level="4.5" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#svm"><i class="fa fa-check"></i><b>4.5</b> SVM</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="evaluación-y-comparación-de-modelos.html"><a href="evaluación-y-comparación-de-modelos.html"><i class="fa fa-check"></i><b>5</b> Evaluación y comparación de modelos</a>
+<ul>
+<li class="chapter" data-level="5.0.1" data-path="evaluación-y-comparación-de-modelos.html"><a href="evaluación-y-comparación-de-modelos.html#test-de-friedman-para-comparar-el-accuracy-de-los-modelos"><i class="fa fa-check"></i><b>5.0.1</b> Test de Friedman para comparar el accuracy de los modelos</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="curva-de-roc.html"><a href="curva-de-roc.html"><i class="fa fa-check"></i><b>6</b> Curva de ROC</a></li>
+<li class="chapter" data-level="7" data-path="gam.html"><a href="gam.html"><i class="fa fa-check"></i><b>7</b> GAM</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">PRÁCTICA MACHINE LEARNING I</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="análisis-supervisado" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Análisis supervisado</h1>
+<div id="regresión-logística" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Regresión logística</h2>
+<p>La división de los coches en gama baja-media y gama alta ha sido necesaria también para poder realizar la regresión logística sobre la nueva variable.</p>
+<p>Se realizan las siguientes gráficas para visualizar los datos con la nueva variable:</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="análisis-supervisado.html#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data<span class="sc">$</span>Gama)</span></code></pre></div>
+<pre><code>## 
+##       Alta Baja-media 
+##       1353       3358</code></pre>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="análisis-supervisado.html#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Power, <span class="at">y =</span> Price, <span class="at">color =</span> Gama)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="análisis-supervisado.html#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Engine, <span class="at">y =</span> Price, <span class="at">color =</span> Gama)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-18-2.png" width="672" /></p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="análisis-supervisado.html#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Transmission, <span class="at">y =</span> Price, <span class="at">color =</span> Gama)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-18-3.png" width="672" /></p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="análisis-supervisado.html#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Seats, <span class="at">y =</span> Price, <span class="at">color =</span> Gama)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-18-4.png" width="672" /></p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="análisis-supervisado.html#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Owner_Type, <span class="at">y =</span> Price, <span class="at">color =</span> Gama)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-18-5.png" width="672" /></p>
+<p>Ahora, se van a aplicar los modelos con distintas covariables para buscar el mejor de ellos:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="análisis-supervisado.html#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># modelos lineales generalizados estimados por MLE</span></span>
+<span id="cb74-2"><a href="análisis-supervisado.html#cb74-2" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="fu">glm</span>( </span>
+<span id="cb74-3"><a href="análisis-supervisado.html#cb74-3" aria-hidden="true" tabindex="-1"></a>  Gama <span class="sc">~</span>Power<span class="sc">+</span>Seats<span class="sc">+</span>Transmission<span class="sc">+</span>Owner_Type<span class="sc">+</span>Engine, </span>
+<span id="cb74-4"><a href="análisis-supervisado.html#cb74-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data, </span>
+<span id="cb74-5"><a href="análisis-supervisado.html#cb74-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb74-6"><a href="análisis-supervisado.html#cb74-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb74-7"><a href="análisis-supervisado.html#cb74-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = Gama ~ Power + Seats + Transmission + Owner_Type + 
+##     Engine, family = binomial(), data = data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.9207  -0.0737   0.1778   0.3066   4.0002  
+## 
+## Coefficients:
+##                            Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)              -3.668e+00  4.878e+02  -0.008   0.9940    
+## Power                    -1.940e-02  2.370e-03  -8.183 2.76e-16 ***
+## Seats4                    1.186e+01  4.878e+02   0.024   0.9806    
+## Seats5                    1.236e+01  4.878e+02   0.025   0.9798    
+## Seats6                   -6.639e+00  6.166e+02  -0.011   0.9914    
+## Seats7                    1.158e+01  4.878e+02   0.024   0.9811    
+## Seats8                    9.311e+00  4.878e+02   0.019   0.9848    
+## Seats9                    1.248e+01  4.878e+02   0.026   0.9796    
+## Seats10                   1.171e+01  4.878e+02   0.024   0.9809    
+## TransmissionManual        8.966e-01  1.476e-01   6.073 1.25e-09 ***
+## Owner_TypeSecond         -6.252e-02  1.493e-01  -0.419   0.6755    
+## Owner_TypeThird           6.359e-01  3.765e-01   1.689   0.0912 .  
+## Owner_TypeFourth &amp; Above  1.862e+00  1.113e+00   1.672   0.0945 .  
+## Engine                   -3.224e-03  2.365e-04 -13.630  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 5649.7  on 4710  degrees of freedom
+## Residual deviance: 2164.7  on 4697  degrees of freedom
+## AIC: 2192.7
+## 
+## Number of Fisher Scoring iterations: 15</code></pre>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="análisis-supervisado.html#cb76-1" aria-hidden="true" tabindex="-1"></a>logit2 <span class="ot">&lt;-</span> <span class="fu">glm</span>( </span>
+<span id="cb76-2"><a href="análisis-supervisado.html#cb76-2" aria-hidden="true" tabindex="-1"></a>  Gama <span class="sc">~</span>Owner_Type<span class="sc">+</span>Seats<span class="sc">+</span>Transmission<span class="sc">+</span>Engine, </span>
+<span id="cb76-3"><a href="análisis-supervisado.html#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data, </span>
+<span id="cb76-4"><a href="análisis-supervisado.html#cb76-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb76-5"><a href="análisis-supervisado.html#cb76-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb76-6"><a href="análisis-supervisado.html#cb76-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit2)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = Gama ~ Owner_Type + Seats + Transmission + Engine, 
+##     family = binomial(), data = data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.8689  -0.0929   0.1818   0.3542   4.0487  
+## 
+## Coefficients:
+##                            Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)              -5.076e+00  4.895e+02  -0.010   0.9917    
+## Owner_TypeSecond         -1.027e-02  1.475e-01  -0.070   0.9445    
+## Owner_TypeThird           7.748e-01  3.781e-01   2.049   0.0405 *  
+## Owner_TypeFourth &amp; Above  2.289e+00  1.152e+00   1.987   0.0469 *  
+## Seats4                    1.256e+01  4.895e+02   0.026   0.9795    
+## Seats5                    1.327e+01  4.895e+02   0.027   0.9784    
+## Seats6                   -5.571e+00  6.100e+02  -0.009   0.9927    
+## Seats7                    1.297e+01  4.895e+02   0.026   0.9789    
+## Seats8                    1.077e+01  4.895e+02   0.022   0.9824    
+## Seats9                    1.508e+01  4.895e+02   0.031   0.9754    
+## Seats10                   1.423e+01  4.895e+02   0.029   0.9768    
+## TransmissionManual        1.361e+00  1.326e-01  10.269   &lt;2e-16 ***
+## Engine                   -4.555e-03  1.894e-04 -24.056   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 5649.7  on 4710  degrees of freedom
+## Residual deviance: 2231.2  on 4698  degrees of freedom
+## AIC: 2257.2
+## 
+## Number of Fisher Scoring iterations: 15</code></pre>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="análisis-supervisado.html#cb78-1" aria-hidden="true" tabindex="-1"></a>logit3 <span class="ot">&lt;-</span> <span class="fu">glm</span>( </span>
+<span id="cb78-2"><a href="análisis-supervisado.html#cb78-2" aria-hidden="true" tabindex="-1"></a>  Gama <span class="sc">~</span>Power<span class="sc">+</span>Transmission<span class="sc">+</span>Engine, </span>
+<span id="cb78-3"><a href="análisis-supervisado.html#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data, </span>
+<span id="cb78-4"><a href="análisis-supervisado.html#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb78-5"><a href="análisis-supervisado.html#cb78-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb78-6"><a href="análisis-supervisado.html#cb78-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit3)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = Gama ~ Power + Transmission + Engine, family = binomial(), 
+##     data = data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.8679  -0.0698   0.1875   0.3241   4.2115  
+## 
+## Coefficients:
+##                      Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)         9.3942879  0.3385829  27.746  &lt; 2e-16 ***
+## Power              -0.0140166  0.0021605  -6.488 8.73e-11 ***
+## TransmissionManual  0.6373511  0.1373724   4.640 3.49e-06 ***
+## Engine             -0.0040538  0.0001737 -23.345  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 5649.7  on 4710  degrees of freedom
+## Residual deviance: 2298.2  on 4707  degrees of freedom
+## AIC: 2306.2
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<p>La interpretación de los p-valores es similar a la del modelo lineal. Podemos ver que las variables Engine,Power y Transmission son significativas en el modelo (p-valor mucho menor de 0.05), mientras que la variable Seats y Owner_Type influyen más en un modelo que en otro.</p>
+<p>El mejor modelo es el explicado por las variables Power, Engine y Transmission.
+En cuanto a los coeficientes, la interpretación cambia. El modelo GLM no ajusta la variable respuesta sino una función de enlace. En el caso del modelo logit esta función es: <span class="math inline">\(η=log(p1−p)\)</span>,
+siendo <span class="math inline">\(p\)</span> la probabilidad de que el individuo tome el valor “1” correspondiente a la gama alta en la variable dicotómica. Al cociente <span class="math inline">\(p/(1−p)\)</span> se le conoce como odds ratio. Por tanto, los coeficientes del modelo logit se interpretan como el logaritmo del odds ratio. Si nos fijamos en el coeficiente de la variable Transmission (0.63) en el modelo 3, nos está indicando que el logaritmo del odds ratio de pertenecer al grupo de los coches de alta gama aumenta 0.63 unidades por cada unidad que aumenta la variable Transmission.</p>
+<p>Antes de comenzar con las siguientes, lo que debemos hacer es definir una medida de precisión para contrastar los datos una vez que tengamos cada matriz de confusión y comparar los resultados que nos ofrecen cada uno de los métodos que empleemos. En nuestro caso, la variable respuesta no está muy bien balanceada:</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="análisis-supervisado.html#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>Gama)</span></code></pre></div>
+<pre><code>##       Alta Baja-media 
+##       1353       3358</code></pre>
+<p>Como vemos, los coches de gama alta se corresponden con el 30% aproximadamente y los de gama baja-media, el 70%. Supondremos que están más o menos equilibradas. No queremos dar más valor a identificar un tipo de coche frente al otro. Por tanto, se establecerá la siguiente <strong>medida de precisión</strong>.
+Esta es una medida de precisión que hemos creado para tener en cuenta todos los casos, tanto los falsos negativos como los falsos positivos. En realidad, se trata de la <strong>media geométrica de la sensitividad</strong> (<em>recall</em>) <strong>y la especificidad</strong>, y se define según la siguiente expresión:</p>
+<p><span class="math display">\[\text{Medida de precisión}=\sqrt{\frac{TP}{FN+TP}·\frac{TN}{FP+TN}}=\sqrt{TPR·TNR} \]</span>
+donde:</p>
+<ul>
+<li><p><span class="math inline">\(TP\)</span> (<em>true positive</em>) son los coches de gama alta que acertamos que son de gama alta.</p></li>
+<li><p><span class="math inline">\(TN\)</span> (<em>true negative</em>) son los coches de gama baja-media que acertamos que son de baja-media.</p></li>
+<li><p><span class="math inline">\(FP\)</span> (<em>false positive</em>) son los coches de gama baja-media que nosotros predecimos como gama alta.</p></li>
+<li><p><span class="math inline">\(FN\)</span> (<em>false negative</em>) son los coches de gana alta que nosotros predecimos como de gama baja-media.</p></li>
+<li><p><span class="math inline">\(TPR\)</span> (<em>sensitivity, recall, hit rate or true positive rate</em>) es la sensitividad.</p></li>
+<li><p><span class="math inline">\(TNR\)</span> (<em>specificity, dplyr::selectivity or true negative rate</em>) es la especificidad.</p></li>
+</ul>
+<p>Cabe señalar que esta medida sólo será utilizada en futuros análisis cuando el problema requiera de una precisión de este tipo, mientras, se utilizará como métrica el accuracy.</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="análisis-supervisado.html#cb82-1" aria-hidden="true" tabindex="-1"></a>medidaPrecision <span class="ot">&lt;-</span> <span class="cf">function</span>(matrizDeConfusion){</span>
+<span id="cb82-2"><a href="análisis-supervisado.html#cb82-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">sqrt</span>(matrizDeConfusion[<span class="dv">1</span>,<span class="dv">1</span>]<span class="sc">*</span>matrizDeConfusion[<span class="dv">2</span>,<span class="dv">2</span>]<span class="sc">/</span>((matrizDeConfusion[<span class="dv">1</span>,<span class="dv">2</span>]<span class="sc">+</span>matrizDeConfusion[<span class="dv">2</span>,<span class="dv">2</span>])<span class="sc">*</span>(matrizDeConfusion[<span class="dv">2</span>,<span class="dv">1</span>]<span class="sc">+</span>matrizDeConfusion[<span class="dv">1</span>,<span class="dv">1</span>]))))</span>
+<span id="cb82-3"><a href="análisis-supervisado.html#cb82-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="los-k-vecinos-más-cercanos-k-nn-the-k-nearest-neighbours" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)</h2>
+<p>El método de los k-vecinos más cercanos consiste en clasificar a un nuevo individuo en función de la categoría de sus <span class="math inline">\(k\)</span> vecinos más cercanos, es decir, clasificaremos un coche en gama alta o gama media-baja en función de la gama de los coches más cercanos a él (con cercanía nos referimos a similitud entre sus características).</p>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="análisis-supervisado.html#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ponemos una semilla para que siempre nos salga el mismo resultado (el algoritmo es aleatorio)</span></span>
+<span id="cb83-2"><a href="análisis-supervisado.html#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">07122020</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="análisis-supervisado.html#cb84-1" aria-hidden="true" tabindex="-1"></a>trainX <span class="ot">&lt;-</span> data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)]</span>
+<span id="cb84-2"><a href="análisis-supervisado.html#cb84-2" aria-hidden="true" tabindex="-1"></a>preProcValues <span class="ot">&lt;-</span> <span class="fu">preProcess</span>(<span class="at">x =</span> trainX,<span class="at">method =</span> <span class="fu">c</span>(<span class="st">&quot;center&quot;</span>, <span class="st">&quot;scale&quot;</span>))</span>
+<span id="cb84-3"><a href="análisis-supervisado.html#cb84-3" aria-hidden="true" tabindex="-1"></a>preProcValues</span></code></pre></div>
+<pre><code>## Created from 4711 samples and 11 variables
+## 
+## Pre-processing:
+##   - centered (6)
+##   - ignored (5)
+##   - scaled (6)</code></pre>
+<p>Para poder realizar las predicciones, se entrena mediante cross-validation y así se estima el número óptimo de vecinos.</p>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="análisis-supervisado.html#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">400</span>)</span>
+<span id="cb86-2"><a href="análisis-supervisado.html#cb86-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method=</span><span class="st">&quot;repeatedcv&quot;</span>,<span class="at">repeats =</span> <span class="dv">3</span>)</span>
+<span id="cb86-3"><a href="análisis-supervisado.html#cb86-3" aria-hidden="true" tabindex="-1"></a>knnFit <span class="ot">&lt;-</span> <span class="fu">train</span>(Gama <span class="sc">~</span> ., <span class="at">data =</span> data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)], <span class="at">method =</span> <span class="st">&quot;knn&quot;</span>, <span class="at">trControl =</span> ctrl, <span class="at">preProcess =</span> <span class="fu">c</span>(<span class="st">&quot;center&quot;</span>,<span class="st">&quot;scale&quot;</span>), <span class="at">tuneLength =</span> <span class="dv">20</span>)</span>
+<span id="cb86-4"><a href="análisis-supervisado.html#cb86-4" aria-hidden="true" tabindex="-1"></a>knnFit</span></code></pre></div>
+<pre><code>## k-Nearest Neighbors 
+## 
+## 4711 samples
+##   11 predictor
+##    2 classes: &#39;Alta&#39;, &#39;Baja-media&#39; 
+## 
+## Pre-processing: centered (30), scaled (30) 
+## Resampling: Cross-Validated (10 fold, repeated 3 times) 
+## Summary of sample sizes: 4240, 4240, 4240, 4240, 4240, 4240, ... 
+## Resampling results across tuning parameters:
+## 
+##   k   Accuracy   Kappa    
+##    5  0.9133979  0.7882405
+##    7  0.9133945  0.7892998
+##    9  0.9110582  0.7844472
+##   11  0.9080157  0.7778724
+##   13  0.9053970  0.7721609
+##   15  0.9045491  0.7700798
+##   17  0.9045492  0.7699856
+##   19  0.9049044  0.7700120
+##   21  0.9041972  0.7677520
+##   23  0.9049056  0.7685929
+##   25  0.9047639  0.7677360
+##   27  0.9049062  0.7678410
+##   29  0.9044819  0.7665081
+##   31  0.9039856  0.7648794
+##   33  0.9029251  0.7617441
+##   35  0.9024993  0.7604944
+##   37  0.9015801  0.7579416
+##   39  0.9023573  0.7594855
+##   41  0.9024273  0.7591610
+##   43  0.9029213  0.7599820
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was k = 5.</code></pre>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="análisis-supervisado.html#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(knnFit)</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="análisis-supervisado.html#cb89-1" aria-hidden="true" tabindex="-1"></a>knnPredict <span class="ot">&lt;-</span> <span class="fu">predict</span>(knnFit,<span class="at">newdata =</span>dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)])</span>
+<span id="cb89-2"><a href="análisis-supervisado.html#cb89-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Gama <span class="ot">&lt;-</span> <span class="fu">factor</span>(data<span class="sc">$</span>Gama,<span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Alta&quot;</span>,<span class="st">&quot;Baja-media&quot;</span>),<span class="at">labels=</span><span class="fu">c</span>(<span class="st">&quot;Alta&quot;</span>,<span class="st">&quot;Baja-media&quot;</span>))</span>
+<span id="cb89-3"><a href="análisis-supervisado.html#cb89-3" aria-hidden="true" tabindex="-1"></a>dataTest<span class="sc">$</span>Gama <span class="ot">&lt;-</span> <span class="fu">factor</span>(dataTest<span class="sc">$</span>Gama,<span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;Alta&quot;</span>,<span class="st">&quot;Baja-media&quot;</span>),<span class="at">labels=</span><span class="fu">c</span>(<span class="st">&quot;Alta&quot;</span>,<span class="st">&quot;Baja-media&quot;</span>))</span>
+<span id="cb89-4"><a href="análisis-supervisado.html#cb89-4" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(knnPredict, dataTest<span class="sc">$</span>Gama )</span></code></pre></div>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##             Reference
+## Prediction   Alta Baja-media
+##   Alta        275         39
+##   Baja-media   61        798
+##                                           
+##                Accuracy : 0.9147          
+##                  95% CI : (0.8973, 0.9301)
+##     No Information Rate : 0.7136          
+##     P-Value [Acc &gt; NIR] : &lt; 2e-16         
+##                                           
+##                   Kappa : 0.7873          
+##                                           
+##  Mcnemar&#39;s Test P-Value : 0.03573         
+##                                           
+##             Sensitivity : 0.8185          
+##             Specificity : 0.9534          
+##          Pos Pred Value : 0.8758          
+##          Neg Pred Value : 0.9290          
+##              Prevalence : 0.2864          
+##          Detection Rate : 0.2344          
+##    Detection Prevalence : 0.2677          
+##       Balanced Accuracy : 0.8859          
+##                                           
+##        &#39;Positive&#39; Class : Alta            
+## </code></pre>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="análisis-supervisado.html#cb91-1" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> <span class="fu">mean</span>(knnPredict <span class="sc">==</span> dataTest<span class="sc">$</span>Gama)</span>
+<span id="cb91-2"><a href="análisis-supervisado.html#cb91-2" aria-hidden="true" tabindex="-1"></a>accuracy</span></code></pre></div>
+<pre><code>## [1] 0.9147485</code></pre>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="análisis-supervisado.html#cb93-1" aria-hidden="true" tabindex="-1"></a>error <span class="ot">=</span> <span class="dv">1</span><span class="sc">-</span>accuracy</span>
+<span id="cb93-2"><a href="análisis-supervisado.html#cb93-2" aria-hidden="true" tabindex="-1"></a>error</span></code></pre></div>
+<pre><code>## [1] 0.08525149</code></pre>
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="análisis-supervisado.html#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(knnPredict,dataTest<span class="sc">$</span>Gama)</span></code></pre></div>
+<pre><code>##             
+## knnPredict   Alta Baja-media
+##   Alta        275         39
+##   Baja-media   61        798</code></pre>
+<p>Por tanto, tomando el número óptimo de vecinos para realizar las predicciones, tenemos una precisión del 91’5%.</p>
+</div>
+<div id="árboles-de-decisión" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Árboles de decisión</h2>
+<p>Los árboles de decisión se construyen en base al cumplimiento o no de ciertos criterios en torno a las variables explicativas de los datos. Digamos que comenzamos comprobando un cierto criterio sobre la variable más explicativa. Si el criterio se cumple, nos vamos por una rama; si no, nos vamos por la otra. Por cada una de ellas, volveremos a comprobar otro cierto criterio, y así hasta llegar a las hojas. Las hojas clasifican a los datos en un grupo u otro. Todo esto lo explicaremos mucho mejor cuando construyamos nuestros árboles de decisión.</p>
+<p>Primero veremos cuál es el valor óptimo de <code>cp</code> (parámetro de complejidad que combina la tasa de error con la profundidad del árbol). Para ello, construiremos un árbol muy complejo, y en función de los resultados que obtengamos lo “podaremos”.</p>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="análisis-supervisado.html#cb97-1" aria-hidden="true" tabindex="-1"></a>arbolDecisionInfoComplejo <span class="ot">&lt;-</span> <span class="fu">rpart</span>(data[,<span class="dv">15</span>] <span class="sc">~</span>., data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)], <span class="at">cp=</span><span class="fl">0.001</span>,  <span class="at">method=</span><span class="st">&quot;class&quot;</span>,<span class="at">parms=</span><span class="fu">list</span>(<span class="at">split=</span><span class="st">&quot;information&quot;</span>))</span>
+<span id="cb97-2"><a href="análisis-supervisado.html#cb97-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotcp</span>(arbolDecisionInfoComplejo)</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/%C3%A1rboles%20de%20decisi%C3%B3n%201-1.png" width="672" /></p>
+<p>En el gráfico vemos que el mínimo se encuentra en torno al 0,0036, así que para obtener el mejor compromiso entre error y profundidad nos quedaremos con un valor de <code>cp</code>=0,004, porque tenemos que tener en cuenta que cuanto más pequeño sea este valor, más complejo y profundo será el árbol y menos error tendremos, sin embargo, corremos el riesgo de sobreajustar el modelo (problema de <em>overfitting</em>). Por otro lado, podemos usar dos criterios diferentes: el de información y el de Gini. Usaremos los dos y comprobaremos con cuál obtenemos una mayor precisión.</p>
+<p>Comenzamos con el árbol de decisión utilizando el criterio de información.</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="análisis-supervisado.html#cb98-1" aria-hidden="true" tabindex="-1"></a>arbolDecision <span class="ot">&lt;-</span> <span class="fu">rpart</span>(data[,<span class="dv">15</span>] <span class="sc">~</span>., data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)], <span class="at">cp=</span><span class="fl">0.004</span>,  <span class="at">method=</span><span class="st">&quot;class&quot;</span>,<span class="at">parms=</span><span class="fu">list</span>(<span class="at">split=</span><span class="st">&quot;information&quot;</span>))</span>
+<span id="cb98-2"><a href="análisis-supervisado.html#cb98-2" aria-hidden="true" tabindex="-1"></a>arbolDecision</span></code></pre></div>
+<pre><code>## n= 4711 
+## 
+## node), split, n, loss, yval, (yprob)
+##       * denotes terminal node
+## 
+##   1) root 4711 1353 Baja-media (0.287200170 0.712799830)  
+##     2) Engine&gt;=1690 1548  291 Alta (0.812015504 0.187984496)  
+##       4) Power&gt;=164.2 860   65 Alta (0.924418605 0.075581395)  
+##         8) Fuel_Type=Diesel 726   31 Alta (0.957300275 0.042699725)  
+##          16) Seats=4,5,6,8 533    7 Alta (0.986866792 0.013133208) *
+##          17) Seats=7 193   24 Alta (0.875647668 0.124352332)  
+##            34) Engine&gt;=2299.5 177   10 Alta (0.943502825 0.056497175)  
+##              68) kmpl&gt;=10.955 166    0 Alta (1.000000000 0.000000000) *
+##              69) kmpl&lt; 10.955 11    1 Baja-media (0.090909091 0.909090909) *
+##            35) Engine&lt; 2299.5 16    2 Baja-media (0.125000000 0.875000000) *
+##         9) Fuel_Type=Petrol 134   34 Alta (0.746268657 0.253731343)  
+##          18) Power&gt;=180.515 96    9 Alta (0.906250000 0.093750000) *
+##          19) Power&lt; 180.515 38   13 Baja-media (0.342105263 0.657894737)  
+##            38) Power&lt; 177.235 7    0 Alta (1.000000000 0.000000000) *
+##            39) Power&gt;=177.235 31    6 Baja-media (0.193548387 0.806451613) *
+##       5) Power&lt; 164.2 688  226 Alta (0.671511628 0.328488372)  
+##        10) Engine&gt;=2117.5 420   68 Alta (0.838095238 0.161904762)  
+##          20) Power&lt; 140.5 335   22 Alta (0.934328358 0.065671642)  
+##            40) Power&lt; 137 229    6 Alta (0.973799127 0.026200873) *
+##            41) Power&gt;=137 106   16 Alta (0.849056604 0.150943396)  
+##              82) Power&gt;=138.555 90    0 Alta (1.000000000 0.000000000) *
+##              83) Power&lt; 138.555 16    0 Baja-media (0.000000000 1.000000000) *
+##          21) Power&gt;=140.5 85   39 Baja-media (0.458823529 0.541176471)  
+##            42) kmpl&gt;=13.59 31    6 Alta (0.806451613 0.193548387) *
+##            43) kmpl&lt; 13.59 54   14 Baja-media (0.259259259 0.740740741)  
+##              86) Engine&lt; 2188.5 9    0 Alta (1.000000000 0.000000000) *
+##              87) Engine&gt;=2188.5 45    5 Baja-media (0.111111111 0.888888889) *
+##        11) Engine&lt; 2117.5 268  110 Baja-media (0.410447761 0.589552239)  
+##          22) Engine&lt; 1796.5 22    0 Alta (1.000000000 0.000000000) *
+##          23) Engine&gt;=1796.5 246   88 Baja-media (0.357723577 0.642276423)  
+##            46) Power&lt; 155.875 210   88 Baja-media (0.419047619 0.580952381)  
+##              92) Engine&lt; 1798.5 28    1 Alta (0.964285714 0.035714286) *
+##              93) Engine&gt;=1798.5 182   61 Baja-media (0.335164835 0.664835165)  
+##               186) Engine&gt;=1932 134   61 Baja-media (0.455223881 0.544776119)  
+##                 372) kmpl&lt; 16.88 76   26 Alta (0.657894737 0.342105263)  
+##                   744) kmpl&gt;=15.05 39    2 Alta (0.948717949 0.051282051) *
+##                   745) kmpl&lt; 15.05 37   13 Baja-media (0.351351351 0.648648649) *
+##                 373) kmpl&gt;=16.88 58   11 Baja-media (0.189655172 0.810344828)  
+##                   746) kmpl&gt;=20.19 8    0 Alta (1.000000000 0.000000000) *
+##                   747) kmpl&lt; 20.19 50    3 Baja-media (0.060000000 0.940000000) *
+##               187) Engine&lt; 1932 48    0 Baja-media (0.000000000 1.000000000) *
+##            47) Power&gt;=155.875 36    0 Baja-media (0.000000000 1.000000000) *
+##     3) Engine&lt; 1690 3163   96 Baja-media (0.030350933 0.969649067)  
+##       6) Engine&gt;=1353.5 1250   80 Baja-media (0.064000000 0.936000000)  
+##        12) Engine&lt; 1366 30    0 Alta (1.000000000 0.000000000) *
+##        13) Engine&gt;=1366 1220   50 Baja-media (0.040983607 0.959016393)  
+##          26) Seats=4,7 59   19 Baja-media (0.322033898 0.677966102)  
+##            52) Power&gt;=99.41 31   13 Alta (0.580645161 0.419354839)  
+##             104) Fuel_Type=Diesel 15    0 Alta (1.000000000 0.000000000) *
+##             105) Fuel_Type=Petrol 16    3 Baja-media (0.187500000 0.812500000) *
+##            53) Power&lt; 99.41 28    1 Baja-media (0.035714286 0.964285714) *
+##          27) Seats=5,8 1161   31 Baja-media (0.026701120 0.973298880)  
+##            54) Engine&lt; 1496.5 416   27 Baja-media (0.064903846 0.935096154)  
+##             108) Engine&gt;=1495.5 18    0 Alta (1.000000000 0.000000000) *
+##             109) Engine&lt; 1495.5 398    9 Baja-media (0.022613065 0.977386935) *
+##            55) Engine&gt;=1496.5 745    4 Baja-media (0.005369128 0.994630872) *
+##       7) Engine&lt; 1353.5 1913   16 Baja-media (0.008363826 0.991636174)  
+##        14) Seats=6 7    0 Alta (1.000000000 0.000000000) *
+##        15) Seats=4,5,7,8 1906    9 Baja-media (0.004721931 0.995278069) *</code></pre>
+<p>Aquí tenemos nuestro árbol de decisión. Como vemos, la primera pregunta (2 y 3) que le hará a un nuevo coche es si su motor es mayor o igual o menor a 1690. Si es mayor o igual a 1690, le preguntará si la potencia es inferior a 164.2 (preguntas 4 y 5); y si es que no, preguntará si el tipo de combustible es de diésel o petróleo(preg 8 y 9). Si es de diésel, entonces habrá que fijarse en el número de asientos que posea el coche. En este punto del árbol, si el número de asientos es 7, se volverá a clasificar por el motor, en función de si es mayor a 2299 en el que cerraremos la rama del árbol observando si la variable kmpl es inferior a 10. Así se ha llegado a un nodo hoja (marcados en asterisco) como por ejemplo llegar hasta la condición 69 y cumplirla, donde se clasifica el coche en gama media-baja o gama alta (dependiendo de la hoja en cuestión a la que haya llegado el coche).
+Como acabamos de señalar, las variables más informativas de nuestro árbol son el motor y la potencia de los coches. Tiene sentido que esto sea así, y que la primera característica sobre la que “pregunte” el árbol para clasificar a un nuevo coche sea Engine. ¿Por qué? Porque tal y como vimos, en la sección del análisis exploratorio de datos, justo era ésta la covariable más relacionada con gama de los coches. Así que los resultados obtenidos son perfectamente coherentes con todo el estudio realizado hasta el momento.</p>
+<p>Aquí tenemos las preguntas que se han hecho a lo largo del árbol.</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="análisis-supervisado.html#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">labels</span>(arbolDecision, <span class="at">pretty=</span>T)</span></code></pre></div>
+<pre><code>##  [1] &quot;root&quot;           &quot;Engine&gt;=1690&quot;   &quot;Power&gt;=164.2&quot;   &quot;Fuel_Type=Disl&quot;
+##  [5] &quot;Seats=4,5,6,8&quot;  &quot;Seats=7&quot;        &quot;Engine&gt;=2300&quot;   &quot;kmpl&gt;=10.96&quot;   
+##  [9] &quot;kmpl&lt; 10.96&quot;    &quot;Engine&lt; 2300&quot;   &quot;Fuel_Type=Ptrl&quot; &quot;Power&gt;=180.5&quot;  
+## [13] &quot;Power&lt; 180.5&quot;   &quot;Power&lt; 177.2&quot;   &quot;Power&gt;=177.2&quot;   &quot;Power&lt; 164.2&quot;  
+## [17] &quot;Engine&gt;=2118&quot;   &quot;Power&lt; 140.5&quot;   &quot;Power&lt; 137&quot;     &quot;Power&gt;=137&quot;    
+## [21] &quot;Power&gt;=138.6&quot;   &quot;Power&lt; 138.6&quot;   &quot;Power&gt;=140.5&quot;   &quot;kmpl&gt;=13.59&quot;   
+## [25] &quot;kmpl&lt; 13.59&quot;    &quot;Engine&lt; 2188&quot;   &quot;Engine&gt;=2188&quot;   &quot;Engine&lt; 2118&quot;  
+## [29] &quot;Engine&lt; 1796&quot;   &quot;Engine&gt;=1796&quot;   &quot;Power&lt; 155.9&quot;   &quot;Engine&lt; 1798&quot;  
+## [33] &quot;Engine&gt;=1798&quot;   &quot;Engine&gt;=1932&quot;   &quot;kmpl&lt; 16.88&quot;    &quot;kmpl&gt;=15.05&quot;   
+## [37] &quot;kmpl&lt; 15.05&quot;    &quot;kmpl&gt;=16.88&quot;    &quot;kmpl&gt;=20.19&quot;    &quot;kmpl&lt; 20.19&quot;   
+## [41] &quot;Engine&lt; 1932&quot;   &quot;Power&gt;=155.9&quot;   &quot;Engine&lt; 1690&quot;   &quot;Engine&gt;=1354&quot;  
+## [45] &quot;Engine&lt; 1366&quot;   &quot;Engine&gt;=1366&quot;   &quot;Seats=4,7&quot;      &quot;Power&gt;=99.41&quot;  
+## [49] &quot;Fuel_Type=Disl&quot; &quot;Fuel_Type=Ptrl&quot; &quot;Power&lt; 99.41&quot;   &quot;Seats=5,8&quot;     
+## [53] &quot;Engine&lt; 1496&quot;   &quot;Engine&gt;=1496&quot;   &quot;Engine&lt; 1496&quot;   &quot;Engine&gt;=1496&quot;  
+## [57] &quot;Engine&lt; 1354&quot;   &quot;Seats=6&quot;        &quot;Seats=4,5,7,8&quot;</code></pre>
+<p>Los errores que se cometen en cada hoja y el error total del árbol:</p>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="análisis-supervisado.html#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printcp</span>(arbolDecision)</span></code></pre></div>
+<pre><code>## 
+## Classification tree:
+## rpart(formula = data[, 15] ~ ., data = data[, c(2:10, 13, 14)], 
+##     method = &quot;class&quot;, parms = list(split = &quot;information&quot;), cp = 0.004)
+## 
+## Variables actually used in tree construction:
+## [1] Engine    Fuel_Type kmpl      Power     Seats    
+## 
+## Root node error: 1353/4711 = 0.2872
+## 
+## n= 4711 
+## 
+##           CP nsplit rel error  xerror      xstd
+## 1  0.7139690      0  1.000000 1.00000 0.0229528
+## 2  0.0177384      1  0.286031 0.28603 0.0139298
+## 3  0.0162602      3  0.250554 0.27494 0.0136808
+## 4  0.0110865      4  0.234294 0.24908 0.0130737
+## 5  0.0096083      6  0.212121 0.21951 0.0123293
+## 6  0.0088692     10  0.173688 0.19956 0.0117915
+## 7  0.0081301     12  0.155950 0.19586 0.0116884
+## 8  0.0066519     13  0.147820 0.18551 0.0113933
+## 9  0.0059128     14  0.141168 0.17221 0.0109993
+## 10 0.0051737     17  0.123429 0.16482 0.0107727
+## 11 0.0048780     18  0.118256 0.15743 0.0105401
+## 12 0.0044346     23  0.093865 0.14043 0.0099802
+## 13 0.0040000     29  0.064302 0.12712 0.0095146</code></pre>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="análisis-supervisado.html#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rpart.plot</span>(arbolDecision, <span class="at">uniform=</span>T);</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p>Vamos a comprobar la precisión del árbol con los mismos datos con los que ha sido construido.</p>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="análisis-supervisado.html#cb105-1" aria-hidden="true" tabindex="-1"></a>predArbolInfo1 <span class="ot">=</span> <span class="fu">predict</span>(arbolDecision, data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)])</span>
+<span id="cb105-2"><a href="análisis-supervisado.html#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Redondeamos la predicción para obtener un resultado 0-1</span></span>
+<span id="cb105-3"><a href="análisis-supervisado.html#cb105-3" aria-hidden="true" tabindex="-1"></a>predArbolInfo1 <span class="ot">=</span> <span class="fu">round</span>(predArbolInfo1)</span>
+<span id="cb105-4"><a href="análisis-supervisado.html#cb105-4" aria-hidden="true" tabindex="-1"></a>tArb1 <span class="ot">=</span> <span class="fu">table</span>(predArbolInfo1[,<span class="dv">1</span>], data[,<span class="dv">15</span>])</span>
+<span id="cb105-5"><a href="análisis-supervisado.html#cb105-5" aria-hidden="true" tabindex="-1"></a>tArb2 <span class="ot">=</span> <span class="fu">table</span>(predArbolInfo1[,<span class="dv">2</span>], data[,<span class="dv">15</span>])</span>
+<span id="cb105-6"><a href="análisis-supervisado.html#cb105-6" aria-hidden="true" tabindex="-1"></a><span class="fu">medidaPrecision</span>(tArb2)</span></code></pre></div>
+<pre><code>## [1] 0.9745568</code></pre>
+<p>Obtenemos una precisión del 97% con los datos de entrenamiento. Ahora, vamos a ver como clasifica nuestro árbol a nuevos coches. Para ello usaremos el conjunto de datos de testing y calcularemos la medida de precisión del resultado.</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="análisis-supervisado.html#cb107-1" aria-hidden="true" tabindex="-1"></a>predArbolInfo2 <span class="ot">=</span> <span class="fu">predict</span>(arbolDecision,dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">14</span>,<span class="dv">15</span>)])</span>
+<span id="cb107-2"><a href="análisis-supervisado.html#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Redondeamos la predicción para obtener un resultado 0-1</span></span>
+<span id="cb107-3"><a href="análisis-supervisado.html#cb107-3" aria-hidden="true" tabindex="-1"></a>predArbolInfo2 <span class="ot">=</span> <span class="fu">round</span>(predArbolInfo2)</span>
+<span id="cb107-4"><a href="análisis-supervisado.html#cb107-4" aria-hidden="true" tabindex="-1"></a>tArb3 <span class="ot">=</span> <span class="fu">table</span>(predArbolInfo2[,<span class="dv">1</span>], dataTest[,<span class="dv">13</span>])</span>
+<span id="cb107-5"><a href="análisis-supervisado.html#cb107-5" aria-hidden="true" tabindex="-1"></a>tArb4 <span class="ot">=</span> <span class="fu">table</span>(predArbolInfo2[,<span class="dv">2</span>], dataTest[,<span class="dv">13</span>])</span>
+<span id="cb107-6"><a href="análisis-supervisado.html#cb107-6" aria-hidden="true" tabindex="-1"></a><span class="co">#medidaPrecision(tArb3)</span></span>
+<span id="cb107-7"><a href="análisis-supervisado.html#cb107-7" aria-hidden="true" tabindex="-1"></a><span class="fu">medidaPrecision</span>(tArb4)</span></code></pre></div>
+<pre><code>## [1] 0.9553525</code></pre>
+<p>Con el conjunto de datos de testing se obtiene una precisión del 95%, lo que nos indica que nuestro árbol de decisión realiza buenas predicciones y no sobreajusta el modelo.</p>
+<p>Por otro lado, vamos a ver cuál es la precisión que obtenemos utilizando el criterio de Ginni. Construimos un nuevo árbol:</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb109-1"><a href="análisis-supervisado.html#cb109-1" aria-hidden="true" tabindex="-1"></a>arbolDecisionGini <span class="ot">&lt;-</span> <span class="fu">rpart</span>(data[,<span class="dv">15</span>] <span class="sc">~</span>., <span class="at">data=</span>data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)], <span class="at">cp=</span><span class="fl">0.004</span>, <span class="at">parms=</span><span class="fu">list</span>(<span class="at">split=</span><span class="st">&quot;gini&quot;</span>))</span>
+<span id="cb109-2"><a href="análisis-supervisado.html#cb109-2" aria-hidden="true" tabindex="-1"></a>arbolDecisionGini</span></code></pre></div>
+<pre><code>## n= 4711 
+## 
+## node), split, n, loss, yval, (yprob)
+##       * denotes terminal node
+## 
+##   1) root 4711 1353 Baja-media (0.287200170 0.712799830)  
+##     2) Engine&gt;=1690 1548  291 Alta (0.812015504 0.187984496)  
+##       4) Power&gt;=164.2 860   65 Alta (0.924418605 0.075581395)  
+##         8) Fuel_Type=Diesel 726   31 Alta (0.957300275 0.042699725) *
+##         9) Fuel_Type=Petrol 134   34 Alta (0.746268657 0.253731343)  
+##          18) Power&gt;=180.515 96    9 Alta (0.906250000 0.093750000) *
+##          19) Power&lt; 180.515 38   13 Baja-media (0.342105263 0.657894737)  
+##            38) Power&lt; 177.235 7    0 Alta (1.000000000 0.000000000) *
+##            39) Power&gt;=177.235 31    6 Baja-media (0.193548387 0.806451613) *
+##       5) Power&lt; 164.2 688  226 Alta (0.671511628 0.328488372)  
+##        10) Engine&gt;=2117.5 420   68 Alta (0.838095238 0.161904762)  
+##          20) Power&lt; 151 379   37 Alta (0.902374670 0.097625330)  
+##            40) Fuel_Type=Diesel 371   31 Alta (0.916442049 0.083557951)  
+##              80) Engine&lt; 2498.5 332   17 Alta (0.948795181 0.051204819)  
+##               160) Power&lt; 137 198    0 Alta (1.000000000 0.000000000) *
+##               161) Power&gt;=137 134   17 Alta (0.873134328 0.126865672)  
+##                 322) Power&gt;=138.555 118    1 Alta (0.991525424 0.008474576) *
+##                 323) Power&lt; 138.555 16    0 Baja-media (0.000000000 1.000000000) *
+##              81) Engine&gt;=2498.5 39   14 Alta (0.641025641 0.358974359)  
+##               162) Engine&gt;=2511 27    3 Alta (0.888888889 0.111111111) *
+##               163) Engine&lt; 2511 12    1 Baja-media (0.083333333 0.916666667) *
+##            41) Fuel_Type=Petrol 8    2 Baja-media (0.250000000 0.750000000) *
+##          21) Power&gt;=151 41   10 Baja-media (0.243902439 0.756097561) *
+##        11) Engine&lt; 2117.5 268  110 Baja-media (0.410447761 0.589552239)  
+##          22) Engine&lt; 1796.5 22    0 Alta (1.000000000 0.000000000) *
+##          23) Engine&gt;=1796.5 246   88 Baja-media (0.357723577 0.642276423)  
+##            46) Kilometers_Driven&lt; 41183.5 43   11 Alta (0.744186047 0.255813953) *
+##            47) Kilometers_Driven&gt;=41183.5 203   56 Baja-media (0.275862069 0.724137931)  
+##              94) kmpl&lt; 16.755 137   52 Baja-media (0.379562044 0.620437956)  
+##               188) kmpl&gt;=14.09 72   26 Alta (0.638888889 0.361111111)  
+##                 376) Power&gt;=134.1 53   10 Alta (0.811320755 0.188679245)  
+##                   752) Power&lt; 147.555 45    2 Alta (0.955555556 0.044444444) *
+##                   753) Power&gt;=147.555 8    0 Baja-media (0.000000000 1.000000000) *
+##                 377) Power&lt; 134.1 19    3 Baja-media (0.157894737 0.842105263) *
+##               189) kmpl&lt; 14.09 65    6 Baja-media (0.092307692 0.907692308) *
+##              95) kmpl&gt;=16.755 66    4 Baja-media (0.060606061 0.939393939) *
+##     3) Engine&lt; 1690 3163   96 Baja-media (0.030350933 0.969649067)  
+##       6) Seats=6 7    0 Alta (1.000000000 0.000000000) *
+##       7) Seats=4,5,7,8 3156   89 Baja-media (0.028200253 0.971799747)  
+##        14) Power&gt;=132.16 7    2 Alta (0.714285714 0.285714286) *
+##        15) Power&lt; 132.16 3149   84 Baja-media (0.026675135 0.973324865)  
+##          30) Engine&gt;=1353.5 1243   75 Baja-media (0.060337892 0.939662108)  
+##            60) Engine&lt; 1366 29    0 Alta (1.000000000 0.000000000) *
+##            61) Engine&gt;=1366 1214   46 Baja-media (0.037891269 0.962108731) *
+##          31) Engine&lt; 1353.5 1906    9 Baja-media (0.004721931 0.995278069) *</code></pre>
+<p>Vamos a comprobar el error que comete el árbol de decisión y qué aspecto tiene:</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb111-1"><a href="análisis-supervisado.html#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">labels</span>(arbolDecisionGini, <span class="at">pretty=</span>T)</span></code></pre></div>
+<pre><code>##  [1] &quot;root&quot;                         &quot;Engine&gt;=1690&quot;                
+##  [3] &quot;Power&gt;=164.2&quot;                 &quot;Fuel_Type=Disl&quot;              
+##  [5] &quot;Fuel_Type=Ptrl&quot;               &quot;Power&gt;=180.5&quot;                
+##  [7] &quot;Power&lt; 180.5&quot;                 &quot;Power&lt; 177.2&quot;                
+##  [9] &quot;Power&gt;=177.2&quot;                 &quot;Power&lt; 164.2&quot;                
+## [11] &quot;Engine&gt;=2118&quot;                 &quot;Power&lt; 151&quot;                  
+## [13] &quot;Fuel_Type=Disl&quot;               &quot;Engine&lt; 2498&quot;                
+## [15] &quot;Power&lt; 137&quot;                   &quot;Power&gt;=137&quot;                  
+## [17] &quot;Power&gt;=138.6&quot;                 &quot;Power&lt; 138.6&quot;                
+## [19] &quot;Engine&gt;=2498&quot;                 &quot;Engine&gt;=2511&quot;                
+## [21] &quot;Engine&lt; 2511&quot;                 &quot;Fuel_Type=Ptrl&quot;              
+## [23] &quot;Power&gt;=151&quot;                   &quot;Engine&lt; 2118&quot;                
+## [25] &quot;Engine&lt; 1796&quot;                 &quot;Engine&gt;=1796&quot;                
+## [27] &quot;Kilometers_Driven&lt; 4.118e+04&quot; &quot;Kilometers_Driven&gt;=4.118e+04&quot;
+## [29] &quot;kmpl&lt; 16.76&quot;                  &quot;kmpl&gt;=14.09&quot;                 
+## [31] &quot;Power&gt;=134.1&quot;                 &quot;Power&lt; 147.6&quot;                
+## [33] &quot;Power&gt;=147.6&quot;                 &quot;Power&lt; 134.1&quot;                
+## [35] &quot;kmpl&lt; 14.09&quot;                  &quot;kmpl&gt;=16.76&quot;                 
+## [37] &quot;Engine&lt; 1690&quot;                 &quot;Seats=6&quot;                     
+## [39] &quot;Seats=4,5,7,8&quot;                &quot;Power&gt;=132.2&quot;                
+## [41] &quot;Power&lt; 132.2&quot;                 &quot;Engine&gt;=1354&quot;                
+## [43] &quot;Engine&lt; 1366&quot;                 &quot;Engine&gt;=1366&quot;                
+## [45] &quot;Engine&lt; 1354&quot;</code></pre>
+<div class="sourceCode" id="cb113"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb113-1"><a href="análisis-supervisado.html#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printcp</span>(arbolDecisionGini)</span></code></pre></div>
+<pre><code>## 
+## Classification tree:
+## rpart(formula = data[, 15] ~ ., data = data[, c(2:10, 13, 14)], 
+##     parms = list(split = &quot;gini&quot;), cp = 0.004)
+## 
+## Variables actually used in tree construction:
+## [1] Engine            Fuel_Type         Kilometers_Driven kmpl             
+## [5] Power             Seats            
+## 
+## Root node error: 1353/4711 = 0.2872
+## 
+## n= 4711 
+## 
+##          CP nsplit rel error  xerror      xstd
+## 1 0.7139690      0   1.00000 1.00000 0.0229528
+## 2 0.0177384      1   0.28603 0.29268 0.0140761
+## 3 0.0162602      3   0.25055 0.27273 0.0136302
+## 4 0.0155211      4   0.23429 0.27273 0.0136302
+## 5 0.0073910      6   0.20325 0.22764 0.0125399
+## 6 0.0072062      9   0.17886 0.17591 0.0111105
+## 7 0.0059128     13   0.15004 0.16408 0.0107497
+## 8 0.0044346     14   0.14412 0.15004 0.0103011
+## 9 0.0040000     22   0.10791 0.13378 0.0097507</code></pre>
+<div class="sourceCode" id="cb115"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb115-1"><a href="análisis-supervisado.html#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rpart.plot</span>(arbolDecisionGini, <span class="at">uniform=</span>T)</span></code></pre></div>
+<p><img src="MachineLearning1_files/figure-html/%C3%A1rboles%20de%20decisi%C3%B3n%208-1.png" width="672" /></p>
+<p>La precisión que se obtiene con los datos de entrenamiento es la siguiente:</p>
+<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="análisis-supervisado.html#cb116-1" aria-hidden="true" tabindex="-1"></a>predArbolGini1 <span class="ot">=</span> <span class="fu">predict</span>(arbolDecisionGini,data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)])</span>
+<span id="cb116-2"><a href="análisis-supervisado.html#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Redondeamos la predicción para obtener un resultado 0-1</span></span>
+<span id="cb116-3"><a href="análisis-supervisado.html#cb116-3" aria-hidden="true" tabindex="-1"></a>predArbolGini1 <span class="ot">=</span> <span class="fu">round</span>(predArbolGini1)</span>
+<span id="cb116-4"><a href="análisis-supervisado.html#cb116-4" aria-hidden="true" tabindex="-1"></a>tArb5 <span class="ot">=</span> <span class="fu">table</span>(predArbolGini1[,<span class="dv">1</span>], data[,<span class="dv">15</span>])</span>
+<span id="cb116-5"><a href="análisis-supervisado.html#cb116-5" aria-hidden="true" tabindex="-1"></a>tArb6 <span class="ot">=</span> <span class="fu">table</span>(predArbolGini1[,<span class="dv">2</span>], data[,<span class="dv">15</span>])</span>
+<span id="cb116-6"><a href="análisis-supervisado.html#cb116-6" aria-hidden="true" tabindex="-1"></a><span class="fu">medidaPrecision</span>(tArb6)</span></code></pre></div>
+<pre><code>## [1] 0.9587796</code></pre>
+<p>Se obtiene un accuracy del 95%. Además, con el conjunto de datos de testing se obtiene la siguiente métrica:</p>
+<div class="sourceCode" id="cb118"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb118-1"><a href="análisis-supervisado.html#cb118-1" aria-hidden="true" tabindex="-1"></a>predArbolGini2 <span class="ot">=</span> <span class="fu">predict</span>(arbolDecisionGini, dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">14</span>,<span class="dv">15</span>)])</span>
+<span id="cb118-2"><a href="análisis-supervisado.html#cb118-2" aria-hidden="true" tabindex="-1"></a>predArbolGini2<span class="ot">=</span><span class="fu">round</span>(predArbolGini2)</span>
+<span id="cb118-3"><a href="análisis-supervisado.html#cb118-3" aria-hidden="true" tabindex="-1"></a>tArb7 <span class="ot">=</span> <span class="fu">table</span>(predArbolGini2[,<span class="dv">1</span>],dataTest[,<span class="dv">13</span>])</span>
+<span id="cb118-4"><a href="análisis-supervisado.html#cb118-4" aria-hidden="true" tabindex="-1"></a>tArb8 <span class="ot">=</span> <span class="fu">table</span>(predArbolGini2[,<span class="dv">2</span>],dataTest[,<span class="dv">13</span>])</span>
+<span id="cb118-5"><a href="análisis-supervisado.html#cb118-5" aria-hidden="true" tabindex="-1"></a>pArb1 <span class="ot">=</span> <span class="fu">medidaPrecision</span>(tArb7)</span>
+<span id="cb118-6"><a href="análisis-supervisado.html#cb118-6" aria-hidden="true" tabindex="-1"></a>pArb2 <span class="ot">=</span> <span class="fu">medidaPrecision</span>(tArb8)</span>
+<span id="cb118-7"><a href="análisis-supervisado.html#cb118-7" aria-hidden="true" tabindex="-1"></a>pArb2</span></code></pre></div>
+<pre><code>## [1] 0.9329822</code></pre>
+<p>Comprobamos que tanto con el conjunto de entrenamiento como con el conjunto de prueba las precisiones que obtenemos son muy buenas también con Gini, en este caso se obtiene un 93% en test por lo que consideramos buenos árboles de decisión. Distinguiendo entre el árbol de información y el del criterio de Gini, seleccionamos el de información por cometer menos error y ajustarse más a las nuevas entradas que se le proporcionan.</p>
+</div>
+<div id="bosques-aleatorios" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> Bosques aleatorios</h2>
+<p>Un bosque de árboles o bosque aleatorio es un conjunto de árboles de decisión tales que los nodos de cada árbol dependen de los valores de un subconjunto de variables muestreado aleatoriamente. Es decir, para construir cada árbol se escogen un subconjunto del total de las variables explicativas. Cuando tenemos el bosque construido lo que hacemos es “pasar” los nuevos datos por todos los árboles del bosque. Cada árbol clasificará al dato en una clase, y el bosque, finalmente, clasificará al dato en la clase en la que más árboles hayan coincidido.</p>
+<p>Una vez que sabemos qué es un bosque aleatorio cabe preguntarse cuál es el número óptimo de árboles que debemos construir y cuántas variables queremos que se seleccionen para cada
+uno de los árboles. Para descubrir esto, probaremos con distintos valores de cada uno y nos quedaremos con el que mejor medida de precisión nos proporcione.</p>
+<p>Durante todo el proceso de análisis se han evaluado cada una de las métricas. Al obtener una precisión del 97% en entrenamiento y 95% en testing en árboles de decisión, se ha hecho constatar que no seleccionaremos como mejor método para predecir el de bosques aleatorios o random forest ya que al obtener esa precisión tan alta, siempre será mejor tener un árbol que un bosque de árboles en cuanto a complejidad y coste. No obstante, se realizan algunos cálculos para estimar cual sería la precisión y las predicciones de este bosque.</p>
+<div class="sourceCode" id="cb120"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb120-1"><a href="análisis-supervisado.html#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb120-2"><a href="análisis-supervisado.html#cb120-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb120-3"><a href="análisis-supervisado.html#cb120-3" aria-hidden="true" tabindex="-1"></a>modelo <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb120-4"><a href="análisis-supervisado.html#cb120-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> <span class="fu">as.factor</span>(data[,<span class="dv">15</span>]) <span class="sc">~</span> .,</span>
+<span id="cb120-5"><a href="análisis-supervisado.html#cb120-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>)],</span>
+<span id="cb120-6"><a href="análisis-supervisado.html#cb120-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">num.trees =</span> <span class="dv">10</span>,</span>
+<span id="cb120-7"><a href="análisis-supervisado.html#cb120-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">123</span></span>
+<span id="cb120-8"><a href="análisis-supervisado.html#cb120-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb121"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb121-1"><a href="análisis-supervisado.html#cb121-1" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, <span class="at">data =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">14</span>,<span class="dv">15</span>)])</span>
+<span id="cb121-2"><a href="análisis-supervisado.html#cb121-2" aria-hidden="true" tabindex="-1"></a>predicciones</span></code></pre></div>
+<pre><code>## Ranger prediction
+## 
+## Type:                             Classification 
+## Sample size:                      1173 
+## Number of independent variables:  11</code></pre>
+<div class="sourceCode" id="cb123"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb123-1"><a href="análisis-supervisado.html#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test_rmse &lt;- sqrt(mean((predicciones - as.factor(data[,13]))^2))</span></span>
+<span id="cb123-2"><a href="análisis-supervisado.html#cb123-2" aria-hidden="true" tabindex="-1"></a><span class="co">#paste(&quot;Error de test (rmse) del modelo (log): &quot;, round(test_rmse,2))</span></span></code></pre></div>
+</div>
+<div id="máquinas-de-vectores-de-soporte-svm-support-vector-machines" class="section level2" number="3.5">
+<h2><span class="header-section-number">3.5</span> Máquinas de vectores de soporte (SVM: Support Vector Machines)</h2>
+<p>Vamos a aplicar SVM a nuestros datos. Las SVM constituyen un método basado en aprendizaje para la resolución de problemas de clasificación y regresión. En ambos casos, esta resolución se basa en una primera fase de entrenamiento (donde se les informa con múltiples ejemplos ya resueltos, en forma de pares {problema, solución}) y una segunda fase de uso para la resolución de problemas. En ella, las SVM se convierten en una “caja negra” que proporciona una respuesta (salida) a un problema dado (entrada).</p>
+<div class="sourceCode" id="cb124"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb124-1"><a href="análisis-supervisado.html#cb124-1" aria-hidden="true" tabindex="-1"></a>svmdata <span class="ot">=</span> data[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)]</span></code></pre></div>
+<p>Lo primero que hacemos es separar el conjunto de datos en los conjuntos de train y test, estableciendo el 70% de ellos para train y el 30% para test.</p>
+<div class="sourceCode" id="cb125"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb125-1"><a href="análisis-supervisado.html#cb125-1" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">2</span>,<span class="fu">nrow</span>(svmdata), <span class="at">replace=</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.7</span>,<span class="fl">0.3</span>))</span>
+<span id="cb125-2"><a href="análisis-supervisado.html#cb125-2" aria-hidden="true" tabindex="-1"></a>trainSet <span class="ot">&lt;-</span> svmdata[ind<span class="sc">==</span><span class="dv">2</span>,]</span>
+<span id="cb125-3"><a href="análisis-supervisado.html#cb125-3" aria-hidden="true" tabindex="-1"></a>testSet <span class="ot">&lt;-</span> svmdata[ind<span class="sc">==</span><span class="dv">1</span>,]</span></code></pre></div>
+<p>Realizamos el entrenamiento del modelo. Vamos a probar los distintos kernels para comprobar cual de ellos aprende mejor.</p>
+<div id="svm-con-kernel-radial" class="section level3" number="3.5.1">
+<h3><span class="header-section-number">3.5.1</span> SVM con kernel radial</h3>
+<p>Suponiendo que una observación del conjunto de datos de test se encuentra alejada de una observación de entrenamiento en términos de distancia euclídea, el kernel radial tiene un comportamiento muy local, en el sentido de que sólo las observaciones de entrenamiento cercanas a una observación de test tendrán efecto sobre su clasificación. Es importante tener en cuenta que una mayor flexibilidad no tiene porque mejorar las predicciones debido a que un modelo muy flexible puede ajustarse demasiado a los datos de entrenamiento.</p>
+<p>Primero, entrenamos el modelo:</p>
+<div class="sourceCode" id="cb126"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb126-1"><a href="análisis-supervisado.html#cb126-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">svm</span>(Gama<span class="sc">~</span>., <span class="at">data =</span> trainSet, <span class="at">kernel=</span><span class="st">&quot;radial&quot;</span>)</span>
+<span id="cb126-2"><a href="análisis-supervisado.html#cb126-2" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata=</span> testSet[<span class="sc">-</span><span class="dv">12</span>])</span></code></pre></div>
+<p>Ahora, se muestra el resultado mediante la matriz de confusión:</p>
+<div class="sourceCode" id="cb127"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb127-1"><a href="análisis-supervisado.html#cb127-1" aria-hidden="true" tabindex="-1"></a>MC <span class="ot">&lt;-</span> <span class="fu">table</span>(testSet[,<span class="dv">12</span>], prediccion)</span>
+<span id="cb127-2"><a href="análisis-supervisado.html#cb127-2" aria-hidden="true" tabindex="-1"></a>MC</span></code></pre></div>
+<pre><code>##             prediccion
+##              Alta Baja-media
+##   Alta        845         96
+##   Baja-media  139       2222</code></pre>
+<div class="sourceCode" id="cb129"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb129-1"><a href="análisis-supervisado.html#cb129-1" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> (<span class="fu">sum</span>(<span class="fu">diag</span>(MC)))<span class="sc">/</span>(<span class="fu">sum</span>(MC))</span>
+<span id="cb129-2"><a href="análisis-supervisado.html#cb129-2" aria-hidden="true" tabindex="-1"></a>accuracy</span></code></pre></div>
+<pre><code>## [1] 0.928831</code></pre>
+<p>Como se puede observar, el modelo clasifica bien en un 92% de los casos, por lo que las predicciones son realmente buenas.</p>
+</div>
+<div id="svm-con-kernel-lineal" class="section level3" number="3.5.2">
+<h3><span class="header-section-number">3.5.2</span> SVM con kernel lineal</h3>
+<p>El kernel lineal cuantifica la similitud de un par de observaciones usando la correlación de Pearson. Con un kernel lineal, el clasificador obtenido es equivalente a un support vector classifier. Se entrena y se muestran los resultados a continuación:</p>
+<div class="sourceCode" id="cb131"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb131-1"><a href="análisis-supervisado.html#cb131-1" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">svm</span>(Gama<span class="sc">~</span>., <span class="at">data =</span> trainSet, <span class="at">kernel=</span><span class="st">&quot;linear&quot;</span>)</span>
+<span id="cb131-2"><a href="análisis-supervisado.html#cb131-2" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> <span class="fu">predict</span>(model2, <span class="at">newdata=</span> testSet[<span class="sc">-</span><span class="dv">12</span>])</span>
+<span id="cb131-3"><a href="análisis-supervisado.html#cb131-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-4"><a href="análisis-supervisado.html#cb131-4" aria-hidden="true" tabindex="-1"></a>MC <span class="ot">&lt;-</span> <span class="fu">table</span>(testSet[,<span class="dv">12</span>], prediccion) </span>
+<span id="cb131-5"><a href="análisis-supervisado.html#cb131-5" aria-hidden="true" tabindex="-1"></a>MC</span></code></pre></div>
+<pre><code>##             prediccion
+##              Alta Baja-media
+##   Alta        848         93
+##   Baja-media  140       2221</code></pre>
+<div class="sourceCode" id="cb133"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb133-1"><a href="análisis-supervisado.html#cb133-1" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> (<span class="fu">sum</span>(<span class="fu">diag</span>(MC)))<span class="sc">/</span>(<span class="fu">sum</span>(MC))</span>
+<span id="cb133-2"><a href="análisis-supervisado.html#cb133-2" aria-hidden="true" tabindex="-1"></a>accuracy</span></code></pre></div>
+<pre><code>## [1] 0.9294367</code></pre>
+<p>Se obtiene un accuracy del 92%, por lo que predice con bastante exactitud al igual que el kernel radial.</p>
+</div>
+<div id="svm-con-kernel-sigmoidal" class="section level3" number="3.5.3">
+<h3><span class="header-section-number">3.5.3</span> SVM con kernel sigmoidal</h3>
+<p>Ahora, con el kernel sigmoidal:</p>
+<div class="sourceCode" id="cb135"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb135-1"><a href="análisis-supervisado.html#cb135-1" aria-hidden="true" tabindex="-1"></a>model3 <span class="ot">&lt;-</span> <span class="fu">svm</span>(Gama<span class="sc">~</span>., <span class="at">data =</span> trainSet, <span class="at">kernel=</span><span class="st">&quot;sigmoid&quot;</span>)</span>
+<span id="cb135-2"><a href="análisis-supervisado.html#cb135-2" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> <span class="fu">predict</span>(model3, <span class="at">newdata=</span> testSet[<span class="sc">-</span><span class="dv">12</span>])</span>
+<span id="cb135-3"><a href="análisis-supervisado.html#cb135-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb135-4"><a href="análisis-supervisado.html#cb135-4" aria-hidden="true" tabindex="-1"></a>MC <span class="ot">&lt;-</span> <span class="fu">table</span>(testSet[,<span class="dv">12</span>], prediccion)</span>
+<span id="cb135-5"><a href="análisis-supervisado.html#cb135-5" aria-hidden="true" tabindex="-1"></a>MC</span></code></pre></div>
+<pre><code>##             prediccion
+##              Alta Baja-media
+##   Alta        848         93
+##   Baja-media  142       2219</code></pre>
+<div class="sourceCode" id="cb137"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb137-1"><a href="análisis-supervisado.html#cb137-1" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> (<span class="fu">sum</span>(<span class="fu">diag</span>(MC)))<span class="sc">/</span>(<span class="fu">sum</span>(MC))</span>
+<span id="cb137-2"><a href="análisis-supervisado.html#cb137-2" aria-hidden="true" tabindex="-1"></a>accuracy</span></code></pre></div>
+<pre><code>## [1] 0.928831</code></pre>
+<p>Se obtiene un accuracy del 92%, por lo que predice con bastante exactitud al igual que el kernel radial y lineal.</p>
+</div>
+<div id="svm-con-kernel-polinomial" class="section level3" number="3.5.4">
+<h3><span class="header-section-number">3.5.4</span> SVM con kernel polinomial</h3>
+<p>El kernel polinómico de grado d (siendo d&gt;1) permite un límite de decisión mucho más flexible. Cuando un support vector classifier se combina con un kernel no lineal, se obtiene un support vector machine. Se entrena el modelo y se muestran los resultados:</p>
+<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="análisis-supervisado.html#cb139-1" aria-hidden="true" tabindex="-1"></a>model4 <span class="ot">&lt;-</span> <span class="fu">svm</span>(Gama<span class="sc">~</span>., <span class="at">data =</span> trainSet, <span class="at">kernel=</span><span class="st">&quot;polynomial&quot;</span>)</span>
+<span id="cb139-2"><a href="análisis-supervisado.html#cb139-2" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> <span class="fu">predict</span>(model4, <span class="at">newdata=</span> testSet[<span class="sc">-</span><span class="dv">12</span>])</span>
+<span id="cb139-3"><a href="análisis-supervisado.html#cb139-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb139-4"><a href="análisis-supervisado.html#cb139-4" aria-hidden="true" tabindex="-1"></a>MC <span class="ot">&lt;-</span> <span class="fu">table</span>(testSet[,<span class="dv">12</span>], prediccion)</span>
+<span id="cb139-5"><a href="análisis-supervisado.html#cb139-5" aria-hidden="true" tabindex="-1"></a>MC</span></code></pre></div>
+<pre><code>##             prediccion
+##              Alta Baja-media
+##   Alta        322        619
+##   Baja-media   26       2335</code></pre>
+<div class="sourceCode" id="cb141"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb141-1"><a href="análisis-supervisado.html#cb141-1" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> (<span class="fu">sum</span>(<span class="fu">diag</span>(MC)))<span class="sc">/</span>(<span class="fu">sum</span>(MC))</span>
+<span id="cb141-2"><a href="análisis-supervisado.html#cb141-2" aria-hidden="true" tabindex="-1"></a>accuracy</span></code></pre></div>
+<pre><code>## [1] 0.8046638</code></pre>
+<p>Tanto el kernel radial como el lineal y el sigmoidal obtienen la misma métrica, por lo tanto esos hiperplanos se adaptan correctamente a nuestros datos.</p>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="análisis-no-supervisado.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="ajuste-de-los-hiperparámetros-del-modelo.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": false,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

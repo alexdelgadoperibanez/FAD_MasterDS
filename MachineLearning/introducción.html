@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>PRÁCTICA MACHINE LEARNING I</title>
+  <meta name="description" content="PRÁCTICA MACHINE LEARNING I" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="PRÁCTICA MACHINE LEARNING I" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="PRÁCTICA MACHINE LEARNING I" />
+  
+  
+  
+
+<meta name="author" content="Amanda Del Álamo Caballero y Alejandro Delgado Peribáñez" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+
+<link rel="next" href="análisis-no-supervisado.html"/>
+<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="introducción.html"><a href="introducción.html"><i class="fa fa-check"></i><b>1</b> Introducción</a></li>
+<li class="chapter" data-level="2" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html"><i class="fa fa-check"></i><b>2</b> Análisis no supervisado</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#análisis-de-componentes-principales"><i class="fa fa-check"></i><b>2.1</b> Análisis de componentes principales</a></li>
+<li class="chapter" data-level="2.2" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#k-medias.-análisis-cluster-no-jerárquico-o-de-conglomerados-clustering"><i class="fa fa-check"></i><b>2.2</b> k-medias. Análisis <em>cluster</em> no jerárquico o de conglomerados (<em>clustering</em>)</a></li>
+<li class="chapter" data-level="2.3" data-path="análisis-no-supervisado.html"><a href="análisis-no-supervisado.html#clustering-jerárquico"><i class="fa fa-check"></i><b>2.3</b> Clustering jerárquico</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html"><i class="fa fa-check"></i><b>3</b> Análisis supervisado</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#regresión-logística"><i class="fa fa-check"></i><b>3.1</b> Regresión logística</a></li>
+<li class="chapter" data-level="3.2" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#los-k-vecinos-más-cercanos-k-nn-the-k-nearest-neighbours"><i class="fa fa-check"></i><b>3.2</b> Los k-vecinos más cercanos (k-NN: The k-nearest neighbours)</a></li>
+<li class="chapter" data-level="3.3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#árboles-de-decisión"><i class="fa fa-check"></i><b>3.3</b> Árboles de decisión</a></li>
+<li class="chapter" data-level="3.4" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#bosques-aleatorios"><i class="fa fa-check"></i><b>3.4</b> Bosques aleatorios</a></li>
+<li class="chapter" data-level="3.5" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#máquinas-de-vectores-de-soporte-svm-support-vector-machines"><i class="fa fa-check"></i><b>3.5</b> Máquinas de vectores de soporte (SVM: Support Vector Machines)</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-radial"><i class="fa fa-check"></i><b>3.5.1</b> SVM con kernel radial</a></li>
+<li class="chapter" data-level="3.5.2" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-lineal"><i class="fa fa-check"></i><b>3.5.2</b> SVM con kernel lineal</a></li>
+<li class="chapter" data-level="3.5.3" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-sigmoidal"><i class="fa fa-check"></i><b>3.5.3</b> SVM con kernel sigmoidal</a></li>
+<li class="chapter" data-level="3.5.4" data-path="análisis-supervisado.html"><a href="análisis-supervisado.html#svm-con-kernel-polinomial"><i class="fa fa-check"></i><b>3.5.4</b> SVM con kernel polinomial</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html"><i class="fa fa-check"></i><b>4</b> Ajuste de los hiperparámetros del modelo</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#regresión-logística-1"><i class="fa fa-check"></i><b>4.1</b> Regresión logística</a></li>
+<li class="chapter" data-level="4.2" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#k-nn"><i class="fa fa-check"></i><b>4.2</b> k-NN</a></li>
+<li class="chapter" data-level="4.3" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#árboles-de-decisión-1"><i class="fa fa-check"></i><b>4.3</b> Árboles de decisión</a></li>
+<li class="chapter" data-level="4.4" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#random-forest"><i class="fa fa-check"></i><b>4.4</b> Random Forest</a></li>
+<li class="chapter" data-level="4.5" data-path="ajuste-de-los-hiperparámetros-del-modelo.html"><a href="ajuste-de-los-hiperparámetros-del-modelo.html#svm"><i class="fa fa-check"></i><b>4.5</b> SVM</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="evaluación-y-comparación-de-modelos.html"><a href="evaluación-y-comparación-de-modelos.html"><i class="fa fa-check"></i><b>5</b> Evaluación y comparación de modelos</a>
+<ul>
+<li class="chapter" data-level="5.0.1" data-path="evaluación-y-comparación-de-modelos.html"><a href="evaluación-y-comparación-de-modelos.html#test-de-friedman-para-comparar-el-accuracy-de-los-modelos"><i class="fa fa-check"></i><b>5.0.1</b> Test de Friedman para comparar el accuracy de los modelos</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="curva-de-roc.html"><a href="curva-de-roc.html"><i class="fa fa-check"></i><b>6</b> Curva de ROC</a></li>
+<li class="chapter" data-level="7" data-path="gam.html"><a href="gam.html"><i class="fa fa-check"></i><b>7</b> GAM</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">PRÁCTICA MACHINE LEARNING I</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">PRÁCTICA MACHINE LEARNING I</h1>
+<p class="author"><em>Amanda Del Álamo Caballero y Alejandro Delgado Peribáñez</em></p>
+<p class="date"><em>18/04/2022</em></p>
+</div>
+<div id="introducción" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introducción</h1>
+<p>En esta sección se comenzarán a aplicar los algoritmos de aprendizaje automático (o <em>machine learning</em>) vistos en clase. Utilizaremos los siguientes algoritmos que podemos clasificar en:</p>
+<ul>
+<li><p><strong>Algoritmos no supervisados</strong>: Parten de un conjunto de datos sin etiquetar y aplican inducción partiendo de ejemplos para predecir en nuevos datos.</p>
+<ul>
+<li>Análisis de componentes principales (reducción de la dimensionalidad)</li>
+<li>k-medias. Análisis <em>cluster</em> no jerárquico o de conglomerados (<em>clustering</em>)</li>
+<li>Análisis <em>cluster</em> jerárquico o de conglomerados (<em>clustering</em>)</li>
+</ul></li>
+<li><p><strong>Algoritmos supervisados</strong>: Utilizan un conjunto de datos etiquetados y con ellas intentan encontrar relaciones entre las características y las etiquetas para predecir en nuevos datos.</p>
+<ul>
+<li>Regresión logística</li>
+<li>Los k-vecinos más cercanos (k-NN: The k-nearest neighbours) (Basado en la información)</li>
+<li>Árboles de decisión (Basado en la información)</li>
+<li>Bosques aleatorios (Basado en la información)</li>
+<li>Máquinas de vectores de soporte (SVM: Support Vector Machines) (Basado en el error)</li>
+</ul></li>
+</ul>
+<p>Se carga, limpia, visualiza y secciona el conjunto de datos:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="introducción.html#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;train-ML.csv&quot;</span>, <span class="at">na =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>,<span class="st">&quot;NA&quot;</span>,<span class="st">&quot;NULL&quot;</span>,<span class="cn">NULL</span>,<span class="st">&quot;  &quot;</span>,<span class="st">&quot;/n&quot;</span> ))</span>
+<span id="cb2-2"><a href="introducción.html#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data)</span></code></pre></div>
+<pre><code>##   X                                     Name Location Year Kilometers_Driven
+## 1 1 Audi Q3 2012-2015 35 TDI Quattro Premium   Mumbai 2015             48000
+## 2 2            BMW 3 Series 320d Luxury Line   Mumbai 2014             18600
+## 3 3                Hyundai Grand i10 AT Asta  Chennai 2016             18000
+## 4 4            Mercedes-Benz E-Class 280 CDI    Kochi 2009             80464
+## 5 5                       Hyundai Accent GLE     Pune 2005            123200
+## 6 6             Ford EcoSport 1.5 TDCi Trend    Delhi 2016             46727
+##   Fuel_Type Transmission Owner_Type Engine  Power Seats Price          Make
+## 1    Diesel    Automatic      First   1968 174.33     5 18.25          Audi
+## 2    Diesel    Automatic     Second   1995 190.00     5 21.00           Bmw
+## 3    Petrol    Automatic      First   1197  82.00     5  5.40       Hyundai
+## 4    Diesel    Automatic     Second   2987 198.50     5  9.29 Mercedes-Benz
+## 5    Petrol       Manual     Second   1495  94.00     5  1.00       Hyundai
+## 6    Diesel       Manual      First   1498  98.59     5  7.25          Ford
+##         Gama  kmpl kmpkg Price.mod2
+## 1  Gama alta 15.73     0  1.3204808
+## 2  Gama alta 22.69     0  1.3112970
+## 3 Gama media 18.90     0  0.7625160
+## 4  Gama alta 11.00     0  1.0623083
+## 5 Gama media 13.20     0  0.2359051
+## 6 Gama media 22.77     0  0.8592963</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="introducción.html#cb4-1" aria-hidden="true" tabindex="-1"></a>dataTest <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;test-ML.csv&quot;</span>, <span class="at">na =</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>,<span class="st">&quot;NA&quot;</span>,<span class="st">&quot;NULL&quot;</span>,<span class="cn">NULL</span>,<span class="st">&quot;  &quot;</span>,<span class="st">&quot;/n&quot;</span> ))</span>
+<span id="cb4-2"><a href="introducción.html#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dataTest)</span></code></pre></div>
+<pre><code>##    X                                Name Location Year Kilometers_Driven
+## 1  3                        Honda Jazz V  Chennai 2011             46000
+## 2  4                   Maruti Ertiga VDI  Chennai 2012             87000
+## 3  9 Volkswagen Vento Diesel Comfortline     Pune 2013             64430
+## 4 11                    Maruti Ciaz Zeta    Kochi 2018             25692
+## 5 14    Land Rover Range Rover 2.2L Pure    Delhi 2014             72000
+## 6 15      Land Rover Freelander 2 TD4 SE     Pune 2012             85000
+##   Fuel_Type Transmission Owner_Type Mileage Engine  Power Seats Price
+## 1    Petrol       Manual      First   18.20   1199  88.70     5  4.50
+## 2    Diesel       Manual      First   20.77   1248  88.76     7  6.00
+## 3    Diesel       Manual      First   20.54   1598 103.60     5  5.20
+## 4    Petrol       Manual      First   21.56   1462 103.25     5  9.95
+## 5    Diesel    Automatic      First   12.70   2179 187.70     5 27.00
+## 6    Diesel    Automatic     Second    0.00   2179 115.00     5 17.50
+##         Make       Gama
+## 1      Honda Gama media
+## 2     Maruti Gama media
+## 3 Volkswagen Gama media
+## 4     Maruti Gama media
+## 5 Land Rover  Gama alta
+## 6 Land Rover  Gama alta</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="introducción.html#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb6-2"><a href="introducción.html#cb6-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Price.mod2) <span class="ot">-&gt;</span> data</span>
+<span id="cb6-3"><a href="introducción.html#cb6-3" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>X) <span class="ot">-&gt;</span> data</span>
+<span id="cb6-4"><a href="introducción.html#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data)</span></code></pre></div>
+<pre><code>##                                       Name Location Year Kilometers_Driven
+## 1 Audi Q3 2012-2015 35 TDI Quattro Premium   Mumbai 2015             48000
+## 2            BMW 3 Series 320d Luxury Line   Mumbai 2014             18600
+## 3                Hyundai Grand i10 AT Asta  Chennai 2016             18000
+## 4            Mercedes-Benz E-Class 280 CDI    Kochi 2009             80464
+## 5                       Hyundai Accent GLE     Pune 2005            123200
+## 6             Ford EcoSport 1.5 TDCi Trend    Delhi 2016             46727
+##   Fuel_Type Transmission Owner_Type Engine  Power Seats Price          Make
+## 1    Diesel    Automatic      First   1968 174.33     5 18.25          Audi
+## 2    Diesel    Automatic     Second   1995 190.00     5 21.00           Bmw
+## 3    Petrol    Automatic      First   1197  82.00     5  5.40       Hyundai
+## 4    Diesel    Automatic     Second   2987 198.50     5  9.29 Mercedes-Benz
+## 5    Petrol       Manual     Second   1495  94.00     5  1.00       Hyundai
+## 6    Diesel       Manual      First   1498  98.59     5  7.25          Ford
+##         Gama  kmpl kmpkg
+## 1  Gama alta 15.73     0
+## 2  Gama alta 22.69     0
+## 3 Gama media 18.90     0
+## 4  Gama alta 11.00     0
+## 5 Gama media 13.20     0
+## 6 Gama media 22.77     0</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="introducción.html#cb8-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="introducción.html#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Fuel_Type =</span> <span class="fu">as.factor</span>(Fuel_Type)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="introducción.html#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Transmission =</span> <span class="fu">as.factor</span>(Transmission)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="introducción.html#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Location =</span> <span class="fu">as.factor</span>(Location)) <span class="ot">-&gt;</span> data</span>
+<span id="cb8-5"><a href="introducción.html#cb8-5" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Owner_Type =</span> <span class="fu">factor</span>(Owner_Type, <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;First&quot;</span>, <span class="st">&quot;Second&quot;</span>, <span class="st">&quot;Third&quot;</span>, <span class="st">&quot;Fourth &amp; Above&quot;</span>))) <span class="ot">-&gt;</span> data</span>
+<span id="cb8-6"><a href="introducción.html#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="introducción.html#cb8-7" aria-hidden="true" tabindex="-1"></a>dataTest <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="introducción.html#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Fuel_Type =</span> <span class="fu">as.factor</span>(Fuel_Type)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="introducción.html#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Transmission =</span> <span class="fu">as.factor</span>(Transmission)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-10"><a href="introducción.html#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Location =</span> <span class="fu">as.factor</span>(Location)) <span class="ot">-&gt;</span> dataTest</span>
+<span id="cb8-11"><a href="introducción.html#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="introducción.html#cb8-12" aria-hidden="true" tabindex="-1"></a>dataTest <span class="sc">%&gt;%</span></span>
+<span id="cb8-13"><a href="introducción.html#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Name =</span> <span class="fu">as.factor</span>(Name)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-14"><a href="introducción.html#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Make =</span> <span class="fu">as.factor</span>(Make)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-15"><a href="introducción.html#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Seats =</span> <span class="fu">as.factor</span>(Seats))<span class="sc">%&gt;%</span></span>
+<span id="cb8-16"><a href="introducción.html#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Gama =</span> <span class="fu">as.factor</span>(Gama))<span class="ot">-&gt;</span> dataTest</span>
+<span id="cb8-17"><a href="introducción.html#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="introducción.html#cb8-18" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span></span>
+<span id="cb8-19"><a href="introducción.html#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Name =</span> <span class="fu">as.factor</span>(Name)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-20"><a href="introducción.html#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Make =</span> <span class="fu">as.factor</span>(Make)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-21"><a href="introducción.html#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Seats =</span> <span class="fu">as.factor</span>(Seats))<span class="ot">-&gt;</span> data</span>
+<span id="cb8-22"><a href="introducción.html#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="introducción.html#cb8-23" aria-hidden="true" tabindex="-1"></a>dataTest <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Owner_Type =</span> <span class="fu">factor</span>(Owner_Type, <span class="at">levels=</span><span class="fu">c</span>(<span class="st">&quot;First&quot;</span>, <span class="st">&quot;Second&quot;</span>, <span class="st">&quot;Third&quot;</span>, <span class="st">&quot;Fourth &amp; Above&quot;</span>))) <span class="ot">-&gt;</span> dataTest</span></code></pre></div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+<a href="análisis-no-supervisado.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": false,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
