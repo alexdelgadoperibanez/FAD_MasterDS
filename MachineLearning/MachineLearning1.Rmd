@@ -113,8 +113,8 @@ head(dataTest)
 
 ```{r , message=FALSE, warning=FALSE}
 library(dplyr)
-data %>% select(-Price.mod2) -> data
-data %>% select(-X) -> data
+data %>% dplyr::select(-Price.mod2) -> data
+data %>% dplyr::select(-X) -> data
 head(data)
 data %>%
   mutate(Fuel_Type = as.factor(Fuel_Type)) %>%
@@ -315,14 +315,14 @@ data %>%
 
 data$Gama <- as.factor(data$Gama)
 
-#dataTest %>% select(-Mileage) -> dataTest
-dataTest %>% select(-X) -> dataTest
+#dataTest %>% dplyr::select(-Mileage) -> dataTest
+dataTest %>% dplyr::select(-X) -> dataTest
 head(dataTest)
 dataTest%>%drop_na() -> dataTest
 dataTest %>% 
     mutate(kmpl = ifelse(Fuel_Type=="Diesel" | Fuel_Type=="Petrol", Mileage, 0)) %>%
     mutate(kmpkg = ifelse(Fuel_Type=="CNG" | Fuel_Type=="LPG", Mileage, 0)) %>%
-    select(-Mileage) -> dataTest
+    dplyr::select(-Mileage) -> dataTest
 
 dataTest %>% 
   mutate(
@@ -337,7 +337,7 @@ dataTest %>%
 
 
 ```{r escalado de datos}
-TrainEscalado <- data %>% select(Year, Kilometers_Driven, Engine, Power, Price, kmpl) %>% scale() %>% as.data.frame()
+TrainEscalado <- data %>% dplyr::select(Year, Kilometers_Driven, Engine, Power, Price, kmpl) %>% scale() %>% as.data.frame()
 ```
 
 
@@ -543,7 +543,7 @@ donde:
 
 - $TPR$ (*sensitivity, recall, hit rate or true positive rate*) es la sensitividad.
 
-- $TNR$ (*specificity, selectivity or true negative rate*) es la especificidad.
+- $TNR$ (*specificity, dplyr::selectivity or true negative rate*) es la especificidad.
 
 Cabe señalar que esta medida sólo será utilizada en futuros análisis cuando el problema requiera de una precisión de este tipo, mientras, se utilizará como métrica el accuracy.
 
@@ -1190,7 +1190,7 @@ El modelo random forest consigue el accuracy promedio más alto, seguido muy de 
 ```{r}
 matriz_metricas <- metricas_resamples %>% filter(metrica == "Accuracy") %>%
                    spread(key = modelo, value = valor) %>%
-                   select(-Resample, -metrica) %>% as.matrix()
+                   dplyr::select(-Resample, -metrica) %>% as.matrix()
 friedman.test(y = matriz_metricas)
 ```
 
