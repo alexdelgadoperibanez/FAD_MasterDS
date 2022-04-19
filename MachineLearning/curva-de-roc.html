@@ -189,59 +189,59 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Las curvas ROC (Receiver Operating Characteritic curve) permiten evaluar, en problemas de clasificación binaria, cómo varia la proporción de verdaderos positivos (sensibilidad o recall) y la de falsos positivos (1-especificidad) dependiendo del cutoff de probabilidad empleado en las asignaciones. El gráfico resultante es muy útil para identificar el cutoff que consigue un mejor equilibrio sensibilidad-especificidad. Además de esto, la curva ROC, en concreto el área bajo la curva (AUC), puede emplearse como métrica para evaluar modelos. Un modelo que clasifica perfectamente las dos clases tiene un 100% de sensibilidad y especificidad, por lo que el área bajo la curva es de 1. Un modelo que predice por debajo de lo esperado por azar, tiene un AUC menor de 0.5. Una condición necesaria para crear una curva ROC es disponer de la probabilidad de clases en las predicciones.</p>
 <p>En caret, se puede sustituir la métrica accuracy empleada por defecto en problemas de clasificación y calcular en su lugar el AUC. Para ello, se tienen que indicar los argumentos summaryFunction = twoClassSummary y classProbs = TRUE en el control de entrenamiento. El segundo argumento es necesario porque el cálculo de la curva ROC requiere las probabilidades predichas para cada clase. Además del área bajo la curva, se calcula la sensibilidad y la especificidad para un cutoff de 0.5.</p>
 <p>El paquete pROC contiene múltiples funciones para crear, representar y obtener métricas a partir de curvas ROC. Como argumentos se necesitan únicamente las probabilidades predichas para cada clase y la clase verdadera a la que pertenece cada observación.</p>
-<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb184-1"><a href="curva-de-roc.html#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
-<span id="cb184-2"><a href="curva-de-roc.html#cb184-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_logistic,</span>
-<span id="cb184-3"><a href="curva-de-roc.html#cb184-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
-<span id="cb184-4"><a href="curva-de-roc.html#cb184-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
-<span id="cb184-5"><a href="curva-de-roc.html#cb184-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
-<span id="cb184-6"><a href="curva-de-roc.html#cb184-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
-<span id="cb184-7"><a href="curva-de-roc.html#cb184-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
-<span id="cb184-8"><a href="curva-de-roc.html#cb184-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb184-9"><a href="curva-de-roc.html#cb184-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
-<span id="cb184-10"><a href="curva-de-roc.html#cb184-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb186"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb186-1"><a href="curva-de-roc.html#cb186-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
+<span id="cb186-2"><a href="curva-de-roc.html#cb186-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_logistic,</span>
+<span id="cb186-3"><a href="curva-de-roc.html#cb186-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
+<span id="cb186-4"><a href="curva-de-roc.html#cb186-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
+<span id="cb186-5"><a href="curva-de-roc.html#cb186-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
+<span id="cb186-6"><a href="curva-de-roc.html#cb186-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
+<span id="cb186-7"><a href="curva-de-roc.html#cb186-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
+<span id="cb186-8"><a href="curva-de-roc.html#cb186-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb186-9"><a href="curva-de-roc.html#cb186-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
+<span id="cb186-10"><a href="curva-de-roc.html#cb186-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
 <p><img src="MachineLearning1_files/figure-html/unnamed-chunk-61-1.png" width="672" /></p>
-<div class="sourceCode" id="cb185"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb185-1"><a href="curva-de-roc.html#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
-<span id="cb185-2"><a href="curva-de-roc.html#cb185-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb187"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb187-1"><a href="curva-de-roc.html#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
+<span id="cb187-2"><a href="curva-de-roc.html#cb187-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
 <pre><code>## Area under the curve: 0.9471</code></pre>
-<div class="sourceCode" id="cb187"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb187-1"><a href="curva-de-roc.html#cb187-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
-<span id="cb187-2"><a href="curva-de-roc.html#cb187-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb189"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb189-1"><a href="curva-de-roc.html#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
+<span id="cb189-2"><a href="curva-de-roc.html#cb189-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
 <pre><code>## 95% CI: 0.9314-0.9629 (DeLong)</code></pre>
 <p>Con la regresión logística se consigue un área bajo la curva del 94%.</p>
 <p>Ahora, veamos la curva ROC para el modelo k-nn.</p>
-<div class="sourceCode" id="cb189"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb189-1"><a href="curva-de-roc.html#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
-<span id="cb189-2"><a href="curva-de-roc.html#cb189-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_knn,</span>
-<span id="cb189-3"><a href="curva-de-roc.html#cb189-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
-<span id="cb189-4"><a href="curva-de-roc.html#cb189-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
-<span id="cb189-5"><a href="curva-de-roc.html#cb189-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
-<span id="cb189-6"><a href="curva-de-roc.html#cb189-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
-<span id="cb189-7"><a href="curva-de-roc.html#cb189-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
-<span id="cb189-8"><a href="curva-de-roc.html#cb189-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb189-9"><a href="curva-de-roc.html#cb189-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
-<span id="cb189-10"><a href="curva-de-roc.html#cb189-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb191"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb191-1"><a href="curva-de-roc.html#cb191-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
+<span id="cb191-2"><a href="curva-de-roc.html#cb191-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_knn,</span>
+<span id="cb191-3"><a href="curva-de-roc.html#cb191-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
+<span id="cb191-4"><a href="curva-de-roc.html#cb191-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
+<span id="cb191-5"><a href="curva-de-roc.html#cb191-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
+<span id="cb191-6"><a href="curva-de-roc.html#cb191-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
+<span id="cb191-7"><a href="curva-de-roc.html#cb191-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
+<span id="cb191-8"><a href="curva-de-roc.html#cb191-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb191-9"><a href="curva-de-roc.html#cb191-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
+<span id="cb191-10"><a href="curva-de-roc.html#cb191-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
 <p><img src="MachineLearning1_files/figure-html/unnamed-chunk-64-1.png" width="672" /></p>
-<div class="sourceCode" id="cb190"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb190-1"><a href="curva-de-roc.html#cb190-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
-<span id="cb190-2"><a href="curva-de-roc.html#cb190-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb192"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb192-1"><a href="curva-de-roc.html#cb192-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
+<span id="cb192-2"><a href="curva-de-roc.html#cb192-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
 <pre><code>## Area under the curve: 0.9184</code></pre>
-<div class="sourceCode" id="cb192"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb192-1"><a href="curva-de-roc.html#cb192-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
-<span id="cb192-2"><a href="curva-de-roc.html#cb192-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb194"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb194-1"><a href="curva-de-roc.html#cb194-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
+<span id="cb194-2"><a href="curva-de-roc.html#cb194-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
 <pre><code>## 95% CI: 0.8995-0.9372 (DeLong)</code></pre>
 <p>Ahora, para el modelo de árbol de decisión:</p>
-<div class="sourceCode" id="cb194"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb194-1"><a href="curva-de-roc.html#cb194-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
-<span id="cb194-2"><a href="curva-de-roc.html#cb194-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_C50Tree,</span>
-<span id="cb194-3"><a href="curva-de-roc.html#cb194-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
-<span id="cb194-4"><a href="curva-de-roc.html#cb194-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
-<span id="cb194-5"><a href="curva-de-roc.html#cb194-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
-<span id="cb194-6"><a href="curva-de-roc.html#cb194-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
-<span id="cb194-7"><a href="curva-de-roc.html#cb194-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
-<span id="cb194-8"><a href="curva-de-roc.html#cb194-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb194-9"><a href="curva-de-roc.html#cb194-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
-<span id="cb194-10"><a href="curva-de-roc.html#cb194-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb196"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb196-1"><a href="curva-de-roc.html#cb196-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Se obtienen las probabilidades predichas para cada clase</span></span>
+<span id="cb196-2"><a href="curva-de-roc.html#cb196-2" aria-hidden="true" tabindex="-1"></a>predicciones <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> modelo_C50Tree,</span>
+<span id="cb196-3"><a href="curva-de-roc.html#cb196-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">newdata =</span> dataTest[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>)],</span>
+<span id="cb196-4"><a href="curva-de-roc.html#cb196-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
+<span id="cb196-5"><a href="curva-de-roc.html#cb196-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cálculo de la curva</span></span>
+<span id="cb196-6"><a href="curva-de-roc.html#cb196-6" aria-hidden="true" tabindex="-1"></a>curva_roc <span class="ot">&lt;-</span> <span class="fu">roc</span>(<span class="at">response =</span> dataTest<span class="sc">$</span>Gama, </span>
+<span id="cb196-7"><a href="curva-de-roc.html#cb196-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">predictor =</span> predicciones<span class="sc">$</span>Alta) </span>
+<span id="cb196-8"><a href="curva-de-roc.html#cb196-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb196-9"><a href="curva-de-roc.html#cb196-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gráfico de la curva</span></span>
+<span id="cb196-10"><a href="curva-de-roc.html#cb196-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(curva_roc)</span></code></pre></div>
 <p><img src="MachineLearning1_files/figure-html/unnamed-chunk-67-1.png" width="672" /></p>
-<div class="sourceCode" id="cb195"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb195-1"><a href="curva-de-roc.html#cb195-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
-<span id="cb195-2"><a href="curva-de-roc.html#cb195-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
+<div class="sourceCode" id="cb197"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb197-1"><a href="curva-de-roc.html#cb197-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Área bajo la curva AUC</span></span>
+<span id="cb197-2"><a href="curva-de-roc.html#cb197-2" aria-hidden="true" tabindex="-1"></a><span class="fu">auc</span>(curva_roc)</span></code></pre></div>
 <pre><code>## Area under the curve: 0.9939</code></pre>
-<div class="sourceCode" id="cb197"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb197-1"><a href="curva-de-roc.html#cb197-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
-<span id="cb197-2"><a href="curva-de-roc.html#cb197-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb199"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb199-1"><a href="curva-de-roc.html#cb199-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Intervalo de confianza de la curva</span></span>
+<span id="cb199-2"><a href="curva-de-roc.html#cb199-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ci.auc</span>(curva_roc, <span class="at">conf.level =</span> <span class="fl">0.95</span>)</span></code></pre></div>
 <pre><code>## 95% CI: 0.9898-0.998 (DeLong)</code></pre>
 <p>El área bajo la curva del árbol de decisión es de 99%, por lo que se realiza un buen diagnóstico con este modelo.</p>
 </div>

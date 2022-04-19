@@ -187,11 +187,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="gam" class="section level1" number="7">
 <h1><span class="header-section-number">7</span> GAM</h1>
 <p>En los modelos GAM se pueden aplicar funciones (lineales o no lineales) a cada uno de los predictores. El paquete gamlss implementa varias funciones smooth que suelen dar buenos resultados.</p>
-<div class="sourceCode" id="cb199"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb199-1"><a href="gam.html#cb199-1" aria-hidden="true" tabindex="-1"></a>modelo_gam <span class="ot">&lt;-</span> <span class="fu">gam</span>(Gama <span class="sc">~</span> <span class="fu">s</span>(Engine) <span class="sc">+</span> <span class="fu">s</span>(Power) <span class="sc">+</span> Transmission,</span>
-<span id="cb199-2"><a href="gam.html#cb199-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">family=</span>binomial,</span>
-<span id="cb199-3"><a href="gam.html#cb199-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">data    =</span> data)</span>
-<span id="cb199-4"><a href="gam.html#cb199-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb199-5"><a href="gam.html#cb199-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_gam)</span></code></pre></div>
+<div class="sourceCode" id="cb201"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb201-1"><a href="gam.html#cb201-1" aria-hidden="true" tabindex="-1"></a>modelo_gam <span class="ot">&lt;-</span> <span class="fu">gam</span>(Gama <span class="sc">~</span> <span class="fu">s</span>(Engine) <span class="sc">+</span> <span class="fu">s</span>(Power) <span class="sc">+</span> Transmission,</span>
+<span id="cb201-2"><a href="gam.html#cb201-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">family=</span>binomial,</span>
+<span id="cb201-3"><a href="gam.html#cb201-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">data    =</span> data)</span>
+<span id="cb201-4"><a href="gam.html#cb201-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb201-5"><a href="gam.html#cb201-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(modelo_gam)</span></code></pre></div>
 <pre><code>## 
 ## Call: gam(formula = Gama ~ s(Engine) + s(Power) + Transmission, family = binomial, 
 ##     data = data)
@@ -226,14 +226,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>Debido a la incorporación de las funciones no lineales (smoothers), hay que ser cauto a la hora de interpretar los coeficientes y los errores mostrados en el summary. Los coeficientes y errores de los predictores con funciones smooth (Engine y Power) contemplan únicamente la parte lineal, ignorando la no lineal. En el caso de los predictores lineales (Transmission) sus errores se estiman asumiendo que los términos con smoother son fijos, y no contemplan la incertidumbre introducida al ajustar cada una de las funciones smooth.</p>
 <p>Para conocer la contribución total (lineal y no lineal) de los predictores transformados por funciones smooth se puede emplear la función anova. Esta función calcula el impacto que tiene en el modelo (en términos de grados de libertad totales, AIC y significancia estadística) el eliminar cada uno de los predictores de forma secuencial.</p>
-<div class="sourceCode" id="cb201"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb201-1"><a href="gam.html#cb201-1" aria-hidden="true" tabindex="-1"></a>modelo_gam</span></code></pre></div>
+<div class="sourceCode" id="cb203"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb203-1"><a href="gam.html#cb203-1" aria-hidden="true" tabindex="-1"></a>modelo_gam</span></code></pre></div>
 <pre><code>## Call:
 ## gam(formula = Gama ~ s(Engine) + s(Power) + Transmission, family = binomial, 
 ##     data = data)
 ## 
 ## Degrees of Freedom: 4710 total; 4701 Residual
 ## Residual Deviance: 2071.113</code></pre>
-<div class="sourceCode" id="cb203"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb203-1"><a href="gam.html#cb203-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(modelo_gam, <span class="at">test=</span> <span class="st">&quot;F&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb205"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb205-1"><a href="gam.html#cb205-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(modelo_gam, <span class="at">test=</span> <span class="st">&quot;F&quot;</span>)</span></code></pre></div>
 <pre><code>## Anova for Nonparametric Effects
 ##              Npar Df Npar Chisq    P(Chi)    
 ## (Intercept)                                  
@@ -242,9 +242,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Transmission                                 
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<div class="sourceCode" id="cb205"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb205-1"><a href="gam.html#cb205-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(modelo_gam)</span></code></pre></div>
+<div class="sourceCode" id="cb207"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb207-1"><a href="gam.html#cb207-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(modelo_gam)</span></code></pre></div>
 <p><img src="MachineLearning1_files/figure-html/unnamed-chunk-71-1.png" width="672" /><img src="MachineLearning1_files/figure-html/unnamed-chunk-71-2.png" width="672" /><img src="MachineLearning1_files/figure-html/unnamed-chunk-71-3.png" width="672" /></p>
-<div class="sourceCode" id="cb206"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb206-1"><a href="gam.html#cb206-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AIC</span>(logit3, modelo_gam)</span></code></pre></div>
+<div class="sourceCode" id="cb208"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb208-1"><a href="gam.html#cb208-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AIC</span>(logit3, modelo_gam)</span></code></pre></div>
 <pre><code>##            df      AIC
 ## logit3      4 2306.247
 ## modelo_gam  4 2091.113</code></pre>
